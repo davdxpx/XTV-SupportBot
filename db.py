@@ -64,6 +64,18 @@ class Database:
         except:
             return False
 
+    def delete_project(self, project_id_str):
+        try:
+            # We also delete related feedback? Or keep it?
+            # Usually better to keep feedback but orphan it, or cascade delete.
+            # Let's just delete the project document for now.
+            self.projects.delete_one({"_id": ObjectId(project_id_str)})
+            # Optional: Delete feedback
+            self.feedback.delete_many({"project_id": ObjectId(project_id_str)})
+            return True
+        except:
+            return False
+
     def increment_feedback_count(self, project_id):
         self.projects.update_one(
             {"_id": project_id},

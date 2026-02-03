@@ -99,11 +99,19 @@ async def start_feedback_flow(client, chat_id, user_id, project_id_str):
         "project_name": project["project_name"]
     }
 
+    # Show project description before starting feedback
+    desc = project.get("description", "")
+    msg_text = f"**Feedback for {project['project_name']}**\n"
+    if desc:
+        msg_text += f"_{desc}_\n"
+    msg_text += "\n"
+
     if stars_enabled:
         db.set_state(user_id, STATE_FEEDBACK_RATING, data)
+        msg_text += "Please rate your experience:"
         await client.send_message(
             chat_id,
-            f"**Feedback for {project['project_name']}**\n\nPlease rate your experience:",
+            msg_text,
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("1 ⭐️", callback_data="rate_1"),
@@ -112,15 +120,16 @@ async def start_feedback_flow(client, chat_id, user_id, project_id_str):
                     InlineKeyboardButton("4 ⭐️", callback_data="rate_4"),
                     InlineKeyboardButton("5 ⭐️", callback_data="rate_5")
                 ],
-                [InlineKeyboardButton("Cancel", callback_data="user_cancel")]
+                [InlineKeyboardButton("❌ Cancel", callback_data="user_cancel")]
             ])
         )
     elif text_enabled:
         db.set_state(user_id, STATE_FEEDBACK_TEXT, data)
+        msg_text += "Please write your feedback below:"
         await client.send_message(
             chat_id,
-            f"**Feedback for {project['project_name']}**\n\nPlease write your feedback below:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="user_cancel")]])
+            msg_text,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="user_cancel")]])
         )
     else:
         await client.send_message(chat_id, "This project has no feedback methods configured.")
@@ -140,14 +149,19 @@ async def user_rating_callback(client, callback: CallbackQuery):
 
     if data.get("text_enabled"):
         db.set_state(user_id, STATE_FEEDBACK_TEXT, data)
-        await callback.message.edit_message_text(
-            f"Rated: {rating} ⭐️\n\nNow please write your feedback text:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="user_cancel")]])
-        )
+        # Use edit_text
+        try:
+             await callback.message.edit_text(
+                f"Rated: {rating} ⭐️\n\nNow please write your feedback text:",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="user_cancel")]])
+            )
+        except AttributeError:
+             await callback.message.message.edit_text(...) # Just in case, but callback.message should be fine
+
     else:
         # Finish
         submit_feedback(user_id, data)
-        await callback.message.edit_message_text(
+        await callback.message.edit_text(
             f"Rated: {rating} ⭐️\n\nThank you for your feedback!",
         )
         db.clear_state(user_id)
@@ -178,7 +192,7 @@ async def user_fsm_text(client, message: Message):
 @Client.on_callback_query(filters.regex("^user_cancel"))
 async def user_cancel(client, callback: CallbackQuery):
     db.clear_state(callback.from_user.id)
-    await callback.message.edit_message_text("Feedback cancelled.")
+    await callback.message.edit_text("❌ Feedback cancelled.")
 
 def submit_feedback(user_id, data):
     project_id = data.get("project_id")
