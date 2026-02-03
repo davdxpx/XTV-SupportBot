@@ -19,6 +19,8 @@ STATE_CONFIG_WELCOME = "conf_welcome"
 STATE_CONFIG_MAX_FB = "conf_max_fb"
 
 def is_admin(_, __, message: Message):
+    if not message.from_user:
+        return False
     return message.from_user.id in ADMIN_IDS
 
 admin_filter = filters.create(is_admin)
@@ -45,7 +47,7 @@ async def show_admin_menu(message_or_callback):
              await message_or_callback.message.edit_text(text, reply_markup=keyboard)
 
 
-@Client.on_callback_query(filters.regex("^admin_") & ~filters.regex("^admin_proj_") & ~filters.regex("^admin_cancel") & ~filters.regex("^admin_view_") & ~filters.regex("^admin_toggle_") & ~filters.regex("^admin_export_") & ~filters.regex("^admin_edit_conf_"))
+@Client.on_callback_query(filters.regex("^admin_") & ~filters.regex("^admin_proj_") & ~filters.regex("^admin_cancel") & ~filters.regex("^admin_view_") & ~filters.regex("^admin_toggle_") & ~filters.regex("^admin_export_") & ~filters.regex("^admin_edit_conf_") & ~filters.regex("^admin_delete_"))
 async def admin_callbacks(client, callback: CallbackQuery):
     user_id = callback.from_user.id
     if user_id not in ADMIN_IDS:
@@ -80,10 +82,13 @@ async def admin_callbacks(client, callback: CallbackQuery):
     elif data == "admin_configs":
         await show_config_menu(callback.message)
 
+    await callback.answer()
+
 @Client.on_callback_query(filters.regex("^admin_cancel"))
 async def admin_cancel(client, callback: CallbackQuery):
     db.clear_state(callback.from_user.id)
     await show_admin_menu(callback.message)
+    await callback.answer()
 
 @Client.on_message(filters.text & admin_filter)
 async def admin_fsm_text(client, message: Message):
@@ -213,6 +218,8 @@ async def admin_fsm_callbacks(client, callback: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="admin_cancel")]])
         )
 
+    await callback.answer()
+
 # --- Consolidated Admin Extras ---
 
 @Client.on_callback_query(filters.regex("^admin_view_proj_"))
@@ -246,6 +253,7 @@ async def admin_view_project(client, callback: CallbackQuery):
     ])
 
     await callback.message.edit_text(text, reply_markup=keyboard, disable_web_page_preview=True)
+    await callback.answer()
 
 @Client.on_callback_query(filters.regex("^admin_toggle_proj_"))
 async def admin_toggle_project(client, callback: CallbackQuery):
@@ -273,6 +281,7 @@ async def admin_delete_project_confirm(client, callback: CallbackQuery):
             [InlineKeyboardButton("Cancel", callback_data=f"admin_view_proj_{project_id_str}")]
         ])
     )
+    await callback.answer()
 
 @Client.on_callback_query(filters.regex("^admin_delete_proj_do_"))
 async def admin_delete_project_do(client, callback: CallbackQuery):
@@ -362,3 +371,4 @@ async def admin_edit_config(client, callback: CallbackQuery):
             "Enter the new Welcome Message:",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="admin_cancel")]])
         )
+    await callback.answer()

@@ -68,7 +68,6 @@ async def start_feedback_flow(client, chat_id, user_id, project_id_str):
     # Check expiry
     if project.get("expiry_date"):
         # This should have been handled by get_active_projects but direct link might bypass
-        import datetime
         if project["expiry_date"] < datetime.datetime.utcnow():
              await client.send_message(chat_id, "This project has expired.")
              return
@@ -156,15 +155,17 @@ async def user_rating_callback(client, callback: CallbackQuery):
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="user_cancel")]])
             )
         except AttributeError:
-             await callback.message.message.edit_text(...) # Just in case, but callback.message should be fine
+             pass # callback.message should be valid if edit_text fails with attribute error
 
     else:
         # Finish
-        submit_feedback(user_id, data)
+        await submit_feedback(client, user_id, data)
         await callback.message.edit_text(
             f"Rated: {rating} ⭐️\n\nThank you for your feedback!",
         )
         db.clear_state(user_id)
+
+    await callback.answer()
 
 @Client.on_message(filters.text & filters.private & ~filters.command("start") & ~filters.command("admin") & ~filters.command("contact"))
 async def user_fsm_text(client, message: Message):
@@ -182,7 +183,7 @@ async def user_fsm_text(client, message: Message):
         feedback_text = message.text
         data["feedback_text"] = feedback_text
 
-        submit_feedback(user_id, data)
+        await submit_feedback(client, user_id, data)
 
         await message.reply_text("Thank you for your feedback!")
         db.clear_state(user_id)
@@ -193,10 +194,30 @@ async def user_fsm_text(client, message: Message):
 async def user_cancel(client, callback: CallbackQuery):
     db.clear_state(callback.from_user.id)
     await callback.message.edit_text("❌ Feedback cancelled.")
+    await callback.answer()
 
-def submit_feedback(user_id, data):
+async def submit_feedback(client, user_id, data):
     project_id = data.get("project_id")
     rating = data.get("rating") # None if not enabled
     text = data.get("feedback_text") # None if not enabled
+    project_name = data.get("project_name", "Unknown Project")
 
     db.add_feedback(project_id, user_id, rating, text)
+
+    # Notify Admin
+    from config import ADMIN_CHANNEL_ID
+
+    msg = (
+        f"📝 **New Feedback Received**\n\n"
+        f"**Project:** {project_name}\n"
+        f"**User:** `{user_id}`\n"
+    )
+    if rating:
+        msg += f"**Rating:** {rating} ⭐️\n"
+    if text:
+        msg += f"**Feedback:**\n{text}"
+
+    try:
+        await client.send_message(ADMIN_CHANNEL_ID, msg)
+    except Exception as e:
+        print(f"Failed to send feedback notification: {e}")
