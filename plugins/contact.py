@@ -18,6 +18,7 @@ async def contact_command(client, message: Message):
 async def contact_cancel(client, callback):
     db.clear_state(callback.from_user.id)
     await callback.message.edit_text("❌ Contact cancelled.")
+    await callback.answer()
 
 @Client.on_message(filters.private & ~filters.command("start") & ~filters.command("admin") & ~filters.command("contact"))
 async def contact_message_handler(client, message: Message):
