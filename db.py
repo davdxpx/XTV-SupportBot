@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import datetime
+import uuid
 from config import MONGO_URI
 
 class Database:
@@ -13,13 +14,18 @@ class Database:
         self.tickets = self.db.tickets  # Renamed from feedback to tickets for the new system
         self.users = self.db.users
         self.configs = self.db.configs
-        # Note: self.contacts is deprecated/merged into tickets logic
+        self.contact_links = self.db.contact_links
 
     # --- Projects ---
-    def create_project(self, name, description, created_by):
+    def create_project(self, name, description, created_by, project_type="support",
+                       feedback_topic_id=None, has_rating=False, has_text=True):
         project = {
             "name": name,
             "description": description,
+            "type": project_type, # 'support' or 'feedback'
+            "feedback_topic_id": feedback_topic_id, # for 'feedback' type
+            "has_rating": has_rating,
+            "has_text": has_text,
             "active": True,
             "created_by": created_by,
             "created_at": datetime.datetime.utcnow(),
@@ -42,7 +48,6 @@ class Database:
     def delete_project(self, project_id_str):
         try:
             self.projects.delete_one({"_id": ObjectId(project_id_str)})
-            # We keep tickets for history, but they are now orphaned from the project list
             return True
         except:
             return False
@@ -53,20 +58,37 @@ class Database:
             {"$inc": {"ticket_count": 1}}
         )
 
+    # --- Contact Links ---
+    def create_contact_link(self, admin_id, display_name, is_anonymous):
+        link_uuid = str(uuid.uuid4())
+        link_doc = {
+            "uuid": link_uuid,
+            "admin_id": admin_id,
+            "display_name": display_name,
+            "is_anonymous": is_anonymous,
+            "created_at": datetime.datetime.utcnow()
+        }
+        self.contact_links.insert_one(link_doc)
+        return link_uuid
+
+    def get_contact_link(self, link_uuid):
+        return self.contact_links.find_one({"uuid": link_uuid})
+
     # --- Tickets (formerly Feedback) ---
-    def create_ticket(self, project_id_str, user_id, message_text, message_type="text", file_id=None):
+    def create_ticket(self, project_id_str, user_id, message_text, message_type="text", file_id=None, contact_uuid=None):
         try:
             p_id = ObjectId(project_id_str) if project_id_str else None
             ticket = {
                 "project_id": p_id,
                 "user_id": user_id,
-                "message": message_text, # Initial message
+                "contact_uuid": contact_uuid, # If created via Contact Link
+                "message": message_text,
                 "type": message_type,
                 "file_id": file_id,
-                "status": "open", # open, closed, in_progress
+                "status": "open",
                 "created_at": datetime.datetime.utcnow(),
-                "topic_id": None, # ID of the forum topic in admin group
-                "history": [] # List of messages in this ticket conversation
+                "topic_id": None,
+                "history": []
             }
             # Add initial message to history
             ticket["history"].append({
@@ -78,7 +100,8 @@ class Database:
             })
 
             t_id = self.tickets.insert_one(ticket).inserted_id
-            self.increment_ticket_count(p_id)
+            if p_id:
+                self.increment_ticket_count(p_id)
 
             # Update user's current active ticket
             self.users.update_one(
@@ -158,12 +181,15 @@ class Database:
 
     def get_user_topic(self, user_id, project_id_str):
         """Finds an open ticket for this user/project that has a topic assigned."""
-        return self.tickets.find_one({
+        query = {
             "user_id": user_id,
-            "project_id": ObjectId(project_id_str),
             "topic_id": {"$ne": None},
             "status": {"$ne": "closed"}
-        })
+        }
+        if project_id_str:
+            query["project_id"] = ObjectId(project_id_str)
+
+        return self.tickets.find_one(query)
 
     def block_user(self, user_id):
         self.users.update_one(

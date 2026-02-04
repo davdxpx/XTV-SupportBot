@@ -17,8 +17,12 @@ async def create_ticket_topic(client: Client, callback: CallbackQuery):
         return
 
     user_id = ticket['user_id']
-    user_info = await client.get_users(user_id)
-    username = user_info.first_name or f"User {user_id}"
+    try:
+        user_info = await client.get_users(user_id)
+        username = user_info.first_name or f"User {user_id}"
+    except:
+        username = f"User {user_id}"
+
     project = db.get_project(ticket['project_id'])
     project_name = project['name'] if project else "Project"
 
@@ -44,9 +48,9 @@ async def create_ticket_topic(client: Client, callback: CallbackQuery):
         )
 
         # If original was media, resend it here
-        if ticket['type'] == 'photo':
+        if ticket.get('type') == 'photo':
             await client.send_photo(ADMIN_CHANNEL_ID, ticket['file_id'], caption=info_text, message_thread_id=topic.id)
-        elif ticket['type'] == 'document':
+        elif ticket.get('type') == 'document':
             await client.send_document(ADMIN_CHANNEL_ID, ticket['file_id'], caption=info_text, message_thread_id=topic.id)
         else:
             await client.send_message(ADMIN_CHANNEL_ID, info_text, message_thread_id=topic.id)
@@ -54,14 +58,20 @@ async def create_ticket_topic(client: Client, callback: CallbackQuery):
         await callback.answer("Topic created successfully!", show_alert=True)
 
         # Notify User
-        await client.send_message(
-            user_id,
-            "👨‍💻 **Support Agent Joined**\n\nA support agent has opened a dedicated channel for your issue. You can continue chatting here."
-        )
+        try:
+            await client.send_message(
+                user_id,
+                "👨‍💻 **Support Agent Joined**\n\nA support agent has opened a dedicated channel for your issue. You can continue chatting here."
+            )
+        except:
+            pass # User might have blocked bot
 
     except Exception as e:
-        await callback.answer(f"Error creating topic: {e}", show_alert=True)
-
-# Listener to forward User messages to Topic (if it exists)
-# This needs to hook into the message handler we wrote earlier.
-# I will need to update plugins/feedback_handler.py to check for existing topics first.
+        error_msg = str(e)
+        print(f"Error creating topic: {error_msg}")
+        if "CHAT_ADMIN_REQUIRED" in error_msg:
+             await callback.answer("Bot needs 'Manage Topics' permission in Admin Group!", show_alert=True)
+        elif "TOPICS_NOT_AVAILABLE" in error_msg:
+             await callback.answer("Topics are not enabled in the Admin Group!", show_alert=True)
+        else:
+             await callback.answer(f"Error: {error_msg[:60]}", show_alert=True)
