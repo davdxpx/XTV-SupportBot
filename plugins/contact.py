@@ -67,7 +67,8 @@ async def contact_message_handler(client, message: Message):
         db.clear_state(user_id)
 
     except Exception as e:
-        await message.reply_text(f"Error sending message: {e}")
+        print(f"Failed to send contact to admin channel ({ADMIN_CHANNEL_ID}): {e}")
+        await message.reply_text(f"❌ Error sending message. Admin has been notified via logs.\nError: `{e}`")
 
 @Client.on_message(filters.chat(ADMIN_CHANNEL_ID) & filters.reply)
 async def admin_reply_handler(client, message: Message):
@@ -76,17 +77,41 @@ async def admin_reply_handler(client, message: Message):
 
     contact_data = db.get_contact_owner(reply_to_id)
     if not contact_data:
-        return # Not a reply to a contact message (or old/not tracked)
+        # Check if it's a feedback notification? (Maybe we want to reply to feedback too?)
+        # For now, only contact messages are tracked for replies.
+        return
 
     user_id = contact_data["user_id"]
 
     try:
-        # Forward admin's reply to user
-        # We can anonymize the admin by just sending the content
-        await message.copy(user_id)
-        # Or customize: "Admin replied: ..."
+        # Send the admin's text to the user
+        # Copying the message preserves media/text
+        await message.copy(
+            user_id,
+            caption=message.caption or message.text or "" # Ensure text is sent if copy logic needs it
+        )
 
-        await message.reply_text(f"✅ Reply sent to user `{user_id}`!")
+        # Confirm to admin
+        await message.reply_text(
+            f"✅ Reply sent to user `{user_id}`!",
+            quote=True
+        )
+
+        # Mark as replied in DB
+        db.contacts.update_one({"_id": contact_data["_id"]}, {"$set": {"replied": True}})
 
     except Exception as e:
-        await message.reply_text(f"❌ Failed to send reply: {e}")
+        await message.reply_text(f"❌ Failed to send reply: {e}", quote=True)
+
+# Allow admins to run commands in the group too
+@Client.on_message(filters.chat(ADMIN_CHANNEL_ID) & filters.command("admin"))
+async def admin_group_command(client, message: Message):
+    # Just show the menu, but maybe in private to avoid clutter?
+    # Or show a restricted menu.
+    # For now, let's allow the full panel but ephemeral?
+    # Pyrogram buttons work best in private usually for FSM.
+    # Switching to private is safer for FSM flows.
+    try:
+        await message.reply_text("Please use the admin panel in private chat to manage projects.", quote=True)
+    except:
+        pass
