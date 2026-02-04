@@ -29,6 +29,18 @@ admin_filter = filters.create(is_admin)
 async def admin_panel(client, message):
     await show_admin_menu(message)
 
+@Client.on_message(filters.command("test_channel") & admin_filter)
+async def test_channel_command(client, message):
+    from config import ADMIN_CHANNEL_ID
+    try:
+        sent = await client.send_message(
+            ADMIN_CHANNEL_ID,
+            f"✅ **Test Message**\n\nIf you see this, the bot can successfully post to the configured channel/group ID: `{ADMIN_CHANNEL_ID}`."
+        )
+        await message.reply_text(f"✅ Successfully sent message to `{ADMIN_CHANNEL_ID}`. Message ID: `{sent.id}`")
+    except Exception as e:
+        await message.reply_text(f"❌ Failed to send message to `{ADMIN_CHANNEL_ID}`.\n\nError: `{e}`")
+
 async def show_admin_menu(message_or_callback):
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Create Project", callback_data="admin_create_project")],
