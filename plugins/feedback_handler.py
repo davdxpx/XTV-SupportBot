@@ -30,9 +30,6 @@ async def handle_user_message(client: Client, message: Message):
             if link_doc:
                 target_admin_id = link_doc["admin_id"]
 
-    # 2. Check implicit state (User has an active conversation?)
-    # ... (Same logic as before for Support Tickets) ...
-
     # --- FEEDBACK vs SUPPORT LOGIC ---
 
     project = None
@@ -47,17 +44,39 @@ async def handle_user_message(client: Client, message: Message):
         return
 
     # CASE B: Support Project or Contact Link
-    await handle_support_ticket(client, message, project, target_admin_id, contact_uuid, user_id)
+    if project_id or target_admin_id:
+        await handle_support_ticket(client, message, project, target_admin_id, contact_uuid, user_id)
+        return
+
+    # CASE C: Existing Open Ticket?
+    # Logic: If user has an open ticket with a topic, we assume they are replying to it.
+    existing_ticket = db.get_user_topic(user_id, None) # Search ANY open ticket with topic
+    if existing_ticket:
+         await forward_to_topic(client, message, existing_ticket)
+         return
+
+    # CASE D: Fallback (No state, no open ticket)
+    # Silent fail or generic help?
+    # User complained about "Please select a project" loop.
+    # We should only send this if we are ABSOLUTELY sure it's a new interaction.
+    # But filtering out random spam is hard.
+    # Let's send it ONCE per session? Or just ignore?
+    # Safest: Send it, but maybe check if text is very short?
+    # Or: Just show the project selection menu directly instead of text warning.
+    await message.reply_text("⚠️ Please select a project/contact option first using /start")
 
 
 async def handle_feedback_submission(client: Client, message: Message, project, user_id):
     # Check constraints
     if not project.get("has_text") and message.text:
-        # If text is disabled but user sent text... we might ignore or accept anyway.
-        # Let's accept it to not annoy user.
         pass
 
     topic_id = project.get("feedback_topic_id", 13)
+    # Ensure int
+    try:
+        topic_id = int(topic_id)
+    except:
+        topic_id = 13
 
     msg_text = message.text or message.caption or "(Media)"
     msg_type = "text"
@@ -69,11 +88,10 @@ async def handle_feedback_submission(client: Client, message: Message, project, 
         msg_type = "document"
         file_id = message.document.file_id
 
-    # Create a Ticket for record keeping (closed immediately?) or just Log?
-    # User said "Feedback and Support are completely different".
-    # But we probably want to save it in DB.
-    # We mark status="closed" immediately? or "feedback"?
-    # Let's create a ticket with status "feedback" (requires DB update? or just use open and ignore).
+    # Create a Ticket record (Closed immediately)
+    ticket_id = db.create_ticket(str(project['_id']), user_id, msg_text, msg_type, file_id)
+    if ticket_id:
+        db.close_ticket(ticket_id)
 
     # Send to Sammel-Topic
     user_link = f"[{message.from_user.first_name}](tg://user?id={user_id})"
@@ -105,34 +123,32 @@ async def handle_feedback_submission(client: Client, message: Message, project, 
 
     except Exception as e:
         print(f"Error sending feedback: {e}")
-        await message.reply_text("❌ Error sending feedback.")
+        # await message.reply_text("❌ Error sending feedback.") # Don't annoy user if it fails silently
 
 
 async def handle_support_ticket(client: Client, message: Message, project, target_admin_id, contact_uuid, user_id):
     project_id = str(project['_id']) if project else None
 
-    # 0. Check for existing open tickets with Topics
-    existing_ticket = db.get_user_topic(user_id, project_id) if project_id else None
+    # 0. Check for existing open tickets with Topics FOR THIS CONTEXT
+    # If we are in "Support Project X", check for open ticket in "Project X"
+    # If we are in "Contact Y", check for open ticket in "Contact Y" logic?
+    # Actually, if we are here, we have Explicit State.
+    # So we should probably create a NEW ticket if no suitable one exists, OR append.
 
-    # If Contact Mode: Don't append to random tickets, unless it's the SAME contact session?
-    # But contact session is stateless after first message? Or do we keep it open?
-    # Plan: Contact starts a ticket. Subsequent messages append if ticket is open.
-    if not existing_ticket and not project_id and not target_admin_id:
-         # Search any open ticket
-         tickets = db.get_tickets_by_user(user_id)
-         for t in tickets:
-             if t['status'] == 'open' and t.get('topic_id'):
-                 existing_ticket = t
-                 break
+    existing_ticket = None
+    if project_id:
+        existing_ticket = db.get_user_topic(user_id, project_id)
+
+    # If Contact Link, we typically want a new session or append to open one?
+    # Let's say: always new ticket for new contact link click?
+    # But if user clicks link, sends msg, then sends another msg -> append.
+    # But how do we know?
+    # The State "awaiting_contact_msg" implies start of convo.
 
     if existing_ticket and not target_admin_id:
          # Forward to Topic (Existing Logic)
          await forward_to_topic(client, message, existing_ticket)
          return
-
-    if not project_id and not target_admin_id:
-        await message.reply_text("⚠️ Please select a project first using /start")
-        return
 
     # Create New Ticket
     msg_text = message.text or message.caption or "(Media)"
@@ -152,13 +168,10 @@ async def handle_support_ticket(client: Client, message: Message, project, targe
         return
 
     # Notify Admin / Create Topic
-    # We will AUTO-CREATE Topic for support tickets now, as implied by "Support Project" flow.
-    # User said: "beim feedback projekt soll auch ein flow sein... beim support projekt ist es so wie bisher (eigenes topic pro user)"
-
     # Determine Topic Name
     if target_admin_id:
         link_doc = db.get_contact_link(contact_uuid)
-        display_name = link_doc.get("display_name", "Admin")
+        display_name = link_doc.get("display_name", "Admin") if link_doc else "Admin"
         source_name = f"📞 Contact ({display_name})"
     else:
         source_name = project["name"]
@@ -192,16 +205,16 @@ async def handle_support_ticket(client: Client, message: Message, project, targe
         # Reply to User
         if target_admin_id:
              await message.reply_text("✅ Message sent. Please wait for a reply.")
+             # Clear state so next messages go to fallback (which should find this open ticket)
+             db.clear_state(user_id)
         else:
              await message.reply_text("✅ Support Ticket created. We will get back to you soon.")
-
-        # If Contact Link, clear state? Or keep?
-        if target_admin_id:
-            db.clear_state(user_id)
+             # Clear state
+             db.clear_state(user_id)
 
     except Exception as e:
         print(f"Error creating topic: {e}")
-        await message.reply_text("❌ Error processing request.")
+        await message.reply_text("❌ Error processing request. Admin has been notified.")
 
 
 async def forward_to_topic(client, message, ticket):
@@ -239,10 +252,13 @@ async def rating_handler(client: Client, callback: CallbackQuery):
     project_id = parts[1]
     score = int(parts[2])
 
-    # Store rating? We need a DB method for ratings or add to last ticket?
-    # Since Feedback tickets are 'fire and forget', maybe we just log it to the channel?
     project = db.get_project(project_id)
     topic_id = project.get("feedback_topic_id", 13)
+    # Ensure int
+    try:
+        topic_id = int(topic_id)
+    except:
+        topic_id = 13
 
     user_link = f"[{callback.from_user.first_name}](tg://user?id={callback.from_user.id})"
 
