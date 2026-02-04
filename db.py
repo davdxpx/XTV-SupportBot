@@ -56,7 +56,7 @@ class Database:
     # --- Tickets (formerly Feedback) ---
     def create_ticket(self, project_id_str, user_id, message_text, message_type="text", file_id=None):
         try:
-            p_id = ObjectId(project_id_str)
+            p_id = ObjectId(project_id_str) if project_id_str else None
             ticket = {
                 "project_id": p_id,
                 "user_id": user_id,

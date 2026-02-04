@@ -16,9 +16,16 @@ async def handle_user_message(client: Client, message: Message):
     state_doc = db.get_state(user_id)
     project_id = None
 
-    # 1. Check explicit state (user just selected a project)
-    if state_doc and state_doc.get("state") == "awaiting_feedback":
-        project_id = state_doc["data"].get("project_id")
+    # 1. Check explicit state (user just selected a project or contact link)
+    target_admin_id = None
+
+    if state_doc:
+        state = state_doc.get("state")
+        if state == "awaiting_feedback":
+            project_id = state_doc["data"].get("project_id")
+        elif state == "awaiting_contact_msg":
+            # This is a Contact Session
+            target_admin_id = state_doc["data"].get("target_admin_id")
 
     # 2. Check implicit state (User has an active last project/ticket)
     if not project_id:
@@ -42,7 +49,8 @@ async def handle_user_message(client: Client, message: Message):
     existing_ticket = db.get_user_topic(user_id, project_id) if project_id else None
 
     # If we didn't filter by project yet, try to find ANY active topic
-    if not existing_ticket and not project_id:
+    # NOTE: If user is in "awaiting_contact_msg", we do NOT want to append to random old tickets, we want a new Contact Ticket.
+    if not existing_ticket and not project_id and not target_admin_id:
         # We need a new DB function or just search tickets
         tickets = db.get_tickets_by_user(user_id)
         for t in tickets:
@@ -50,7 +58,7 @@ async def handle_user_message(client: Client, message: Message):
                 existing_ticket = t
                 break
 
-    if existing_ticket:
+    if existing_ticket and not target_admin_id:
         # Forward to Topic
         msg_text = message.text or message.caption or "(Media)"
         msg_type = "text"
@@ -84,7 +92,7 @@ async def handle_user_message(client: Client, message: Message):
 
         return
 
-    if not project_id:
+    if not project_id and not target_admin_id:
         # Fallback: check if we can infer or ask
         # For now, just show start menu
         await message.reply_text("⚠️ Please select a project first using /start")
@@ -104,25 +112,46 @@ async def handle_user_message(client: Client, message: Message):
     # Add other types as needed
 
     # Create Ticket
-    ticket_id = db.create_ticket(project_id, user_id, msg_text, msg_type, file_id)
+    # Note: If it's a Contact Request, we might not have a project_id.
+    # We should support creating tickets without project_id or use a placeholder "Contact" project?
+    # Better: Update db.create_ticket to allow None project_id if type is contact.
+
+    if target_admin_id:
+        # It's a Contact Ticket
+        # We handle this specifically
+        project_name = "📞 Private Contact"
+        # We use a dummy ID or handle None in DB?
+        # Let's assume we pass None as project_id
+        ticket_id = db.create_ticket(None, user_id, msg_text, msg_type, file_id)
+        # We might need to flag this ticket as "Contact" type in DB to avoid errors in listing
+    else:
+        ticket_id = db.create_ticket(project_id, user_id, msg_text, msg_type, file_id)
 
     if not ticket_id:
         await message.reply_text("❌ Error creating ticket.")
         return
 
     # Notify Admin Channel
-    project = db.get_project(project_id)
-    project_name = project["name"] if project else "Unknown"
+    if target_admin_id:
+        # Special Notification
+        project_name = "📞 Private Contact"
+        admin_mention = f"[{target_admin_id}](tg://user?id={target_admin_id})" # Or ping?
+    else:
+        project = db.get_project(project_id)
+        project_name = project["name"] if project else "Unknown"
 
     user_link = f"[{message.from_user.first_name}](tg://user?id={user_id})"
 
     notification_text = (
         f"📩 **New Ticket**\n\n"
         f"👤 User: {user_link} (`{user_id}`)\n"
-        f"📂 Project: **{project_name}**\n"
+        f"📂 Source: **{project_name}**\n"
         f"🆔 Ticket: `{ticket_id}`\n\n"
         f"💬: {msg_text}"
     )
+
+    if target_admin_id:
+         notification_text += f"\n\n🔔 Attention: [Admin](tg://user?id={target_admin_id})"
 
     buttons = InlineKeyboardMarkup([
         [
