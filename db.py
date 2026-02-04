@@ -10,26 +10,20 @@ class Database:
 
         # Collections
         self.projects = self.db.projects
-        self.feedback = self.db.feedback
-        self.contacts = self.db.contacts
+        self.tickets = self.db.tickets  # Renamed from feedback to tickets for the new system
+        self.users = self.db.users
         self.configs = self.db.configs
-        self.users = self.db.users  # For FSM states
+        # Note: self.contacts is deprecated/merged into tickets logic
 
     # --- Projects ---
-    def create_project(self, name, description, feedback_config, expiry_hours, created_by):
-        expiry_date = None
-        if expiry_hours > 0:
-            expiry_date = datetime.datetime.utcnow() + datetime.timedelta(hours=expiry_hours)
-
+    def create_project(self, name, description, created_by):
         project = {
-            "project_name": name,
+            "name": name,
             "description": description,
             "active": True,
-            "feedback_config": feedback_config, # {"stars": bool, "text": bool}
-            "expiry_date": expiry_date,
             "created_by": created_by,
-            "created_date": datetime.datetime.utcnow(),
-            "feedback_count": 0
+            "created_at": datetime.datetime.utcnow(),
+            "ticket_count": 0
         }
         return self.projects.insert_one(project).inserted_id
 
@@ -40,80 +34,110 @@ class Database:
             return None
 
     def get_all_projects(self):
-        return list(self.projects.find().sort("created_date", -1))
+        return list(self.projects.find().sort("created_at", -1))
 
     def get_active_projects(self):
-        now = datetime.datetime.utcnow()
-        # Active and (no expiry OR expiry > now)
-        query = {
-            "active": True,
-            "$or": [
-                {"expiry_date": None},
-                {"expiry_date": {"$gt": now}}
-            ]
-        }
-        return list(self.projects.find(query).sort("created_date", -1))
-
-    def toggle_project_active(self, project_id_str, status: bool):
-        try:
-            self.projects.update_one(
-                {"_id": ObjectId(project_id_str)},
-                {"$set": {"active": status}}
-            )
-            return True
-        except:
-            return False
+        return list(self.projects.find({"active": True}).sort("created_at", -1))
 
     def delete_project(self, project_id_str):
         try:
-            # We also delete related feedback? Or keep it?
-            # Usually better to keep feedback but orphan it, or cascade delete.
-            # Let's just delete the project document for now.
             self.projects.delete_one({"_id": ObjectId(project_id_str)})
-            # Optional: Delete feedback
-            self.feedback.delete_many({"project_id": ObjectId(project_id_str)})
+            # We keep tickets for history, but they are now orphaned from the project list
             return True
         except:
             return False
 
-    def increment_feedback_count(self, project_id):
+    def increment_ticket_count(self, project_id):
         self.projects.update_one(
             {"_id": project_id},
-            {"$inc": {"feedback_count": 1}}
+            {"$inc": {"ticket_count": 1}}
         )
 
-    # --- Feedback ---
-    def add_feedback(self, project_id_str, user_id, rating, text):
+    # --- Tickets (formerly Feedback) ---
+    def create_ticket(self, project_id_str, user_id, message_text, message_type="text", file_id=None):
         try:
             p_id = ObjectId(project_id_str)
-            feedback = {
+            ticket = {
                 "project_id": p_id,
                 "user_id": user_id,
-                "rating": rating,
-                "feedback_text": text,
-                "timestamp": datetime.datetime.utcnow()
+                "message": message_text, # Initial message
+                "type": message_type,
+                "file_id": file_id,
+                "status": "open", # open, closed, in_progress
+                "created_at": datetime.datetime.utcnow(),
+                "topic_id": None, # ID of the forum topic in admin group
+                "history": [] # List of messages in this ticket conversation
             }
-            self.feedback.insert_one(feedback)
-            self.increment_feedback_count(p_id)
-            return True
+            # Add initial message to history
+            ticket["history"].append({
+                "sender": "user",
+                "text": message_text,
+                "type": message_type,
+                "file_id": file_id,
+                "timestamp": datetime.datetime.utcnow()
+            })
+
+            t_id = self.tickets.insert_one(ticket).inserted_id
+            self.increment_ticket_count(p_id)
+
+            # Update user's current active ticket
+            self.users.update_one(
+                {"user_id": user_id},
+                {"$set": {"last_active_project": project_id_str, "last_ticket_id": t_id}},
+                upsert=True
+            )
+
+            return t_id
         except Exception as e:
-            print(f"Error adding feedback: {e}")
-            return False
+            print(f"Error creating ticket: {e}")
+            return None
 
-    def get_feedback_for_project(self, project_id_str):
-        try:
-            return list(self.feedback.find({"project_id": ObjectId(project_id_str)}))
-        except:
-            return []
+    def add_message_to_ticket(self, ticket_id, sender, text, message_type="text", file_id=None):
+        """
+        sender: 'user' or 'admin'
+        """
+        msg = {
+            "sender": sender,
+            "text": text,
+            "type": message_type,
+            "file_id": file_id,
+            "timestamp": datetime.datetime.utcnow()
+        }
+        self.tickets.update_one(
+            {"_id": ticket_id},
+            {
+                "$push": {"history": msg},
+                "$set": {"updated_at": datetime.datetime.utcnow()}
+            }
+        )
 
-    def get_user_feedback_count(self, user_id):
-        return self.feedback.count_documents({"user_id": user_id})
+    def set_ticket_topic(self, ticket_id, topic_id):
+        self.tickets.update_one(
+            {"_id": ticket_id},
+            {"$set": {"topic_id": topic_id}}
+        )
 
-    def get_last_feedback_time(self, user_id):
-        last = self.feedback.find_one({"user_id": user_id}, sort=[("timestamp", -1)])
-        return last["timestamp"] if last else None
+    def get_ticket(self, ticket_id):
+        if isinstance(ticket_id, str):
+            ticket_id = ObjectId(ticket_id)
+        return self.tickets.find_one({"_id": ticket_id})
 
-    # --- State Management (FSM) ---
+    def get_tickets_by_user(self, user_id):
+        return list(self.tickets.find({"user_id": user_id}).sort("created_at", -1))
+
+    def get_tickets_by_project(self, project_id_str):
+        return list(self.tickets.find({"project_id": ObjectId(project_id_str)}).sort("created_at", -1))
+
+    def get_ticket_by_topic_id(self, topic_id):
+        return self.tickets.find_one({"topic_id": topic_id})
+
+    def close_ticket(self, ticket_id):
+        self.tickets.update_one(
+            {"_id": ticket_id},
+            {"$set": {"status": "closed", "closed_at": datetime.datetime.utcnow()}}
+        )
+
+    # --- Users & State ---
     def set_state(self, user_id, state, data=None):
         if data is None:
             data = {}
@@ -132,32 +156,24 @@ class Database:
             {"$unset": {"state": "", "data": ""}}
         )
 
-    # --- Configs ---
-    def get_config(self, key, default=None):
-        doc = self.configs.find_one({"key": key})
-        return doc["value"] if doc else default
+    def get_user_topic(self, user_id, project_id_str):
+        """Finds an open ticket for this user/project that has a topic assigned."""
+        return self.tickets.find_one({
+            "user_id": user_id,
+            "project_id": ObjectId(project_id_str),
+            "topic_id": {"$ne": None},
+            "status": {"$ne": "closed"}
+        })
 
-    def set_config(self, key, value):
-        self.configs.update_one(
-            {"key": key},
-            {"$set": {"value": value}},
+    def block_user(self, user_id):
+        self.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"blocked": True}},
             upsert=True
         )
 
-    # --- Contacts ---
-    def save_contact_message(self, user_id, message_id_in_channel):
-        """
-        Maps a message ID in the admin channel to the original user ID.
-        We can use this to know who to reply to.
-        """
-        self.contacts.insert_one({
-            "user_id": user_id,
-            "channel_message_id": message_id_in_channel,
-            "timestamp": datetime.datetime.utcnow(),
-            "replied": False
-        })
-
-    def get_contact_owner(self, channel_message_id):
-        return self.contacts.find_one({"channel_message_id": channel_message_id})
+    def is_user_blocked(self, user_id):
+        u = self.users.find_one({"user_id": user_id})
+        return u and u.get("blocked", False)
 
 db = Database()
