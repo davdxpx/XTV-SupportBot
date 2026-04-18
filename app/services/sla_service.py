@@ -101,8 +101,8 @@ class SlaService:
         assignee = ticket.get("assignee_id")
         mention = user_mention(assignee, f"Admin {assignee}") if assignee else "team"
         return (
-            f"<blockquote>SLA warning \u2022 Ticket #{short}\n\n"
-            f"Attention {mention}: the user is waiting beyond the SLA window.\n"
+            f"⚠️ <b>SLA warning</b> • Ticket #{short}\n"
+            f"<blockquote>Attention {mention}: the user is waiting beyond the SLA window.\n"
             f"Please reply in this topic.</blockquote>"
         )
 

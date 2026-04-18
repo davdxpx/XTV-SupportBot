@@ -15,6 +15,7 @@ from app.db import users as users_repo
 from app.services import ticket_service
 from app.ui.card import send_card
 from app.ui.templates import user_messages
+from app.utils.text import escape_html
 
 log = get_logger("user.feedback")
 
@@ -100,12 +101,12 @@ async def rating_submitted(client: Client, callback: CallbackQuery) -> None:
     if topic_id:
         try:
             user = callback.from_user
-            stars = "\u2b50" * data.score
+            stars = "⭐" * data.score
             first = user.first_name or "user"
             text = (
-                f"<blockquote>Rating received \u2022 {project.get('name')}\n\n"
-                f'User: <a href="tg://user?id={user.id}">{first}</a>\n'
-                f"Score: {stars}</blockquote>"
+                f"⭐ <b>Rating received</b> • {escape_html(project.get('name', ''))}\n"
+                f'User: <a href="tg://user?id={user.id}">{escape_html(first)}</a>\n'
+                f"Score: {stars}"
             )
             from pyrogram.enums import ParseMode
 

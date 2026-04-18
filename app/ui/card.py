@@ -11,56 +11,77 @@ from pyrogram.types import InlineKeyboardMarkup, Message
 
 from app.config import settings
 from app.core.logger import get_logger
-from app.ui.blockquote import join_lines, wrap
-from app.ui.glyphs import DIVIDER
 from app.ui.progress import bar as progress_bar
 from app.ui.progress import percentage as pct_str
 
 log = get_logger("ui")
 
 
+def _strip(s: str | None) -> str:
+    return (s or "").rstrip()
+
+
+def _blockquote(inner: str, *, expandable: bool = False) -> str:
+    tag = "<blockquote expandable>" if expandable else "<blockquote>"
+    return f"{tag}{inner}</blockquote>"
+
+
 @dataclass
 class Card:
-    """Composable blockquote card.
+    """Composable message card.
 
-    All text passed in MUST already be HTML-safe (escape_html-ed). The Card
-    itself only adds structural markup.
+    Structure (in render order, each section optional):
+
+        <b>{title}</b>
+        {step_line}          (e.g. "Step 2/4 • Status")
+                             (blank line between sections)
+        {body line 1}
+        {body line 2}
+        ...
+        <blockquote>{quote}</blockquote>   ← only if ``quote`` is set
+        {footer}
+
+    Blockquote is intentionally reserved for ONE optional quoted section
+    per card (e.g. the user's original message, a highlighted tip, etc.) —
+    never for the whole message.
     """
 
     title: str
     body: Sequence[str] = field(default_factory=list)
     steps: tuple[int, int] | None = None
     status_line: str | None = None
+    quote: str | None = None
+    quote_expandable: bool = False
     footer: str | None = None
     buttons: InlineKeyboardMarkup | None = None
-    expandable: bool = False
 
-    def _header(self) -> str:
-        if self.steps is None:
-            return self.title
-        current, total = self.steps
-        step_suffix = f" \u2022 {self.status_line}" if self.status_line else ""
-        return f"{self.title}\n\nStep {current}/{total}{step_suffix}"
+    def _lines(self) -> list[str]:
+        lines: list[str] = [f"<b>{self.title}</b>"]
+        if self.steps is not None:
+            cur, total = self.steps
+            suffix = f" • {self.status_line}" if self.status_line else ""
+            lines.append(f"Step {cur}/{total}{suffix}")
+        if self.body:
+            lines.append("")
+            lines.extend(_strip(line) for line in self.body)
+        if self.quote:
+            lines.append("")
+            lines.append(_blockquote(self.quote, expandable=self.quote_expandable))
+        if self.footer:
+            lines.append("")
+            lines.append(self.footer)
+        return lines
 
     def render(self) -> tuple[str, InlineKeyboardMarkup | None]:
-        parts: list[str] = [self._header()]
-        if self.body:
-            parts.append("")
-            parts.extend(self.body)
-        if self.footer:
-            parts.append("")
-            parts.append(self.footer)
-        body = join_lines(parts)
-        text = wrap(body, expandable=self.expandable)
-        return text, self.buttons
+        return "\n".join(self._lines()), self.buttons
 
 
 @dataclass
 class ProgressCard(Card):
-    """A Card that renders a progress bar and edits itself in place.
+    """A Card with a live-editable progress strip.
 
-    Use ``attach`` once to send the initial message, then ``update`` repeatedly.
-    ``update`` is rate-limited by settings.PROGRESS_EDIT_INTERVAL.
+    The progress bar is rendered inside a short ``<blockquote>`` so it pops
+    visually without drowning the whole message in a quote.
     """
 
     progress: float = 0.0
@@ -74,20 +95,29 @@ class ProgressCard(Card):
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _closed: bool = False
 
+    def _progress_strip(self) -> str:
+        pct = pct_str(self.progress)
+        bar = progress_bar(self.progress, width=self.progress_width)
+        return _blockquote(f"{self.progress_label}: {pct}\n{bar}")
+
     def render(self) -> tuple[str, InlineKeyboardMarkup | None]:
-        parts: list[str] = [self._header()]
+        lines: list[str] = [f"<b>{self.title}</b>"]
+        if self.steps is not None:
+            cur, total = self.steps
+            suffix = f" • {self.status_line}" if self.status_line else ""
+            lines.append(f"Step {cur}/{total}{suffix}")
         if self.body:
-            parts.append("")
-            parts.extend(self.body)
-        parts.append("")
-        parts.append(f"{self.progress_label}: {pct_str(self.progress)}")
-        parts.append(progress_bar(self.progress, width=self.progress_width))
+            lines.append("")
+            lines.extend(_strip(line) for line in self.body)
+        lines.append("")
+        lines.append(self._progress_strip())
+        if self.quote:
+            lines.append("")
+            lines.append(_blockquote(self.quote, expandable=self.quote_expandable))
         if self.footer:
-            parts.append("")
-            parts.append(DIVIDER)
-            parts.append(self.footer)
-        text = wrap(join_lines(parts), expandable=self.expandable)
-        return text, self.buttons
+            lines.append("")
+            lines.append(self.footer)
+        return "\n".join(lines), self.buttons
 
     async def attach(
         self,
@@ -219,6 +249,7 @@ async def edit_card(
         )
     except MessageNotModified:
         pass
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

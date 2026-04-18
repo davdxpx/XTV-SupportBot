@@ -134,7 +134,7 @@ async def open_priority_picker(client: Client, callback: CallbackQuery) -> None:
     )
     try:
         await callback.message.reply_text(
-            f"<blockquote>Priority for #{ticket_id[-6:]}.</blockquote>",
+            f"⚡ <b>Priority</b> for #{ticket_id[-6:]}",
             parse_mode="html",
             reply_markup=keyboard,
         )

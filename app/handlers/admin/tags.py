@@ -84,12 +84,12 @@ async def open_tag_picker(client: Client, callback: CallbackQuery) -> None:
         return
     tags = await tags_repo.list_all(ctx.db)
     if not tags:
-        await callback.answer("Create tags first via /admin \u203a Tags.", show_alert=True)
+        await callback.answer("Create tags first via /admin › Tags.", show_alert=True)
         return
     current = set(ticket.get("tags") or [])
     buttons = []
     for t in tags:
-        marker = "\u2713 " if t["name"] in current else ""
+        marker = "✓ " if t["name"] in current else "• "
         buttons.append(
             btn(
                 f"{marker}#{t['name']}",
@@ -99,7 +99,7 @@ async def open_tag_picker(client: Client, callback: CallbackQuery) -> None:
     keyboard = InlineKeyboardMarkup(chunk(buttons, per_row=2))
     try:
         await callback.message.reply_text(
-            f"<blockquote>Toggle tags for #{ticket_id[-6:]}.</blockquote>",
+            f"🏷 <b>Toggle tags</b> for #{ticket_id[-6:]}",
             parse_mode="html",
             reply_markup=keyboard,
         )
