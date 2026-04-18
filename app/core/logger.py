@@ -77,34 +77,38 @@ class BotLogger(logging.Logger):
     """Accepts ``log.info('event', key=value, ...)`` style calls in addition
     to the regular stdlib interface. Extra kwargs are rendered as
     ``key=value`` pairs and appended to the message so the pretty console
-    formatter in :class:`ConsoleFormatter` stays in charge of styling."""
+    formatter in :class:`ConsoleFormatter` stays in charge of styling.
+
+    The first positional is named ``event`` (not ``msg``) so callers can
+    safely pass ``msg=...`` as structured context.
+    """
 
     def _log_with_kwargs(
-        self, level: int, msg: Any, args: tuple, **kwargs: Any
+        self, level: int, event: Any, args: tuple, **kwargs: Any
     ) -> None:
-        msg_str, reserved = _merge_kwargs(msg, kwargs)
+        msg_str, reserved = _merge_kwargs(event, kwargs)
         if self.isEnabledFor(level):
             # Delegate to stdlib with reserved kwargs preserved.
             self._log(level, msg_str, args, **reserved)
 
-    def debug(self, msg: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
-        self._log_with_kwargs(logging.DEBUG, msg, args, **kwargs)
+    def debug(self, event: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+        self._log_with_kwargs(logging.DEBUG, event, args, **kwargs)
 
-    def info(self, msg: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
-        self._log_with_kwargs(logging.INFO, msg, args, **kwargs)
+    def info(self, event: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+        self._log_with_kwargs(logging.INFO, event, args, **kwargs)
 
-    def warning(self, msg: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
-        self._log_with_kwargs(logging.WARNING, msg, args, **kwargs)
+    def warning(self, event: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+        self._log_with_kwargs(logging.WARNING, event, args, **kwargs)
 
-    def error(self, msg: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
-        self._log_with_kwargs(logging.ERROR, msg, args, **kwargs)
+    def error(self, event: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+        self._log_with_kwargs(logging.ERROR, event, args, **kwargs)
 
-    def critical(self, msg: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
-        self._log_with_kwargs(logging.CRITICAL, msg, args, **kwargs)
+    def critical(self, event: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+        self._log_with_kwargs(logging.CRITICAL, event, args, **kwargs)
 
-    def exception(self, msg: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+    def exception(self, event: Any = "", *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
         kwargs.setdefault("exc_info", True)
-        self._log_with_kwargs(logging.ERROR, msg, args, **kwargs)
+        self._log_with_kwargs(logging.ERROR, event, args, **kwargs)
 
 
 # Install our logger class for every logger created from now on.
