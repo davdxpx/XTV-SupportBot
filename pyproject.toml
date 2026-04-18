@@ -1,0 +1,48 @@
+[project]
+name = "xtvfeedback-bot"
+version = "2.0.0"
+description = "Telegram Feedback + Contact Bot with Forum-Topic tickets, assignment, tags, SLA, auto-close, anti-spam and broadcasts"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+authors = [
+    { name = "davdxpx" },
+]
+dependencies = [
+    "pyrofork>=2.3.60",
+    "tgcrypto>=1.2.5",
+    "motor>=3.5.0",
+    "pymongo>=4.8.0",
+    "dnspython>=2.6.1",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "structlog>=24.1.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.7",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+]
+
+[project.scripts]
+xtvfeedback-bot = "main:entrypoint"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "PL", "ASYNC"]
+ignore = ["PLR0913", "PLR2004"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict_optional = true
+ignore_missing_imports = true

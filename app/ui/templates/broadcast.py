@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+from pyrogram.types import InlineKeyboardMarkup
+
+from app.constants import CallbackPrefix, MAX_BROADCAST_LEN
+from app.ui.card import Card, ProgressCard
+from app.ui.keyboards import btn, rows
+from app.utils.text import escape_html, truncate
+
+
+def prompt() -> Card:
+    return Card(
+        title="Broadcast",
+        body=[
+            "Send the message you want to broadcast to all active users.",
+            "Plain text only \u2014 no media in v1.",
+            f"Max {MAX_BROADCAST_LEN} characters.",
+            "",
+            "/cancel to abort.",
+        ],
+    )
+
+
+def preview(text: str, total: int) -> Card:
+    buttons = rows(
+        [
+            btn("Start", CallbackPrefix.ADMIN_BROADCAST_CONFIRM),
+            btn("Cancel", CallbackPrefix.ADMIN_BROADCAST_CANCEL),
+        ],
+    )
+    return Card(
+        title="Broadcast \u2022 preview",
+        body=[
+            f"Target: {total} active users.",
+            "",
+            truncate(escape_html(text), 600),
+        ],
+        footer="Use Start to begin sending, Cancel to discard.",
+        buttons=buttons,
+    )
+
+
+def _progress_card(
+    *,
+    status: str,
+    text: str,
+    sent: int,
+    failed: int,
+    blocked: int,
+    total: int,
+    paused: bool = False,
+) -> ProgressCard:
+    pct = sent / total if total else 0
+    controls = rows(
+        [
+            btn("Resume" if paused else "Pause",
+                CallbackPrefix.ADMIN_BROADCAST_RESUME if paused else CallbackPrefix.ADMIN_BROADCAST_PAUSE),
+            btn("Cancel", CallbackPrefix.ADMIN_BROADCAST_CANCEL),
+        ],
+    )
+    card = ProgressCard(
+        title="Broadcast",
+        status_line=status,
+        steps=(1, 1),
+        body=[
+            truncate(escape_html(text), 400),
+            "",
+            f"Sent: {sent}/{total} \u2022 Failed: {failed} \u2022 Blocked: {blocked}",
+        ],
+        buttons=controls,
+    )
+    card.progress = pct
+    return card
+
+
+def running(text: str, *, sent: int, failed: int, blocked: int, total: int) -> ProgressCard:
+    return _progress_card(
+        status="Running",
+        text=text,
+        sent=sent,
+        failed=failed,
+        blocked=blocked,
+        total=total,
+        paused=False,
+    )
+
+
+def paused(text: str, *, sent: int, failed: int, blocked: int, total: int) -> ProgressCard:
+    return _progress_card(
+        status="Paused",
+        text=text,
+        sent=sent,
+        failed=failed,
+        blocked=blocked,
+        total=total,
+        paused=True,
+    )
+
+
+def finished(text: str, *, sent: int, failed: int, blocked: int, total: int, cancelled: bool = False) -> ProgressCard:
+    state = "Cancelled" if cancelled else "Done"
+    card = _progress_card(
+        status=state,
+        text=text,
+        sent=sent,
+        failed=failed,
+        blocked=blocked,
+        total=total,
+        paused=False,
+    )
+    card.buttons = None
+    card.progress = 1.0 if not cancelled else (sent / total if total else 0)
+    return card
