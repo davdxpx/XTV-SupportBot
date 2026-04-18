@@ -60,7 +60,14 @@ async def user_message(client: Client, message: Message) -> None:
             )
         except Exception as exc:  # noqa: BLE001
             log.exception("feedback.ticket_create_failed", user_id=user_id, error=str(exc))
+            # Report into ERROR_LOG_TOPIC_ID so admins see the crash live.
+            from app.handlers.errors import report_error
             from app.ui.card import Card
+
+            try:
+                await report_error(client, exc, context=f"ticket.create user={user_id}")
+            except Exception:  # noqa: BLE001
+                pass
 
             await send_card(
                 client,
