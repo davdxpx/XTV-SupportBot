@@ -65,13 +65,26 @@ def contact_intro(display_name: str, is_anonymous: bool) -> Card:
     return Card(title="📞 Direct contact", body=body, footer=footer)
 
 
-def ticket_created(short_id: str, *, is_feedback: bool = False) -> Card:
+def ticket_created(
+    short_id: str,
+    *,
+    is_feedback: bool = False,
+    is_contact: bool = False,
+) -> Card:
     if is_feedback:
         return Card(
             title="✅ Feedback received",
             body=[
                 "Thanks for your feedback.",
                 "It has been forwarded to our team.",
+            ],
+        )
+    if is_contact:
+        return Card(
+            title="📞 Message sent",
+            body=[
+                f"Reference: <code>#{short_id}</code>",
+                "Your contact has been notified and will reply here.",
             ],
         )
     return Card(

@@ -69,14 +69,19 @@ async def create_ticket_from_message(
 
     short = short_ticket_id(ticket_id)
 
+    is_contact = bool(contact_uuid) and not project
     project_name = project.get("name") if project else "Direct contact"
+    # Topic title: 📞 prefix when it's a contact link, 🎫 when it's a
+    # classic support ticket. Makes the two flows visually distinct in
+    # the admin forum sidebar.
+    title_prefix = f"📞 {project_name}" if is_contact else project_name
     fallback = False
     try:
         topic_id, fallback = await topic_service.ensure_topic_for_ticket(
             client,
             db,
             ticket_id=ticket_id,
-            title_prefix=project_name,
+            title_prefix=title_prefix,
             user_name=user.first_name or user.username or f"User {user_id}",
             username=user.username,
             project=project,
@@ -100,10 +105,13 @@ async def create_ticket_from_message(
 
     # Confirm to the user.
     is_feedback = bool(project and project.get("type") == "feedback")
+    is_contact = bool(contact_uuid) and not project
     await send_card(
         client,
         user_id,
-        user_messages.ticket_created(short, is_feedback=is_feedback),
+        user_messages.ticket_created(
+            short, is_feedback=is_feedback, is_contact=is_contact
+        ),
     )
 
     await audit_repo.log(
@@ -155,14 +163,17 @@ async def send_admin_reply_to_user(
         db, ticket["_id"], sender="admin", text=text, message_type=media_type, file_id=file_id
     )
     user_id = ticket["user_id"]
-    card_text, keyboard = user_messages.admin_reply_card(text).render()
+
+    # Minimal delivery: plain text / caption, no "Support reply" frame.
+    # HTML-escape so user-typed angle brackets don't break parsing.
+    body = escape_html(text)
     try:
         if media_type == "photo" and file_id:
-            await client.send_photo(user_id, file_id, caption=card_text, parse_mode=ParseMode.HTML)
+            await client.send_photo(user_id, file_id, caption=body, parse_mode=ParseMode.HTML)
         elif media_type == "document" and file_id:
-            await client.send_document(user_id, file_id, caption=card_text, parse_mode=ParseMode.HTML)
+            await client.send_document(user_id, file_id, caption=body, parse_mode=ParseMode.HTML)
         else:
-            await client.send_message(user_id, card_text, parse_mode=ParseMode.HTML)
+            await client.send_message(user_id, body, parse_mode=ParseMode.HTML)
     except RPCError as exc:
         log.warning("ticket.deliver_failed", ticket=str(ticket["_id"]), error=str(exc))
         raise

@@ -82,6 +82,19 @@ async def get_cooldown(db: AsyncIOMotorDatabase, user_id: int) -> datetime | Non
     return (doc or {}).get("cooldown_until")
 
 
+async def get_tickets_seen_at(db: AsyncIOMotorDatabase, user_id: int) -> datetime | None:
+    doc = await db.users.find_one({"user_id": user_id}, projection={"tickets_seen_at": 1})
+    return (doc or {}).get("tickets_seen_at")
+
+
+async def mark_tickets_seen(db: AsyncIOMotorDatabase, user_id: int) -> None:
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"tickets_seen_at": utcnow()}},
+        upsert=True,
+    )
+
+
 async def count(db: AsyncIOMotorDatabase, *, blocked: bool | None = None) -> int:
     query: dict[str, Any] = {}
     if blocked is True:

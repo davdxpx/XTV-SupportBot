@@ -57,8 +57,9 @@ def render(
     status = ticket.get("status", "open")
     priority = ticket.get("priority", "normal")
     tags = ticket.get("tags") or []
+    is_contact = bool(ticket.get("contact_uuid")) and not project
     project_name = escape_html(project.get("name")) if project else "Direct contact"
-    project_type = project.get("type", "support") if project else "contact"
+    project_type = "contact" if is_contact else (project.get("type", "support") if project else "support")
 
     mention = user_mention(user_id, user_name or f"User {user_id}")
     username_s = f"@{escape_html(username)}" if username else "—"
@@ -87,8 +88,13 @@ def render(
 
     original = truncate(escape_html(ticket.get("message", "")), 400) or "(no initial text)"
 
+    if is_contact:
+        title = f"📞 Contact #{short_id} • {project_name}"
+    else:
+        title = f"🎫 Ticket #{short_id} • {project_name}"
+
     card = Card(
-        title=f"🎫 Ticket #{short_id} • {project_name}",
+        title=title,
         body=body,
         quote=original,
         quote_expandable=True,
