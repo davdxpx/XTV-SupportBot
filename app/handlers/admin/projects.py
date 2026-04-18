@@ -67,7 +67,7 @@ async def view_project_tickets(client: Client, callback: CallbackQuery) -> None:
         await callback.answer("No open tickets.", show_alert=True)
         return
     lines = [
-        f"#{short_ticket_id(t['_id'])} \u2022 user <code>{t['user_id']}</code>" for t in tickets[:15]
+        f"#{short_ticket_id(t['_id'])} • user <code>{t['user_id']}</code>" for t in tickets[:15]
     ]
     from app.ui.card import Card
 

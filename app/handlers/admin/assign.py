@@ -44,7 +44,7 @@ async def open_assign_picker(client: Client, callback: CallbackQuery) -> None:
     keyboard = InlineKeyboardMarkup(chunk(buttons, per_row=2))
     try:
         await callback.message.reply_text(
-            f"<blockquote>Assign ticket #{short_ticket_id(oid)}\n\nPick an admin or unassign.</blockquote>",
+            f"👨‍💻 <b>Assign ticket</b> #{short_ticket_id(oid)}\nPick an admin or unassign.",
             parse_mode="html",
             reply_markup=keyboard,
         )

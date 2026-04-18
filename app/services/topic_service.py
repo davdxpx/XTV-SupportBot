@@ -45,7 +45,7 @@ async def ensure_topic_for_ticket(
         raise TopicCreationError("ticket_missing")
 
     short = short_ticket_id(ticket_id)
-    title = f"#{short} \u2022 {title_prefix}"[:128]
+    title = f"#{short} • {title_prefix}"[:128]
 
     try:
         topic = await _create_forum_topic(client, title)
