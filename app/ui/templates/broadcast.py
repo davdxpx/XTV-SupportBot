@@ -111,3 +111,12 @@ def finished(text: str, *, sent: int, failed: int, blocked: int, total: int, can
     card.buttons = None
     card.progress = 1.0 if not cancelled else (sent / total if total else 0)
     return card
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

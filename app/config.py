@@ -27,12 +27,15 @@ class Settings(BaseSettings):
     MONGO_DB_NAME: str = "xtvfeedback_bot"
 
     # --- Roles ---
-    ADMIN_IDS: List[int] = Field(default_factory=list)
+    # Keep as raw str so pydantic-settings does not try to JSON-decode a
+    # single id like "1" into an int. We split it in the validator below.
+    ADMIN_IDS_RAW: str = Field(default="", alias="ADMIN_IDS")
     ADMIN_CHANNEL_ID: int
 
     # --- Logging ---
     LOG_LEVEL: str = "INFO"
     LOG_JSON: bool = False
+    DEBUG_MODE: bool = False
 
     # --- SLA ---
     SLA_WARN_MINUTES: int = 30
@@ -64,21 +67,26 @@ class Settings(BaseSettings):
     # --- Localization ---
     DEFAULT_LANG: str = "en"
 
-    @field_validator("ADMIN_IDS", mode="before")
-    @classmethod
-    def _parse_admin_ids(cls, value: object) -> List[int]:
-        if value is None or value == "":
-            return []
-        if isinstance(value, list):
-            return [int(x) for x in value]
-        if isinstance(value, str):
-            return [int(x.strip()) for x in value.split(",") if x.strip().lstrip("-").isdigit()]
-        raise ValueError("ADMIN_IDS must be a comma-separated list of integers")
-
     @field_validator("LOG_LEVEL")
     @classmethod
     def _upper_log_level(cls, value: str) -> str:
         return value.upper()
+
+    @property
+    def ADMIN_IDS(self) -> List[int]:
+        raw = (self.ADMIN_IDS_RAW or "").strip()
+        if not raw:
+            return []
+        out: list[int] = []
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                out.append(int(part))
+            except ValueError:
+                continue
+        return out
 
 
 @lru_cache(maxsize=1)
@@ -87,3 +95,12 @@ def get_settings() -> Settings:
 
 
 settings: Settings = get_settings()
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

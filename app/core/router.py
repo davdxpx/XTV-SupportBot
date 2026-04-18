@@ -73,3 +73,12 @@ def register_all(client: "Client", ctx: "HandlerContext") -> None:
         modules.append(module_name)
 
     log.info("handlers.registered", count=len(modules), modules=modules)
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

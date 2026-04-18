@@ -19,3 +19,12 @@ def bar(pct: float, width: int = DEFAULT_PROGRESS_WIDTH, *, fill: str = FILL, em
 def percentage(pct: float) -> str:
     """Format a 0..1 value as 'XX.X%'."""
     return f"{clamp(pct) * 100:.1f}%"
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

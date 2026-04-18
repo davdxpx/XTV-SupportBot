@@ -106,3 +106,12 @@ def _buttons(ticket_id: str, status: str) -> InlineKeyboardMarkup | None:
     priority = btn("Priority", f"{CallbackPrefix.TICKET_PRIORITY}|{ticket_id}")
     close = btn("Close", f"{CallbackPrefix.TICKET_CLOSE}|{ticket_id}")
     return rows([assign, tag], [priority, close])
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

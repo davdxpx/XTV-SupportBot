@@ -90,3 +90,12 @@ MAX_PROJECT_NAME_LEN = 64
 MAX_PROJECT_DESC_LEN = 512
 MAX_BROADCAST_LEN = 4000
 TAG_NAME_REGEX = r"^[a-z0-9_-]{1,24}$"
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

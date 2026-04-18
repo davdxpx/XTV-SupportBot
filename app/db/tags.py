@@ -51,3 +51,12 @@ async def delete(db: AsyncIOMotorDatabase, name: str) -> bool:
 async def list_all(db: AsyncIOMotorDatabase) -> list[dict[str, Any]]:
     cursor = db.tags.find().sort("name", 1)
     return [doc async for doc in cursor]
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

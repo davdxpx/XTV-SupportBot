@@ -95,3 +95,12 @@ def done_support(name: str) -> Card:
 
 def done_feedback(name: str) -> Card:
     return Card(title="Project Created", body=[f"Feedback project <b>{name}</b> is live."])
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------
