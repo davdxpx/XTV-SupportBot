@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+from pyrogram import Client
+from pyrogram.types import CallbackQuery, Message
+
+from app.constants import CallbackPrefix, HandlerGroup, UserState
+from app.core.callback_data import CbRate
+from app.core.context import get_context
+from app.core.filters import cb_prefix, is_admin_user, is_private, not_command
+from app.core.logger import get_logger
+from app.db import contact_links as contact_links_repo
+from app.db import projects as projects_repo
+from app.db import tickets as tickets_repo
+from app.db import users as users_repo
+from app.services import ticket_service
+from app.ui.card import send_card
+from app.ui.templates import user_messages
+
+log = get_logger("user.feedback")
+
+
+@Client.on_message(
+    is_private & ~is_admin_user & not_command,
+    group=HandlerGroup.USER_FLOW,
+)
+async def user_message(client: Client, message: Message) -> None:
+    ctx = get_context(client)
+    user_id = message.from_user.id
+
+    state_doc = await users_repo.get(ctx.db, user_id)
+    state = (state_doc or {}).get("state") or ""
+    data = (state_doc or {}).get("data") or {}
+
+    project = None
+    contact_uuid: str | None = None
+    target_admin_id: int | None = None
+
+    if state == UserState.AWAITING_FEEDBACK:
+        project = await projects_repo.get(ctx.db, data.get("project_id", ""))
+    elif state == UserState.AWAITING_CONTACT_MSG:
+        contact_uuid = data.get("contact_uuid")
+        if contact_uuid:
+            link = await contact_links_repo.get(ctx.db, contact_uuid)
+            target_admin_id = (link or {}).get("admin_id")
+
+    if project and project.get("type") == "feedback":
+        await _handle_feedback_submission(client, message, project)
+        await users_repo.clear_state(ctx.db, user_id)
+        return
+
+    if project or target_admin_id:
+        ticket = await ticket_service.create_ticket_from_message(
+            client,
+            ctx.db,
+            message=message,
+            project=project,
+            contact_uuid=contact_uuid,
+        )
+        # SLA scheduling happens in ticket_service (deadline stored in doc).
+        await users_repo.clear_state(ctx.db, user_id)
+        if ticket and project and project.get("has_rating"):
+            await send_card(client, user_id, user_messages.rating_card(str(project["_id"])))
+        return
+
+    # Look for an existing open ticket to forward the message into.
+    existing = await tickets_repo.get_user_topic(ctx.db, user_id, None)
+    if existing:
+        await ticket_service.append_user_reply(client, ctx.db, ticket=existing, message=message)
+        return
+
+    await send_card(client, user_id, user_messages.please_start_card())
+
+
+async def _handle_feedback_submission(client: Client, message: Message, project: dict) -> None:
+    ctx = get_context(client)
+    ticket = await ticket_service.create_ticket_from_message(
+        client, ctx.db, message=message, project=project
+    )
+    # Feedback projects auto-close immediately.
+    if ticket and ticket.get("_id"):
+        await tickets_repo.close(ctx.db, ticket["_id"], closed_by=None, reason="feedback_submission")
+    if project.get("has_rating"):
+        await send_card(
+            client,
+            message.from_user.id,
+            user_messages.rating_card(str(project["_id"])),
+        )
+
+
+@Client.on_callback_query(cb_prefix(CallbackPrefix.USER_RATE))
+async def rating_submitted(client: Client, callback: CallbackQuery) -> None:
+    data = CbRate.unpack(callback.data)
+    ctx = get_context(client)
+    project = await projects_repo.get(ctx.db, data.project_id)
+    if not project:
+        await callback.answer()
+        return
+
+    topic_id = project.get("feedback_topic_id")
+    if topic_id:
+        try:
+            user = callback.from_user
+            text = (
+                f"<blockquote>Rating received \u2022 {project.get('name')}\n\n"
+                f"User: <a href=\"tg://user?id={user.id}\">{user.first_name or 'user'}</a>\n"
+                f"Score: {'\u2b50' * data.score}</blockquote>"
+            )
+            from app.config import settings
+            from pyrogram.enums import ParseMode
+
+            await client.send_message(
+                settings.ADMIN_CHANNEL_ID,
+                text,
+                parse_mode=ParseMode.HTML,
+                message_thread_id=int(topic_id),
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("rating.forward_failed", error=str(exc))
+
+    from app.ui.card import edit_card
+
+    await edit_card(
+        client,
+        callback.message.chat.id,
+        callback.message.id,
+        user_messages.rating_thanks(data.score),
+    )
+    await callback.answer()
