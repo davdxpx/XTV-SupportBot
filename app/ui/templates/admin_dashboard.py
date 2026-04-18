@@ -37,7 +37,10 @@ def project_list(projects: list[dict]) -> Card:
         pid = str(p["_id"])
         active = bool(p.get("active"))
         ptype = p.get("type", "support")
-        label = f"{'\u25cf' if active else '\u25cb'} {ptype[:1].upper()} \u2022 {p.get('name', '?')}"
+        status_glyph = "\u25cf" if active else "\u25cb"
+        type_letter = ptype[:1].upper()
+        name = p.get("name", "?")
+        label = f"{status_glyph} {type_letter} \u2022 {name}"
         rows_list.append([btn(label, f"{CallbackPrefix.ADMIN_PROJECT_VIEW}|{pid}")])
     rows_list.append([btn("Create new project", CallbackPrefix.ADMIN_PROJECT_CREATE)])
     rows_list.append([btn("Back", CallbackPrefix.ADMIN_HOME)])

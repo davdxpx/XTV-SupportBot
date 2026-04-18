@@ -27,11 +27,16 @@ async def report_error(client: Client, exc: BaseException, context: str = "") ->
     log.exception("handler.error", context=context, error=str(exc))
     if not settings.ERROR_LOG_TOPIC_ID:
         return
+    ctx_part = f" \u2022 {context}" if context else ""
+    exc_name = type(exc).__name__
+    body = (
+        f"<blockquote>Internal error{ctx_part}\n\n"
+        f"<code>{exc_name}: {exc}</code></blockquote>"
+    )
     try:
         await client.send_message(
             settings.ADMIN_CHANNEL_ID,
-            f"<blockquote>Internal error{' \u2022 ' + context if context else ''}\n\n"
-            f"<code>{type(exc).__name__}: {exc}</code></blockquote>",
+            body,
             parse_mode="html",
             message_thread_id=settings.ERROR_LOG_TOPIC_ID,
         )

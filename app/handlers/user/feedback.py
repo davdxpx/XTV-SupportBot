@@ -100,13 +100,16 @@ async def rating_submitted(client: Client, callback: CallbackQuery) -> None:
     if topic_id:
         try:
             user = callback.from_user
+            stars = "\u2b50" * data.score
+            first = user.first_name or "user"
             text = (
                 f"<blockquote>Rating received \u2022 {project.get('name')}\n\n"
-                f"User: <a href=\"tg://user?id={user.id}\">{user.first_name or 'user'}</a>\n"
-                f"Score: {'\u2b50' * data.score}</blockquote>"
+                f'User: <a href="tg://user?id={user.id}">{first}</a>\n'
+                f"Score: {stars}</blockquote>"
             )
-            from app.config import settings
             from pyrogram.enums import ParseMode
+
+            from app.config import settings
 
             await client.send_message(
                 settings.ADMIN_CHANNEL_ID,

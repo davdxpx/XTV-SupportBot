@@ -87,13 +87,15 @@ async def open_tag_picker(client: Client, callback: CallbackQuery) -> None:
         await callback.answer("Create tags first via /admin \u203a Tags.", show_alert=True)
         return
     current = set(ticket.get("tags") or [])
-    buttons = [
-        btn(
-            f"{'\u2713 ' if t['name'] in current else ''}#{t['name']}",
-            f"{CallbackPrefix.TICKET_TAG_TOGGLE}|{ticket_id}|{t['name']}",
+    buttons = []
+    for t in tags:
+        marker = "\u2713 " if t["name"] in current else ""
+        buttons.append(
+            btn(
+                f"{marker}#{t['name']}",
+                f"{CallbackPrefix.TICKET_TAG_TOGGLE}|{ticket_id}|{t['name']}",
+            )
         )
-        for t in tags
-    ]
     keyboard = InlineKeyboardMarkup(chunk(buttons, per_row=2))
     try:
         await callback.message.reply_text(

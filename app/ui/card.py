@@ -39,7 +39,8 @@ class Card:
         if self.steps is None:
             return self.title
         current, total = self.steps
-        return f"{self.title}\n\nStep {current}/{total}{f' \u2022 {self.status_line}' if self.status_line else ''}"
+        step_suffix = f" \u2022 {self.status_line}" if self.status_line else ""
+        return f"{self.title}\n\nStep {current}/{total}{step_suffix}"
 
     def render(self) -> tuple[str, InlineKeyboardMarkup | None]:
         parts: list[str] = [self._header()]
