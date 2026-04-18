@@ -1,32 +1,54 @@
-from pyrogram import Client, idle
-from config import API_ID, API_HASH, BOT_TOKEN
-import logging
+"""Entry point for the XTVfeedback-bot.
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='bot.log'
-)
+Run with ``python main.py``. Requires a populated ``.env`` file.
+"""
+from __future__ import annotations
 
-# Also log to console
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console.setFormatter(formatter)
-logging.getLogger('').addHandler(console)
+import asyncio
 
-app = Client(
-    "xtvfeedback_bot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-    plugins=dict(root="plugins")
-)
+from pyrogram import idle
+
+from app.bootstrap import build_client, build_context, shutdown
+from app.core.logger import configure_logging, get_logger
+from app.core.router import register_all
+from app.tasks import autoclose_task, sla_task
+from app.tasks.sla_task import SLA_LOOP_SECONDS
+
+
+async def _amain() -> None:
+    configure_logging()
+    log = get_logger("main")
+    client = build_client()
+    await client.start()
+    log.info("bot.started")
+    try:
+        ctx = await build_context(client)
+        register_all(client, ctx)
+        await ctx.tasks.start()
+        await ctx.broadcasts.resume_pending()
+        ctx.tasks.run_loop(
+            lambda: sla_task.run_once(ctx.sla), name="sla_loop", interval=SLA_LOOP_SECONDS
+        )
+        ctx.tasks.run_loop(
+            lambda: autoclose_task.run_once(client, ctx.db),
+            name="autoclose_loop",
+            interval=max(60, ctx.settings.AUTO_CLOSE_SWEEP_MINUTES * 60),
+        )
+        log.info("bot.ready")
+        await idle()
+        await ctx.tasks.stop()
+    finally:
+        try:
+            await client.stop()
+        except Exception:  # noqa: BLE001
+            pass
+        await shutdown()
+        log.info("bot.stopped")
+
+
+def entrypoint() -> None:
+    asyncio.run(_amain())
+
 
 if __name__ == "__main__":
-    print("Starting bot...")
-    app.start()
-    print("Bot started. Press Ctrl+C to stop.")
-    idle()
-    app.stop()
+    entrypoint()
