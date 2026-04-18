@@ -11,3 +11,12 @@ os.environ.setdefault("MONGO_URI", "mongodb://localhost:27017/test")
 os.environ.setdefault("ADMIN_CHANNEL_ID", "-1001234567890")
 os.environ.setdefault("ADMIN_IDS", "1,2,3")
 os.environ.setdefault("LOG_LEVEL", "WARNING")
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

@@ -90,3 +90,12 @@ async def set_progress_msg(
     if started_at:
         update["$set"]["started_at"] = started_at
     await db.broadcasts.update_one({"_id": bid}, update)
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

@@ -1,0 +1,8 @@
+pyrofork>=2.3.60
+tgcrypto>=1.2.5
+motor>=3.5.0
+pymongo>=4.8.0
+dnspython>=2.6.1
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.1

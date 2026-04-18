@@ -98,3 +98,12 @@ def test_starts_with_matches():
     assert re.match(pattern, "a:projects")
     assert re.match(pattern, "a:projects|some-id")
     assert not re.match(pattern, "a:projectslong")
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

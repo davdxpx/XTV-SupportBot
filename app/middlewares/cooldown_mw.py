@@ -34,3 +34,12 @@ async def enforce_cooldown(client: Client, message: Message) -> None:
         log.debug("cooldown.notify_failed", error=str(exc))
 
     message.stop_propagation()
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

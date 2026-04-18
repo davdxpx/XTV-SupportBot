@@ -15,7 +15,6 @@ dependencies = [
     "dnspython>=2.6.1",
     "pydantic>=2.7.0",
     "pydantic-settings>=2.3.0",
-    "structlog>=24.1.0",
     "python-dotenv>=1.0.1",
 ]
 

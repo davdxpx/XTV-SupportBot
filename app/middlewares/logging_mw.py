@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import structlog
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
@@ -14,11 +13,21 @@ log = get_logger("msg")
 async def log_incoming(_client: Client, message: Message) -> None:
     user_id = message.from_user.id if message.from_user else None
     chat_id = message.chat.id if message.chat else None
-    structlog.contextvars.bind_contextvars(
-        user_id=user_id, chat_id=chat_id, msg_id=message.id
-    )
     log.debug(
         "msg.received",
-        text=(message.text or message.caption or "")[:60],
+        user_id=user_id,
+        chat_id=chat_id,
+        msg_id=message.id,
         thread_id=message.message_thread_id,
+        text=(message.text or message.caption or "")[:60],
     )
+
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

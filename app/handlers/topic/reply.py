@@ -52,3 +52,12 @@ async def topic_admin_reply(client: Client, message: Message) -> None:
             await message.reply_text(f"Delivery failed: {exc}")
         except Exception:  # noqa: BLE001
             pass
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

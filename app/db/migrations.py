@@ -103,3 +103,12 @@ async def run(db: AsyncIOMotorDatabase) -> None:
     """Full migration entrypoint called at bootstrap."""
     await ensure_indexes(db)
     await backfill_defaults(db)
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

@@ -105,3 +105,12 @@ def tags_menu(tags: list[dict]) -> Card:
         )
     rows_list.append([btn("Back", CallbackPrefix.ADMIN_HOME)])
     return Card(title="Tag Management", body=body, buttons=InlineKeyboardMarkup(rows_list))
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

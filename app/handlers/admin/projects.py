@@ -170,3 +170,12 @@ async def project_text_pick(client: Client, callback: CallbackQuery) -> None:
         client, callback.message.chat.id, callback.message.id, project_wizard.ask_topic_id()
     )
     await callback.answer()
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------

@@ -206,3 +206,12 @@ async def hydrate_project(db: AsyncIOMotorDatabase, ticket: dict[str, Any]) -> d
     if not ticket.get("project_id"):
         return None
     return await projects_repo.get(db, ticket["project_id"])
+
+# --------------------------------------------------------------------------
+# Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
+# Don't Remove Credit
+# Telegram Channel @XTVbots
+# Developed for the 𝕏TV Network @XTVglobal
+# Backup Channel @XTVhome
+# Contact on Telegram @davdxpx
+# --------------------------------------------------------------------------
