@@ -12,13 +12,16 @@ log = get_logger("catchall")
 
 @Client.on_message(filters.all, group=HandlerGroup.CATCH_ALL)
 async def catchall(client: Client, message: Message) -> None:
-    # Everything reaching this group has propagated through every other group
-    # untouched, so we only emit a debug line for observability.
-    log.debug(
+    # Reached only when no other group claimed the update. Useful when
+    # debugging why /start or /admin do nothing.
+    text = (message.text or message.caption or "")[:60]
+    log.warning(
         "msg.unhandled",
         chat_id=message.chat.id if message.chat else None,
+        chat_type=str(message.chat.type) if message.chat else "?",
         user_id=message.from_user.id if message.from_user else None,
         thread_id=message.message_thread_id,
+        text=text,
     )
 
 

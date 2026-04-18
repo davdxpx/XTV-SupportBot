@@ -1,25 +1,63 @@
 from __future__ import annotations
 
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import CallbackQuery, Message
 
 from app.constants import HandlerGroup
 from app.core.logger import get_logger
 
 log = get_logger("msg")
+cb_log = get_logger("cb")
+
+
+def _chat_type(message: Message) -> str:
+    try:
+        return str(message.chat.type) if message.chat else "?"
+    except Exception:  # noqa: BLE001
+        return "?"
+
+
+def _short_text(message: Message, limit: int = 80) -> str:
+    text = message.text or message.caption or ""
+    if not text:
+        if message.photo:
+            return "[photo]"
+        if message.document:
+            return f"[document {getattr(message.document, 'file_name', '?')}]"
+        if message.video:
+            return "[video]"
+        if message.sticker:
+            return "[sticker]"
+        if message.voice:
+            return "[voice]"
+        return "[no-text]"
+    return text[:limit] + ("…" if len(text) > limit else "")
 
 
 @Client.on_message(filters.all, group=HandlerGroup.MIDDLEWARE_LOG)
 async def log_incoming(_client: Client, message: Message) -> None:
-    user_id = message.from_user.id if message.from_user else None
-    chat_id = message.chat.id if message.chat else None
-    log.debug(
-        "msg.received",
-        user_id=user_id,
-        chat_id=chat_id,
+    user = message.from_user
+    log.info(
+        "msg.in",
+        chat_id=message.chat.id if message.chat else None,
+        chat_type=_chat_type(message),
+        thread=message.message_thread_id,
+        user_id=user.id if user else None,
+        user=(f"@{user.username}" if user and user.username else (user.first_name if user else "?")),
         msg_id=message.id,
-        thread_id=message.message_thread_id,
-        text=(message.text or message.caption or "")[:60],
+        text=_short_text(message),
+    )
+
+
+@Client.on_callback_query(filters.all, group=HandlerGroup.MIDDLEWARE_LOG)
+async def log_callback(_client: Client, callback: CallbackQuery) -> None:
+    user = callback.from_user
+    cb_log.info(
+        "cb.in",
+        user_id=user.id if user else None,
+        user=(f"@{user.username}" if user and user.username else (user.first_name if user else "?")),
+        data=callback.data,
+        chat_id=callback.message.chat.id if callback.message and callback.message.chat else None,
     )
 
 
