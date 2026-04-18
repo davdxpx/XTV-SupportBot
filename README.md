@@ -27,17 +27,25 @@ Telegram support + feedback + direct-contact bot. Every ticket is a **Telegram f
 
 ## Setup
 
+**For the full step-by-step walkthrough including Telegram app creation, forum
+supergroup configuration, bot permissions, MongoDB Atlas, Railway, Docker and
+a smoke-test checklist, see [SETUP.md](./SETUP.md).**
+
+Quick version:
+
 ```bash
 # create and activate a Python 3.12 virtualenv
 python3.12 -m venv .venv
 source .venv/bin/activate
 
 # install
-pip install -e .
+pip install -r requirements.txt
 
 # configure
 cp .env.example .env
 # edit .env with your values
+
+python main.py
 ```
 
 ### .env

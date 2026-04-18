@@ -50,14 +50,30 @@ async def user_message(client: Client, message: Message) -> None:
         return
 
     if project or target_admin_id:
-        ticket = await ticket_service.create_ticket_from_message(
-            client,
-            ctx.db,
-            message=message,
-            project=project,
-            contact_uuid=contact_uuid,
-        )
-        # SLA scheduling happens in ticket_service (deadline stored in doc).
+        try:
+            ticket = await ticket_service.create_ticket_from_message(
+                client,
+                ctx.db,
+                message=message,
+                project=project,
+                contact_uuid=contact_uuid,
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.exception("feedback.ticket_create_failed", user_id=user_id, error=str(exc))
+            from app.ui.card import Card
+
+            await send_card(
+                client,
+                user_id,
+                Card(
+                    title="⚠️ Something went wrong",
+                    body=[
+                        "We could not open your ticket right now.",
+                        "The team has been notified, please try again in a moment.",
+                    ],
+                ),
+            )
+            return
         await users_repo.clear_state(ctx.db, user_id)
         if ticket and project and project.get("has_rating"):
             await send_card(client, user_id, user_messages.rating_card(str(project["_id"])))
