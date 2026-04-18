@@ -62,15 +62,17 @@ async def _amain() -> None:
 
     try:
         chat = await client.get_chat(settings.ADMIN_CHANNEL_ID)
+        chat_type_str = str(getattr(chat, "type", "?"))
+        is_forum = bool(getattr(chat, "is_forum", False)) or chat_type_str.endswith("FORUM")
         log.info(
             "boot.admin_chat",
             id=chat.id,
             title=getattr(chat, "title", None),
-            type=str(getattr(chat, "type", "?")),
-            is_forum=getattr(chat, "is_forum", None),
+            type=chat_type_str,
+            is_forum=is_forum,
             members=getattr(chat, "members_count", None),
         )
-        if not getattr(chat, "is_forum", False):
+        if not is_forum:
             log.warning(
                 "boot.admin_chat_not_forum",
                 hint="Enable Topics in the supergroup so tickets can become threads.",
