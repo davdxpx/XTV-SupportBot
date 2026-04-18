@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING
 
 from app.core.logger import get_logger
@@ -11,68 +12,78 @@ if TYPE_CHECKING:
 
 log = get_logger("router")
 
+# Every module that defines @Client.on_message / @Client.on_callback_query
+# handlers. Order is irrelevant for correctness because the explicit
+# ``group=`` argument on each decorator controls dispatch order, but the
+# import order does pin the per-group registration order if multiple
+# handlers share the same group.
+_HANDLER_MODULES: tuple[str, ...] = (
+    # Middleware (negative groups)
+    "app.middlewares.logging_mw",
+    "app.middlewares.blocked_mw",
+    "app.middlewares.cooldown_mw",
+    # Commands (group 0)
+    "app.handlers.start",
+    "app.handlers.admin.dashboard",
+    "app.handlers.admin.projects",
+    "app.handlers.admin.contact_links",
+    "app.handlers.admin.block",
+    "app.handlers.admin.broadcast",
+    "app.handlers.admin.assign",
+    "app.handlers.admin.tags",
+    "app.handlers.user.feedback",
+    "app.handlers.user.close",
+    "app.handlers.user.history",
+    "app.handlers.topic.reply",
+    "app.handlers.topic.commands",
+    # State machine (group 1)
+    "app.handlers.admin.input_router",
+    # Catch-all
+    "app.handlers.errors",
+)
+
 
 def register_all(client: "Client", ctx: "HandlerContext") -> None:
-    """Register every handler module. Import order controls group dispatch
-    implicitly through each handler's ``group=`` argument (see constants.HandlerGroup)."""
+    """Bind context, import every handler module, then attach every collected
+    handler to the live :class:`pyrogram.Client` instance.
+
+    Pyrogram's ``@Client.on_message`` decorator is a *classmethod* that just
+    stashes ``handlers`` on the wrapped function. Without
+    ``plugins=dict(root=...)`` the dispatcher never sees them. We do the
+    plugin-loader's job here explicitly so the registration is independent
+    of import-time magic and visible in the logs.
+    """
     from app.core.context import bind_context
 
     bind_context(client, ctx)
 
-    # Middleware (negative groups) runs first.
-    from app.middlewares import logging_mw  # noqa: F401
-    from app.middlewares import blocked_mw  # noqa: F401
-    from app.middlewares import cooldown_mw  # noqa: F401
+    total_handlers = 0
+    per_module: list[tuple[str, int]] = []
 
-    # Commands (group 0).
-    from app.handlers import start  # noqa: F401
-    from app.handlers.admin import dashboard  # noqa: F401
-    from app.handlers.admin import projects  # noqa: F401
-    from app.handlers.admin import contact_links  # noqa: F401
-    from app.handlers.admin import block  # noqa: F401
-    from app.handlers.admin import broadcast  # noqa: F401
-    from app.handlers.admin import assign  # noqa: F401
-    from app.handlers.admin import tags  # noqa: F401
+    for module_name in _HANDLER_MODULES:
+        module = importlib.import_module(module_name)
+        count = 0
+        for attr in dir(module):
+            obj = getattr(module, attr)
+            handlers = getattr(obj, "handlers", None)
+            if not handlers:
+                continue
+            for entry in handlers:
+                # Pyrogram stores either (handler, group) tuples or bare handlers.
+                if isinstance(entry, tuple) and len(entry) == 2:
+                    handler, group = entry
+                else:
+                    handler, group = entry, 0
+                client.add_handler(handler, group)
+                count += 1
+        per_module.append((module_name, count))
+        total_handlers += count
+        log.debug("router.module_loaded", module=module_name, handlers=count)
 
-    # Admin state machine (group 1).
-    from app.handlers.admin import input_router  # noqa: F401
+    log.info("router.registered", modules=len(_HANDLER_MODULES), handlers=total_handlers)
+    for name, count in per_module:
+        log.info("router.module", module=name, handlers=count)
 
-    # User flows (group 2).
-    from app.handlers.user import feedback  # noqa: F401
-    from app.handlers.user import close as user_close  # noqa: F401
-    from app.handlers.user import history  # noqa: F401
-
-    # Topic (group 3).
-    from app.handlers.topic import reply  # noqa: F401
-    from app.handlers.topic import commands as topic_commands  # noqa: F401
-
-    # Error handler (catch-all).
-    from app.handlers import errors as error_handler  # noqa: F401
-
-    modules: list[str] = []
-    for module_name in (
-        "app.middlewares.logging_mw",
-        "app.middlewares.blocked_mw",
-        "app.middlewares.cooldown_mw",
-        "app.handlers.start",
-        "app.handlers.admin.dashboard",
-        "app.handlers.admin.projects",
-        "app.handlers.admin.contact_links",
-        "app.handlers.admin.block",
-        "app.handlers.admin.broadcast",
-        "app.handlers.admin.assign",
-        "app.handlers.admin.tags",
-        "app.handlers.admin.input_router",
-        "app.handlers.user.feedback",
-        "app.handlers.user.close",
-        "app.handlers.user.history",
-        "app.handlers.topic.reply",
-        "app.handlers.topic.commands",
-        "app.handlers.errors",
-    ):
-        modules.append(module_name)
-
-    log.info("handlers.registered", count=len(modules), modules=modules)
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
