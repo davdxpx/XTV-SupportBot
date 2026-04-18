@@ -12,11 +12,13 @@ log = get_logger("catchall")
 
 @Client.on_message(filters.all, group=HandlerGroup.CATCH_ALL)
 async def catchall(client: Client, message: Message) -> None:
-    # Reached only when no other group claimed the update. Useful when
-    # debugging why /start or /admin do nothing.
+    # In Pyrofork, every message propagates through all groups unless a
+    # handler explicitly raises StopPropagation. That means this fires
+    # even when lower-group handlers *did* take care of the message, so
+    # we keep it at DEBUG to avoid noisy false-positive warnings.
     text = (message.text or message.caption or "")[:60]
-    log.warning(
-        "msg.unhandled",
+    log.debug(
+        "msg.catchall",
         chat_id=message.chat.id if message.chat else None,
         chat_type=str(message.chat.type) if message.chat else "?",
         user_id=message.from_user.id if message.from_user else None,

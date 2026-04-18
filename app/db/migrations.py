@@ -2,19 +2,43 @@ from __future__ import annotations
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
+from pymongo.errors import OperationFailure
 
 from app.config import settings
 from app.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+
+
+async def _safe_drop_index(coll, name: str) -> None:
+    try:
+        await coll.drop_index(name)
+        log.info("db.index_dropped", coll=coll.name, name=name)
+    except OperationFailure:
+        pass
+    except Exception as exc:  # noqa: BLE001
+        log.debug("db.index_drop_failed", coll=coll.name, name=name, error=str(exc))
 
 
 async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
-    """Create all indexes. Idempotent."""
+    """Create all indexes. Idempotent.
+
+    The unique index on ``tickets.topic_id`` must use a partial filter
+    expression instead of ``sparse=True`` — ``sparse`` only skips missing
+    fields, not fields that are explicitly ``null``. A ticket that failed
+    topic creation has ``topic_id=None`` and without the partial filter
+    the second such document would collide on the unique constraint.
+    """
+    # Drop legacy indexes that we recreate with different options below.
+    await _safe_drop_index(db.tickets, "ux_topic_id")
+
     await db.tickets.create_index(
-        [("topic_id", ASCENDING)], unique=True, sparse=True, name="ux_topic_id"
+        [("topic_id", ASCENDING)],
+        unique=True,
+        partialFilterExpression={"topic_id": {"$type": "number"}},
+        name="ux_topic_id",
     )
     await db.tickets.create_index(
         [("user_id", ASCENDING), ("status", ASCENDING)], name="ix_user_status"
@@ -72,7 +96,6 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
             {field: {"$exists": False}}, {"$set": {field: default}}
         )
 
-    # Derive last_user_msg_at / last_admin_msg_at from created_at as a safe proxy.
     await db.tickets.update_many(
         {"last_user_msg_at": {"$exists": False}},
         [{"$set": {"last_user_msg_at": "$created_at"}}],
@@ -103,6 +126,7 @@ async def run(db: AsyncIOMotorDatabase) -> None:
     """Full migration entrypoint called at bootstrap."""
     await ensure_indexes(db)
     await backfill_defaults(db)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
