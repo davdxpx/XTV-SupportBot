@@ -34,6 +34,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "app.handlers.user.feedback",
     "app.handlers.user.close",
     "app.handlers.user.history",
+    "app.handlers.user.tickets",
     "app.handlers.topic.reply",
     "app.handlers.topic.commands",
     # State machine (group 1)

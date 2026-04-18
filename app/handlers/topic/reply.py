@@ -13,15 +13,44 @@ from app.services import ticket_service
 log = get_logger("topic.reply")
 
 
+async def _react(message: Message, emoji: str) -> None:
+    """Best-effort emoji reaction on the admin's message. Silent if the
+    client lacks reaction support in this pyrofork build."""
+    try:
+        # Pyrofork 2.x
+        await message.react(emoji)
+        return
+    except TypeError:
+        pass
+    except AttributeError:
+        pass
+    except Exception as exc:  # noqa: BLE001
+        log.debug("react.failed", error=str(exc))
+        return
+
+    # Some builds expose it on the client instead.
+    try:
+        await message._client.send_reaction(  # type: ignore[attr-defined]
+            chat_id=message.chat.id, message_id=message.id, emoji=emoji
+        )
+    except Exception as exc:  # noqa: BLE001
+        log.debug("react.fallback_failed", error=str(exc))
+
+
 @Client.on_message(
     is_admin_forum_topic & is_admin_user & ~filters.service,
     group=HandlerGroup.TOPIC,
 )
 async def topic_admin_reply(client: Client, message: Message) -> None:
-    """Any non-command admin message inside a ticket topic is forwarded to the user."""
+    """Non-command admin messages in a ticket topic are forwarded to the user.
+
+    Instead of replying with "Delivered." we react to the admin's own
+    message with a ✅ on success or ❌ on failure, so the topic stays
+    clean.
+    """
     text = message.text or message.caption or ""
     if text.startswith("/"):
-        return  # commands are handled in topic/commands.py
+        return
 
     ctx = get_context(client)
     topic_id = message.message_thread_id
@@ -32,26 +61,18 @@ async def topic_admin_reply(client: Client, message: Message) -> None:
     if not ticket:
         return
     if ticket.get("status") != "open":
-        try:
-            await message.reply_text("This ticket is closed.")
-        except Exception:  # noqa: BLE001
-            pass
+        await _react(message, "❌")
         return
 
     try:
         await ticket_service.send_admin_reply_to_user(
             client, ctx.db, ticket=ticket, message=message
         )
-        try:
-            await message.reply_text("Delivered.")
-        except Exception:  # noqa: BLE001
-            pass
+        await _react(message, "✅")
     except Exception as exc:  # noqa: BLE001
         log.warning("topic.deliver_failed", error=str(exc))
-        try:
-            await message.reply_text(f"Delivery failed: {exc}")
-        except Exception:  # noqa: BLE001
-            pass
+        await _react(message, "❌")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

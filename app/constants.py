@@ -45,6 +45,9 @@ class CallbackPrefix(StrEnum):
     # User-facing
     USER_SELECT_PROJECT = "u:sp"
     USER_RATE = "u:rate"
+    USER_TICKETS_LIST = "u:tks"
+    USER_TICKETS_VIEW = "u:tkv"
+    USER_TICKETS_CLOSE = "u:tkc"
 
     # Admin dashboard
     ADMIN_HOME = "a:home"
