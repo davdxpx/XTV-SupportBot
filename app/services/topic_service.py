@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import random
 from typing import Any
 
@@ -21,12 +22,17 @@ from app.utils.retry import async_retry
 log = get_logger("topic")
 
 
+# ---------------------------------------------------------------------------
+# Peer helpers
+# ---------------------------------------------------------------------------
+
+
 async def _input_channel(client: Client, chat_id: int) -> raw.types.InputChannel:
-    """Resolve a chat_id to a raw InputChannel. Required for raw API calls."""
     peer = await client.resolve_peer(chat_id)
     if not hasattr(peer, "channel_id") or not hasattr(peer, "access_hash"):
         raise TopicCreationError(
-            f"chat_id {chat_id} is not a supergroup / channel (got {type(peer).__name__})"
+            f"chat_id {chat_id} is not a supergroup / channel "
+            f"(resolved peer type: {type(peer).__name__})"
         )
     return raw.types.InputChannel(
         channel_id=peer.channel_id,
@@ -41,42 +47,118 @@ def _rnd_id(client: Client) -> int:
     return random.SystemRandom().randint(1, 2**62)
 
 
+# ---------------------------------------------------------------------------
+# Pyrofork schema adapter
+# ---------------------------------------------------------------------------
+
+
+def _find_raw_class(name: str) -> type | None:
+    """Look up a raw TL function class across known namespaces.
+
+    Pyrofork versions disagree on whether CreateForumTopic /
+    EditForumTopic live in ``raw.functions.channels`` (current schema,
+    per https://core.telegram.org/method/channels.createForumTopic) or
+    the legacy ``raw.functions.messages`` namespace. We iterate both.
+    """
+    for ns in ("channels", "messages"):
+        mod = getattr(raw.functions, ns, None)
+        if mod is None:
+            continue
+        cls = getattr(mod, name, None)
+        if cls is not None:
+            return cls
+    return None
+
+
+def _class_params(cls: type) -> set[str]:
+    try:
+        return set(inspect.signature(cls.__init__).parameters)
+    except (ValueError, TypeError):
+        return set()
+
+
+async def _peer_kwarg(client: Client, params: set[str]) -> tuple[str, Any]:
+    """Pick the right peer kwarg name (``channel`` vs ``peer``) for this
+    class and resolve the admin chat to the matching type."""
+    if "channel" in params:
+        return "channel", await _input_channel(client, settings.ADMIN_CHANNEL_ID)
+    if "peer" in params:
+        return "peer", await client.resolve_peer(settings.ADMIN_CHANNEL_ID)
+    raise TopicCreationError(
+        f"CreateForumTopic/EditForumTopic in this pyrofork build has no "
+        f"channel or peer parameter (got: {sorted(params)})"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Raw API wrappers
+# ---------------------------------------------------------------------------
+
+
 @async_retry(attempts=settings.TOPIC_CREATE_RETRY, backoff=1.8, exceptions=(RPCError,))
 async def _create_forum_topic(client: Client, title: str) -> int:
     """Create a forum topic in ADMIN_CHANNEL_ID via the raw API.
 
-    The high-level ``client.create_forum_topic`` in some pyrofork builds
-    calls ``messages.CreateForumTopic`` with a ``channel=`` kwarg that does
-    not exist on that schema, raising ``TypeError``. We go directly to
-    ``channels.CreateForumTopic`` to avoid the mismatch.
-
-    Returns the forum topic's thread id (== message id of the service
-    message that created the topic).
+    Returns the topic's thread id (== id of the service message that
+    created the topic). Implemented per
+    https://core.telegram.org/method/channels.createForumTopic.
     """
-    input_channel = await _input_channel(client, settings.ADMIN_CHANNEL_ID)
-    result = await client.invoke(
-        raw.functions.channels.CreateForumTopic(
-            channel=input_channel,
-            title=title[:128],
-            random_id=_rnd_id(client),
-        )
+    cls = _find_raw_class("CreateForumTopic")
+    if cls is None:
+        raise TopicCreationError("Pyrofork has no CreateForumTopic in channels or messages")
+
+    params = _class_params(cls)
+    peer_key, peer_value = await _peer_kwarg(client, params)
+
+    kwargs: dict[str, Any] = {
+        peer_key: peer_value,
+        "title": title[:128],
+        "random_id": _rnd_id(client),
+    }
+
+    log.debug(
+        "topic.raw.create",
+        cls=f"{cls.__module__}.{cls.__name__}",
+        peer_key=peer_key,
     )
+    result = await client.invoke(cls(**kwargs))
+
     for update in getattr(result, "updates", []) or []:
         msg = getattr(update, "message", None)
         if msg is not None and getattr(msg, "id", None):
             return int(msg.id)
-    raise TopicCreationError("topic created but message id was not returned")
+    raise TopicCreationError("topic created but message id was not returned by server")
 
 
-async def _close_forum_topic_raw(client: Client, topic_id: int) -> None:
-    input_channel = await _input_channel(client, settings.ADMIN_CHANNEL_ID)
-    await client.invoke(
-        raw.functions.channels.EditForumTopic(
-            channel=input_channel,
-            topic_id=topic_id,
-            closed=True,
-        )
+async def _edit_forum_topic_raw(
+    client: Client, topic_id: int, *, closed: bool | None = None
+) -> None:
+    cls = _find_raw_class("EditForumTopic")
+    if cls is None:
+        raise TopicCreationError("Pyrofork has no EditForumTopic")
+
+    params = _class_params(cls)
+    peer_key, peer_value = await _peer_kwarg(client, params)
+
+    kwargs: dict[str, Any] = {
+        peer_key: peer_value,
+        "topic_id": topic_id,
+    }
+    if closed is not None and "closed" in params:
+        kwargs["closed"] = closed
+
+    log.debug(
+        "topic.raw.edit",
+        cls=f"{cls.__module__}.{cls.__name__}",
+        peer_key=peer_key,
+        closed=closed,
     )
+    await client.invoke(cls(**kwargs))
+
+
+# ---------------------------------------------------------------------------
+# High-level helpers used by the service layer
+# ---------------------------------------------------------------------------
 
 
 async def ensure_topic_for_ticket(
@@ -139,8 +221,8 @@ async def ensure_topic_for_ticket(
 
 async def close_topic(client: Client, topic_id: int) -> None:
     try:
-        await _close_forum_topic_raw(client, topic_id)
-    except RPCError as exc:
+        await _edit_forum_topic_raw(client, topic_id, closed=True)
+    except (RPCError, TopicCreationError) as exc:
         log.warning("topic.close_failed", topic_id=topic_id, error=str(exc))
 
 
