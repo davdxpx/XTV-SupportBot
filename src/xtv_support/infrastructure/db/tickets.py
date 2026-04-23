@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
-
-from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from typing import TYPE_CHECKING, Any
 
 from xtv_support.utils.ids import safe_objectid
 from xtv_support.utils.time import utcnow
+
+if TYPE_CHECKING:  # pragma: no cover — type-only so unit tests don't need bson/motor
+    from bson import ObjectId
+    from motor.motor_asyncio import AsyncIOMotorDatabase
+else:
+    # Runtime import is lazy — consumers that never touch tickets can
+    # import this module without pymongo/motor installed (handy for
+    # AI-plugin discovery in trimmed CI images).
+    from bson import ObjectId  # noqa: F401 — re-exported for call sites below
 
 
 async def create(

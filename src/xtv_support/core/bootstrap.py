@@ -13,6 +13,7 @@ from xtv_support.core.events import EventBus
 from xtv_support.core.i18n import I18n
 from xtv_support.core.logger import configure_logging, get_logger
 from xtv_support.core.state import MemoryStateStore, StateMachine, StateStore
+from xtv_support.infrastructure.ai.client import AIClient, AIConfig
 from xtv_support.infrastructure.db import migrations as db_migrations
 from xtv_support.infrastructure.db.client import close as close_db
 from xtv_support.infrastructure.db.client import get_db
@@ -74,16 +75,38 @@ async def build_context(client: Client) -> HandlerContext:
         default=i18n.default_lang,
     )
 
+    # --- AI layer (Phase 7) -----------------------------------------
+    ai_config = AIConfig.from_env()
+    ai_client = AIClient(ai_config, db=db)
+    log.info(
+        "ai.configured",
+        enabled=ai_config.enabled,
+        default_model=ai_config.default_model,
+        redact_pii=ai_config.redact_pii,
+    )
+
     # Register every singleton the rest of the app may want to resolve.
     container.register_instance(Client, client)
     container.register_instance(EventBus, bus)
     container.register_instance(FeatureFlags, flags)
     container.register_instance(StateMachine, state_machine)
     container.register_instance(I18n, i18n)
+    container.register_instance(AIClient, ai_client)
     container.register_instance(TaskManager, tasks)
     container.register_instance(CooldownService, cooldown)
     container.register_instance(SlaService, sla)
     container.register_instance(BroadcastManager, broadcasts)
+    try:
+        from motor.motor_asyncio import AsyncIOMotorDatabase
+
+        container.register_instance(AsyncIOMotorDatabase, db)
+    except Exception:  # noqa: BLE001
+        pass
+    from xtv_support.config.settings import Settings
+    try:
+        container.register_instance(Settings, settings)
+    except Exception:  # noqa: BLE001
+        pass
 
     # --- Plugins ----------------------------------------------------
     loader = PluginLoader(container=container, bus=bus, flags=flags, registry=registry)
