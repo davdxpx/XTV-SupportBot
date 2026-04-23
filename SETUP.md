@@ -1,4 +1,4 @@
-# XTVfeedback-bot — Setup Guide
+# XTV-SupportBot — Setup Guide
 
 Step-by-step to go from zero to a running bot. Follow in order.
 
@@ -115,8 +115,8 @@ python main.py
 ### Docker
 
 ```bash
-docker build -t xtvfeedback-bot .
-docker run --rm --env-file .env xtvfeedback-bot
+docker build -f deploy/docker/Dockerfile -t xtv-support:0.9.0 .
+docker run --rm --env-file .env xtv-support:0.9.0
 ```
 
 ### Railway
@@ -127,18 +127,18 @@ docker run --rm --env-file .env xtvfeedback-bot
 
 ### VPS (systemd)
 
-Create `/etc/systemd/system/xtvfeedback-bot.service`:
+Create `/etc/systemd/system/xtv-support.service`:
 
 ```ini
 [Unit]
-Description=XTVfeedback-bot
+Description=XTV-SupportBot
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/srv/xtvfeedback-bot
-EnvironmentFile=/srv/xtvfeedback-bot/.env
-ExecStart=/srv/xtvfeedback-bot/.venv/bin/python main.py
+WorkingDirectory=/srv/xtv-support
+EnvironmentFile=/srv/xtv-support/.env
+ExecStart=/srv/xtv-support/.venv/bin/python main.py
 Restart=always
 RestartSec=5
 User=bot
@@ -147,7 +147,7 @@ User=bot
 WantedBy=multi-user.target
 ```
 
-`systemctl daemon-reload && systemctl enable --now xtvfeedback-bot`.
+`systemctl daemon-reload && systemctl enable --now xtv-support`.
 
 ---
 

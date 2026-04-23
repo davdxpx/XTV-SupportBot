@@ -1,0 +1,10 @@
+# Every change is reviewed by the maintainer by default.
+*                       @davdxpx
+
+# Security-sensitive paths require a second explicit review.
+/LICENSE                @davdxpx
+/SECURITY.md            @davdxpx
+/.github/               @davdxpx
+/pyproject.toml         @davdxpx
+/deploy/                @davdxpx
+/scripts/rotate_*.py    @davdxpx

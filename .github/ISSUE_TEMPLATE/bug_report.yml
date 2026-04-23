@@ -1,0 +1,73 @@
+name: "Bug report"
+description: "Something is broken or behaves unexpectedly."
+title: "bug: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in as
+        much detail as you can — minimal reproductions make fixes dramatically
+        faster.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: "Output of `git rev-parse HEAD` or the release tag you're on."
+      placeholder: "v0.9.0 or a1b2c3d"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: false
+      options:
+        - Tickets / forum topics
+        - Admin dashboard / broadcast
+        - Anti-spam / cooldown
+        - SLA / auto-close
+        - AI features
+        - REST API / Web admin
+        - Webhooks / integrations
+        - Observability
+        - Deployment (Docker / Helm / Railway)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened? What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: "Paste the `boot.*` lines and any error traceback. Redact tokens."
+      render: text
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: "OS, Python, deployment (Railway / Docker / bare), Mongo version, relevant env flags."
+    validations:
+      required: true

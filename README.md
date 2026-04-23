@@ -1,155 +1,179 @@
-# XTVfeedback-bot
+# XTV-SupportBot
 
-Telegram support + feedback + direct-contact bot. Every ticket is a **Telegram forum topic** in the admin supergroup, so the entire team can collaborate per user.
+<p align="center">
+  <b>Enterprise-grade Telegram support, feedback and direct-contact bot.</b><br>
+  Forum-topic tickets · RBAC &amp; teams · macros &amp; knowledge base · AI assistance ·
+  analytics · broadcasts · plugins · REST API &amp; web admin.
+</p>
 
-## Highlights
+<p align="center">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.9.0-blue">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/license-XTV%20Public%20License-lightgrey">
+  <img alt="Status" src="https://img.shields.io/badge/status-pre--release-orange">
+</p>
 
-- **Forum-topic tickets**: one topic per conversation, with a live header card (assignee, tags, priority, SLA progress bar)
-- **Consistent blockquote UI**: every message uses an expandable `<blockquote>` with optional progress bars
-- **Assignment**: `Assign` button or `/assign me|<id>|none` in a topic
-- **Tags**: admin-managed tag registry, per-ticket multi-toggle picker, `/tag add|rm` in a topic
-- **SLA timer**: configurable warning deadline, automatic alert in the topic + header rerender
-- **Auto-close**: inactive tickets are closed after `AUTO_CLOSE_DAYS`
-- **Anti-spam cooldown**: sliding-window rate limit with mute + strike escalation
-- **Broadcast**: pausable/cancellable sender with a live progress card in the admin DM
-- **Projects**: support or feedback-type projects; feedback projects auto-close and can collect star ratings
-- **Contact links**: one-click deep link that opens a private thread with a specific admin (optionally anonymous)
-- Full async stack: **pyrofork + motor**, structlog, pydantic-settings
+> **v0.9.0 is a public pre-release** on the way to a stable v1.0. Interfaces may
+> still change between minor versions. Bug reports and PRs are welcome — see
+> `CONTRIBUTING.md`.
 
-## Requirements
+---
 
-- Python **3.12**
-- A Telegram **forum supergroup** with topics enabled
-- The bot must be an admin of the supergroup with the **Manage Topics** permission
-- MongoDB (Atlas or self-hosted)
-- `API_ID` / `API_HASH` from <https://my.telegram.org>
-- Bot token from [@BotFather](https://t.me/BotFather)
+## What it does
 
-## Setup
+XTV-SupportBot turns a single Telegram forum supergroup into a full-featured
+helpdesk. Every conversation with an end-user is a **forum topic**; the whole
+team can collaborate inside it with live-updated header cards, assignment,
+tags, priority, SLA timers and canned replies.
 
-**For the full step-by-step walkthrough including Telegram app creation, forum
-supergroup configuration, bot permissions, MongoDB Atlas, Railway, Docker and
-a smoke-test checklist, see [SETUP.md](./SETUP.md).**
+## Feature matrix
 
-Quick version:
+| Area | Features |
+|---|---|
+| **Tickets** | forum-topic per ticket, live header card, assignment, tags, priority, SLA + breach alerts, auto-close |
+| **Teams &amp; roles** | RBAC (`owner`/`admin`/`supervisor`/`agent`/`viewer`), queue routing by tag/project/priority |
+| **Productivity** | macros / canned responses, knowledge base with FTS &amp; pre-ticket FAQ gate, inline autocompletion |
+| **AI** (opt-in) | reply drafts, ticket summaries, sentiment, smart routing, translation, voice/image OCR — via **LiteLLM** (Claude, GPT, Gemini, Ollama, …) |
+| **Escalation &amp; CSAT** | escalation rules, business hours &amp; holidays, 1–5★ CSAT after close |
+| **Analytics** | FRT/resolution/SLA metrics, agent leaderboard, weekly digest, CSV/JSON exports |
+| **Integrations** | outgoing HMAC-signed webhooks, Discord/Slack bridge, optional email ingestion |
+| **Anti-spam** | sliding-window cooldown + mute, CAPTCHA plugin, link/phishing scanner |
+| **Broadcast** | pausable/cancellable with live progress card |
+| **Compliance** | GDPR export/delete, audit log with TTL, PII-redaction filter |
+| **API &amp; web** | FastAPI REST (API-keys &amp; scopes), React/Vite SPA admin under `/web/` |
+| **Observability** | Prometheus `/metrics`, OpenTelemetry traces, `/health` &amp; `/ready` |
+| **i18n** | English + Spanish, Russian, Hindi, Bengali, Tamil, Telugu, Marathi, Punjabi, Gujarati, Urdu |
+| **Ops** | multi-stage Docker image, docker-compose, Helm chart, raw k8s manifests, Railway/Nixpacks |
+
+## Tech stack
+
+- Python **3.12**, async everywhere
+- `pyrofork` (Telegram MTProto) + `tgcrypto`
+- `motor` (MongoDB async) — primary datastore
+- Optional `redis` for distributed cache / cooldown / rate-limits
+- `pydantic-settings`, `structlog`
+- `LiteLLM` for provider-agnostic AI
+- `FastAPI` for the REST/admin API, React + Vite for the SPA
+- `Prometheus` + `OpenTelemetry` for observability
+
+## Install
+
+### pip extras
 
 ```bash
-# create and activate a Python 3.12 virtualenv
+pip install -e '.[dev]'            # minimum
+pip install -e '.[ai,api,redis]'   # enable AI, REST API, Redis cache
+pip install -e '.[all]'            # everything including docs & observability
+```
+
+### Docker (single image, SPA baked in)
+
+```bash
+docker build -f deploy/docker/Dockerfile -t xtv-support:0.9.0 .
+docker run --rm --env-file .env xtv-support:0.9.0
+```
+
+### docker-compose (bot + mongo + redis + prometheus)
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml up
+```
+
+### Helm (Kubernetes)
+
+```bash
+helm install xtv-support deploy/helm/xtv-support \
+  --set-file env.env=./.env \
+  --set image.tag=0.9.0
+```
+
+### Railway / Nixpacks / VPS
+
+`Procfile` &amp; `nixpacks.toml` remain unchanged — `python main.py` is the entry
+point. See `SETUP.md` for the end-to-end walkthrough.
+
+## Quick start (local)
+
+```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-
-# install
-pip install -r requirements.txt
-
-# configure
-cp .env.example .env
-# edit .env with your values
-
-python main.py
-```
-
-### .env
-
-Required:
-
-- `API_ID`, `API_HASH`, `BOT_TOKEN`
-- `MONGO_URI`
-- `ADMIN_IDS` (comma-separated Telegram user ids)
-- `ADMIN_CHANNEL_ID` (the forum-supergroup id, usually negative and starts with `-100`)
-
-Optional tuning (defaults shown in `.env.example`):
-
-- SLA: `SLA_WARN_MINUTES`, `SLA_BREACH_MINUTES`
-- Auto-close: `AUTO_CLOSE_DAYS`, `AUTO_CLOSE_SWEEP_MINUTES`
-- Cooldown: `COOLDOWN_RATE`, `COOLDOWN_WINDOW`, `COOLDOWN_MUTE_SECONDS`
-- Broadcast: `BROADCAST_CONCURRENCY`, `BROADCAST_FLOOD_BUFFER_MS`
-- Progress edits: `PROGRESS_EDIT_INTERVAL`
-- Topic creation retries: `TOPIC_CREATE_RETRY`
-- Error reporting topic: `ERROR_LOG_TOPIC_ID`
-- Audit retention: `AUDIT_RETENTION_DAYS`
-- Logging: `LOG_LEVEL`, `LOG_JSON`
-
-### Admin group setup
-
-1. Create a new Telegram group.
-2. Promote it to a supergroup and enable **Topics** in group settings.
-3. Add the bot as an **administrator** with **Manage Topics** and **Invite Users** permissions.
-4. Copy the group's numeric id into `ADMIN_CHANNEL_ID` (supergroup ids usually look like `-1001234567890`).
-
-If topics are not enabled or the bot lacks the permission, the bot falls back to sending ticket messages directly into the channel and marks the ticket with `topic_fallback=true`. Admins can still reply, but without a dedicated thread.
-
-## Run
-
-```bash
-python main.py
-```
-
-The first boot runs `db.migrations.run()`, which ensures indexes and back-fills missing fields for the new features (assignee, tags, priority, SLA, cooldown, etc.). Migrations are idempotent.
-
-## Commands
-
-### Private chat (users)
-
-- `/start` — select a project or resolve a deep link (`?start=<project_id>` or `?start=contact_<uuid>`)
-- `/close` — close the caller's active ticket
-
-### Private chat (admins)
-
-- `/admin` — open the admin dashboard
-- `/history <user_id>` — recent tickets for a user
-
-### In a ticket topic (admins)
-
-- Any non-command message is forwarded to the user
-- `/close` — close the ticket and its topic
-- `/assign <user_id|me|none>` — assign an admin or clear the assignee
-- `/tag add|rm <name>` — toggle a tag on the ticket
-- Inline buttons on the header card: **Assign**, **Tag**, **Priority**, **Close**
-
-## Testing manually (end-to-end)
-
-1. `/start` in a private chat shows the welcome card.
-2. Pick a project, send a text — a new topic appears in the admin group with the ticket header (blockquote + progress bar). The user receives a confirmation card.
-3. Reply inside the topic; the user receives the reply as a `Support reply` blockquote.
-4. Click `Assign` on the header, pick another admin — the header re-renders and that admin gets a DM.
-5. Click `Tag`, toggle two tags — the header shows `#tag1 #tag2`.
-6. Send 11 messages in 60 s from the user — message 11 gets a cooldown card; further messages are dropped until the mute elapses.
-7. Leave the ticket unanswered past `SLA_WARN_MINUTES` — an SLA alert is posted to the topic and the header bar flips to breached.
-8. `/admin ›› Broadcast` — type a text, preview, hit `Start`; the admin DM shows a live progress card with **Pause**/**Resume**/**Cancel**.
-9. Leave a ticket inactive for `AUTO_CLOSE_DAYS` — the next auto-close sweep closes it and the user gets an info card.
-
-## Tests
-
-```bash
 pip install -e '.[dev]'
-pytest
+
+cp .env.example .env           # fill in API_ID/API_HASH/BOT_TOKEN/MONGO_URI/ADMIN_IDS/ADMIN_CHANNEL_ID
+
+python main.py
 ```
+
+See **`SETUP.md`** for the fully-annotated walkthrough (BotFather, forum
+supergroup, MongoDB Atlas, Railway/Docker, smoke-test checklist).
+
+## Configuration
+
+Every setting is read from environment variables or `.env`. See
+`.env.example` for the complete, commented list. Feature modules that are
+shipped as opt-in plugins are **off by default** — flip them on by setting
+their `FEATURE_*` flag to `true`.
+
+## Commands (excerpt)
+
+### User DM
+- `/start` · `/close` · `/lang` · `/tickets` · `/gdpr export|delete`
+
+### Admin DM
+- `/admin` (dashboard) · `/history <user_id>` · `/team create` · `/apikey create <scope>`
+
+### Inside a ticket topic
+- Any non-command text → forwarded to user
+- `/close` · `/assign <user_id|me|none>` · `/tag add|rm <name>`
+- `/macro save|use|list` · header buttons: *Assign*, *Tag*, *Priority*, *AI Draft*, *Close*
 
 ## Architecture
 
 ```
-app/
-  core/        filters, router, errors, logger, context, callback_data
-  db/          motor client + per-collection repositories, migrations
-  services/    ticket / topic / broadcast / cooldown / sla / autoclose / audit
-  ui/          Card, ProgressCard, blockquote, progress bar primitives
-    templates/ ticket_header, admin_dashboard, project_wizard, broadcast,
-               user_messages
-  middlewares/ logging, blocked-user drop, cooldown guard, admin_guard
-  handlers/    start, user/*, admin/*, topic/*, errors
-  tasks/       TaskManager, sla_task, autoclose_task
-main.py        asyncio.run(_amain()): client.start -> build_context ->
-               register_all -> run loops -> idle -> clean shutdown
+src/xtv_support/
+  config/          settings, feature flags, i18n config
+  core/            DI container, event bus, router, filters, logger, FSM
+  domain/          pure models &amp; events
+  infrastructure/  db, cache, storage, telegram, ai (LiteLLM), metrics, tracing
+  services/        tickets, projects, users, sla, cooldown, broadcasts, macros,
+                   kb, ai, analytics, escalation, csat, teams, business_hours, gdpr
+  handlers/        user/ admin/ topic/ system/
+  middlewares/     logging, admin_guard, blocked, cooldown, i18n, rbac, rate_limit, tracing
+  ui/              primitives (card/progress/blockquote), templates, themes, keyboards
+  plugins/         loader + registry + builtin/*
+  tasks/           scheduler + periodic jobs
+  api/             FastAPI app (routes, deps, security)
+  utils/           text, time, ids, retry, crypto, phone, validation
+  locales/         en.yaml, ru.yaml, …
 ```
 
-Message dispatch uses explicit handler groups (`HandlerGroup` in `app/constants.py`) so admin flows, user flows and topic flows never cross.
+The full layered diagram lives in `docs/architecture.md`.
 
-## Security notes
+## Documentation
 
-- The previous version of `.env.example` committed a real bot token and a MongoDB URI with password. **Rotate both** (new token via @BotFather, new MongoDB password in Atlas). The leak remains in git history.
-- Secrets in this rewrite are wrapped in `pydantic.SecretStr`.
-- Every sensitive admin action (assign, block, broadcast, project delete, tag CRUD) is written to the `audit_log` collection with a TTL of `AUDIT_RETENTION_DAYS` days.
+- **`SETUP.md`** — step-by-step first-run guide
+- **`docs/`** (MkDocs-Material) — full reference, plugin authoring, API, deployment
+- **`CHANGELOG.md`** · **`SECURITY.md`** · **`CONTRIBUTING.md`** · **`CODE_OF_CONDUCT.md`**
 
-## License / credits
+## Security
+
+- Every admin action is written to an audit log with configurable TTL
+- Inbound link/phishing scanner is on by default; abusers are auto-muted
+- API keys are SHA-256-hashed at rest; full key is shown exactly once
+- Webhook deliveries are HMAC-SHA-256 signed
+- Secret-rotation helper: `python scripts/rotate_secrets.py`
+
+Report vulnerabilities privately — see `SECURITY.md`.
+
+## License
+
+Source-available under the **XTV Public License** — see `LICENSE`. For
+licensing inquiries reach out on Telegram [@davdxpx](https://t.me/davdxpx).
+
+## Credits
+
+Developed by **𝕏0L0™** ([@davdxpx](https://t.me/davdxpx)) for the
+[𝕏TV Network](https://t.me/XTVglobal) · bots channel:
+[@XTVbots](https://t.me/XTVbots) · backup: [@XTVhome](https://t.me/XTVhome).
 
 Developed by @davdxpx

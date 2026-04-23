@@ -1,0 +1,24 @@
+name: "Question"
+description: "You're stuck and the docs don't cover it. Before opening, check the Telegram channel."
+title: "question: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: What you're trying to do
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you've already tried
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment (if relevant)
+      description: Version, deployment method, Mongo version, feature flags.

@@ -1,4 +1,5 @@
 .git/
+.github/
 .venv/
 venv/
 __pycache__/
@@ -8,6 +9,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 tests/
+docs/
+docs/site/
+site/
 .env
 .env.*
 *.log
@@ -16,5 +20,16 @@ tests/
 .vscode/
 .idea/
 .DS_Store
-README.md
 plans/
+
+# Web SPA is built inside the Docker image via its own stage
+web/node_modules/
+web/.vite/
+web/.turbo/
+
+# Local dev artefacts
+Makefile
+CHANGELOG.md
+SECURITY.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
