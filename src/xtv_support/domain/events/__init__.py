@@ -14,6 +14,11 @@ from xtv_support.domain.events.broadcasts import (
     BroadcastResumed,
     BroadcastStarted,
 )
+from xtv_support.domain.events.csat import (
+    CsatCommented,
+    CsatPrompted,
+    CsatReceived,
+)
 from xtv_support.domain.events.kb import (
     KbArticleDismissed,
     KbArticleHelpful,
@@ -80,4 +85,8 @@ __all__ = [
     "PluginLoaded",
     "PluginUnloaded",
     "PluginFailed",
+    # CSAT (Phase 8c)
+    "CsatPrompted",
+    "CsatReceived",
+    "CsatCommented",
 ]
