@@ -62,5 +62,15 @@ def create_app(
     async def version() -> dict:
         return {"version": __version__, "name": "XTV-SupportBot"}
 
+    # Mount core routers lazily so a user importing ``create_app`` in a
+    # test environment that stubs out the routes doesn't pay for them.
+    from xtv_support.api.routes import analytics as analytics_routes
+    from xtv_support.api.routes import projects as projects_routes
+    from xtv_support.api.routes import tickets as tickets_routes
+
+    app.include_router(tickets_routes.build_router())
+    app.include_router(projects_routes.build_router())
+    app.include_router(analytics_routes.build_router())
+
     _log.info("api.app_created", version=__version__)
     return app
