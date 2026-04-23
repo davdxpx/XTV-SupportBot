@@ -1,0 +1,21 @@
+# Hindi — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: hi
+  name: Hindi
+  native_name: "हिन्दी"
+  flag: "\U0001F1EE\U0001F1F3"   # 🇮🇳
+
+user:
+  welcome: "👋 स्वागत है! टिकट खोलने के लिए /start भेजें।"
+  welcome_back: "👋 वापसी पर स्वागत है, {name}।"
+  pick_project: "एक प्रोजेक्ट चुनें:"
+  blocked: "⛔ आपको इस बॉट से ब्लॉक कर दिया गया है।"
+  cooldown: "⏱️ कृपया धीरे — आप {seconds} सेकंड में फिर से लिख सकते हैं।"
+  ticket_created: "🎫 टिकट #{ticket_id} बनाया गया। टीम यहीं जवाब देगी।"
+  ticket_closed: "✅ आपका टिकट बंद कर दिया गया है। नया खोलने के लिए /start भेजें।"
+  reply_received: "💬 समर्थन की प्रतिक्रिया प्राप्त हुई।"
+  language_changed: "🌐 भाषा सेट की गई: {lang}।"
+  language_list_header: "अपनी भाषा चुनें:"
+  no_active_ticket: "आपके पास कोई सक्रिय टिकट नहीं है। खोलने के लिए /start भेजें।"
+  thanks_for_feedback: "🙏 आपकी प्रतिक्रिया के लिए धन्यवाद!"

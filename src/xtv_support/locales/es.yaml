@@ -1,0 +1,21 @@
+# Spanish — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: es
+  name: Spanish
+  native_name: "Español"
+  flag: "\U0001F1EA\U0001F1F8"   # 🇪🇸
+
+user:
+  welcome: "👋 ¡Bienvenido! Envía /start para abrir un ticket."
+  welcome_back: "👋 ¡Bienvenido de nuevo, {name}!"
+  pick_project: "Selecciona un proyecto:"
+  blocked: "⛔ Has sido bloqueado de este bot."
+  cooldown: "⏱️ Más despacio — podrás volver a escribir en {seconds}s."
+  ticket_created: "🎫 Ticket #{ticket_id} creado. El equipo te responderá aquí."
+  ticket_closed: "✅ Tu ticket ha sido cerrado. Envía /start para abrir uno nuevo."
+  reply_received: "💬 Respuesta de soporte recibida."
+  language_changed: "🌐 Idioma establecido: {lang}."
+  language_list_header: "Elige tu idioma:"
+  no_active_ticket: "No tienes un ticket activo. Envía /start para abrir uno."
+  thanks_for_feedback: "🙏 ¡Gracias por tus comentarios!"
