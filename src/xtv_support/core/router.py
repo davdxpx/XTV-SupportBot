@@ -18,10 +18,14 @@ log = get_logger("router")
 # import order does pin the per-group registration order if multiple
 # handlers share the same group.
 _HANDLER_MODULES: tuple[str, ...] = (
-    # Middleware (negative groups)
+    # Middleware (negative groups) — runs MIDDLEWARE_LOG first, then GUARD.
+    # Within GUARD the registration order determines dispatch order, so
+    # rbac_mw + i18n_mw run before blocked_mw / cooldown_mw — later
+    # handlers then see the ContextVars set by the earlier ones.
     "xtv_support.middlewares.logging_mw",
-    "xtv_support.middlewares.blocked_mw",
+    "xtv_support.middlewares.rbac_mw",
     "xtv_support.middlewares.i18n_mw",
+    "xtv_support.middlewares.blocked_mw",
     "xtv_support.middlewares.cooldown_mw",
     # Commands (group 0)
     "xtv_support.handlers.start",
