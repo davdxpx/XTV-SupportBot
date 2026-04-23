@@ -119,6 +119,26 @@ class AuditDoc(TypedDict, total=False):
     payload: dict
     ts: datetime
 
+
+class RoleDoc(TypedDict, total=False):
+    user_id: int
+    role: str                # xtv_support.domain.enums.Role value
+    team_ids: list[str]
+    granted_by: int | None
+    granted_at: datetime
+
+
+class TeamDoc(TypedDict, total=False):
+    _id: str                 # team slug, unique
+    name: str
+    timezone: str
+    business_hours: list[dict]   # [{weekday: int, start: "HH:MM", end: "HH:MM"}]
+    holidays: list[str]          # YYYY-MM-DD
+    member_ids: list[int]
+    queue_rules: list[dict]      # [{match: {...}, weight: int}]
+    created_by: int
+    created_at: datetime
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

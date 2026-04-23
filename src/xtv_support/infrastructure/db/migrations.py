@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -75,6 +75,14 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
         [("ts", DESCENDING)], name="ix_ts_ttl", expireAfterSeconds=retention_seconds
     )
 
+    # --- Phase 5: RBAC + Teams ---------------------------------------
+    await db.roles.create_index([("user_id", ASCENDING)], unique=True, name="ux_role_user")
+    await db.roles.create_index([("role", ASCENDING)], name="ix_role")
+    await db.roles.create_index([("team_ids", ASCENDING)], name="ix_role_teams")
+
+    await db.teams.create_index([("_id", ASCENDING)], name="ix_team_id")
+    await db.teams.create_index([("member_ids", ASCENDING)], name="ix_team_members")
+
     log.info("db.indexes_ensured")
 
 
@@ -113,6 +121,26 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
     }
     for field, default in user_defaults.items():
         await db.users.update_many({field: {"$exists": False}}, {"$set": {field: default}})
+
+    # --- Seed RBAC from ADMIN_IDS (Phase 5) --------------------------
+    # Every legacy admin is bootstrapped as Role.ADMIN unless a roles/
+    # document for them already exists (respects manual overrides).
+    from xtv_support.utils.time import utcnow as _utcnow
+
+    for admin_id in settings.ADMIN_IDS:
+        await db.roles.update_one(
+            {"user_id": admin_id},
+            {
+                "$setOnInsert": {
+                    "user_id": admin_id,
+                    "role": "admin",
+                    "team_ids": [],
+                    "granted_by": None,
+                    "granted_at": _utcnow(),
+                }
+            },
+            upsert=True,
+        )
 
     await db.configs.update_one(
         {"_id": "schema"},
