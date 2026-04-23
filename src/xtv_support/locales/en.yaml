@@ -1,0 +1,81 @@
+# =============================================================================
+# English — default locale (full coverage)
+#
+# Keys are organised by UI surface: user, admin, topic, system, ticket.
+# New keys land in this file first; other locales may omit anything and
+# will fall back here.
+# =============================================================================
+
+meta:
+  code: en
+  name: English
+  native_name: English
+  flag: "\U0001F1EC\U0001F1E7"   # 🇬🇧
+
+# ---- User-facing (DM) ------------------------------------------------------
+user:
+  welcome: "👋 Welcome! Send /start to open a ticket."
+  welcome_back: "👋 Welcome back, {name}."
+  pick_project: "Pick a project:"
+  project_not_found: "That project does not exist anymore."
+  blocked: "⛔ You've been blocked from using this bot."
+  cooldown: "⏱️ Please slow down — you can write again in {seconds}s."
+  ticket_created: "🎫 Ticket #{ticket_id} created. The team will reply here."
+  ticket_closed: "✅ Your ticket has been closed. Send /start to open a new one."
+  ticket_reopened: "🔓 Your ticket has been reopened."
+  reply_received: "💬 Support reply received."
+  unknown_command: "I don't understand that command. Try /start."
+  language_changed: "🌐 Language set to {lang}."
+  language_list_header: "Choose your language:"
+  no_active_ticket: "You don't have an active ticket. Send /start to open one."
+  thanks_for_feedback: "🙏 Thanks for your feedback!"
+
+# ---- Admin-facing (DM dashboard + topic) -----------------------------------
+admin:
+  dashboard: "Admin dashboard"
+  no_permission: "🚫 This action requires admin permissions."
+  assigned_to_you: "📌 Ticket #{ticket_id} was assigned to you."
+  ticket_reassigned: "🔁 Ticket #{ticket_id} is now assigned to {assignee}."
+  ticket_untagged: "🏷️ Tag #{tag} removed from ticket."
+  ticket_tagged: "🏷️ Tag #{tag} added to ticket."
+  broadcast_started: "📣 Broadcast started — {count} recipients."
+  broadcast_finished: "📣 Broadcast finished: {delivered} delivered, {failed} failed."
+  topic_created_fallback: "⚠️ Could not create a forum topic; posting into the channel instead."
+
+# ---- Topic messages (admin-side inside a ticket topic) ---------------------
+topic:
+  sla_warning: "⚠️ SLA warning — this ticket has waited {minutes}m."
+  sla_breach: "🔥 SLA breach — this ticket has waited {minutes}m."
+  autoclosed: "⌛ Auto-closed after {days}d of inactivity."
+
+# ---- System / fallbacks ----------------------------------------------------
+system:
+  service_unavailable: "Service temporarily unavailable. Please try again in a minute."
+  internal_error: "Something went wrong. The admins have been notified."
+  feature_disabled: "This feature is disabled on this instance."
+
+# ---- Ticket value labels (priority, status, tags) --------------------------
+ticket:
+  count_one: "1 ticket"
+  count_other: "{count} tickets"
+  priority:
+    low: Low
+    normal: Normal
+    high: High
+    urgent: Urgent
+  status:
+    open: Open
+    pending: Pending
+    closed: Closed
+  tag_self_service: "Self-service"
+  tag_billing: "Billing"
+  tag_bug: "Bug"
+  tag_question: "Question"
+
+# ---- CSAT survey (Phase 8) -------------------------------------------------
+csat:
+  prompt: "🌟 How would you rate your experience with this ticket?"
+  thanks: "Thank you for rating — your feedback helps us improve."
+  comment_prompt: "Anything you'd like to add? (optional)"
+  star_one: "1 star"
+  star_other: "{count} stars"

@@ -1,0 +1,21 @@
+# Telugu — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: te
+  name: Telugu
+  native_name: "తెలుగు"
+  flag: "\U0001F1EE\U0001F1F3"   # 🇮🇳
+
+user:
+  welcome: "👋 స్వాగతం! టికెట్ తెరవడానికి /start పంపండి."
+  welcome_back: "👋 తిరిగి స్వాగతం, {name}."
+  pick_project: "ఒక ప్రాజెక్ట్‌ను ఎంచుకోండి:"
+  blocked: "⛔ మీరు ఈ బాట్ నుండి నిరోధించబడ్డారు."
+  cooldown: "⏱️ నెమ్మదిగా — మీరు {seconds} సెకన్లలో మళ్లీ రాయవచ్చు."
+  ticket_created: "🎫 టికెట్ #{ticket_id} సృష్టించబడింది. బృందం ఇక్కడ సమాధానమిస్తుంది."
+  ticket_closed: "✅ మీ టికెట్ మూసివేయబడింది. కొత్తది తెరవడానికి /start పంపండి."
+  reply_received: "💬 మద్దతు ప్రతిస్పందన వచ్చింది."
+  language_changed: "🌐 భాష సెట్ చేయబడింది: {lang}."
+  language_list_header: "మీ భాషను ఎంచుకోండి:"
+  no_active_ticket: "మీకు యాక్టివ్ టికెట్ లేదు. తెరవడానికి /start పంపండి."
+  thanks_for_feedback: "🙏 మీ అభిప్రాయానికి ధన్యవాదాలు!"

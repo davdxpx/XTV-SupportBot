@@ -1,0 +1,21 @@
+# Urdu — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: ur
+  name: Urdu
+  native_name: "اردو"
+  flag: "\U0001F1F5\U0001F1F0"   # 🇵🇰
+
+user:
+  welcome: "👋 خوش آمدید! ٹکٹ کھولنے کے لیے /start بھیجیں۔"
+  welcome_back: "👋 واپسی پر خوش آمدید، {name}۔"
+  pick_project: "ایک پروجیکٹ منتخب کریں:"
+  blocked: "⛔ آپ کو اس بوٹ سے بلاک کر دیا گیا ہے۔"
+  cooldown: "⏱️ تھوڑا آہستہ — آپ {seconds} سیکنڈ میں دوبارہ لکھ سکتے ہیں۔"
+  ticket_created: "🎫 ٹکٹ #{ticket_id} بنا دیا گیا۔ ٹیم یہیں جواب دے گی۔"
+  ticket_closed: "✅ آپ کا ٹکٹ بند کر دیا گیا ہے۔ نیا کھولنے کے لیے /start بھیجیں۔"
+  reply_received: "💬 سپورٹ کا جواب موصول ہوا۔"
+  language_changed: "🌐 زبان مقرر کی گئی: {lang}۔"
+  language_list_header: "اپنی زبان منتخب کریں:"
+  no_active_ticket: "آپ کے پاس کوئی فعال ٹکٹ نہیں ہے۔ کھولنے کے لیے /start بھیجیں۔"
+  thanks_for_feedback: "🙏 آپ کے تبصرے کا شکریہ!"

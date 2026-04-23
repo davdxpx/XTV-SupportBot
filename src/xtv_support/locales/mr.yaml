@@ -1,0 +1,21 @@
+# Marathi — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: mr
+  name: Marathi
+  native_name: "मराठी"
+  flag: "\U0001F1EE\U0001F1F3"   # 🇮🇳
+
+user:
+  welcome: "👋 स्वागत आहे! तिकीट उघडण्यासाठी /start पाठवा."
+  welcome_back: "👋 परत स्वागत आहे, {name}."
+  pick_project: "एक प्रकल्प निवडा:"
+  blocked: "⛔ तुम्हाला या बॉटमधून ब्लॉक केले आहे."
+  cooldown: "⏱️ थोडे हळू — तुम्ही {seconds} सेकंदांत पुन्हा लिहू शकता."
+  ticket_created: "🎫 तिकीट #{ticket_id} तयार झाले. संघ येथे उत्तर देईल."
+  ticket_closed: "✅ तुमचे तिकीट बंद झाले आहे. नवीन उघडण्यासाठी /start पाठवा."
+  reply_received: "💬 सपोर्ट उत्तर मिळाले."
+  language_changed: "🌐 भाषा सेट केली: {lang}."
+  language_list_header: "तुमची भाषा निवडा:"
+  no_active_ticket: "तुमच्याकडे कोणतेही सक्रिय तिकीट नाही. उघडण्यासाठी /start पाठवा."
+  thanks_for_feedback: "🙏 तुमच्या अभिप्रायाबद्दल धन्यवाद!"

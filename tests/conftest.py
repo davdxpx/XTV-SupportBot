@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 
-# Provide the minimal env required by pydantic-settings so app.config imports
-# cleanly in tests. The values are fake but syntactically valid.
+# Provide the minimal env required by pydantic-settings so
+# xtv_support.config.settings imports cleanly in tests. The values are fake
+# but syntactically valid.
 os.environ.setdefault("API_ID", "1")
 os.environ.setdefault("API_HASH", "x")
 os.environ.setdefault("BOT_TOKEN", "1:x")

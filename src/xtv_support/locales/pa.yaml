@@ -1,0 +1,21 @@
+# Punjabi — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: pa
+  name: Punjabi
+  native_name: "ਪੰਜਾਬੀ"
+  flag: "\U0001F1EE\U0001F1F3"   # 🇮🇳
+
+user:
+  welcome: "👋 ਜੀ ਆਇਆਂ ਨੂੰ! ਟਿਕਟ ਖੋਲ੍ਹਣ ਲਈ /start ਭੇਜੋ।"
+  welcome_back: "👋 ਵਾਪਸੀ ਤੇ ਜੀ ਆਇਆਂ ਨੂੰ, {name}।"
+  pick_project: "ਇੱਕ ਪ੍ਰੋਜੈਕਟ ਚੁਣੋ:"
+  blocked: "⛔ ਤੁਹਾਨੂੰ ਇਸ ਬਾਟ ਤੋਂ ਬਲਾਕ ਕੀਤਾ ਗਿਆ ਹੈ।"
+  cooldown: "⏱️ ਥੋੜ੍ਹਾ ਹੌਲੀ — ਤੁਸੀਂ {seconds} ਸਕਿੰਟਾਂ ਵਿੱਚ ਦੁਬਾਰਾ ਲਿਖ ਸਕਦੇ ਹੋ।"
+  ticket_created: "🎫 ਟਿਕਟ #{ticket_id} ਬਣਾਈ ਗਈ। ਟੀਮ ਇੱਥੇ ਜਵਾਬ ਦੇਵੇਗੀ।"
+  ticket_closed: "✅ ਤੁਹਾਡੀ ਟਿਕਟ ਬੰਦ ਹੋ ਗਈ। ਨਵੀਂ ਖੋਲ੍ਹਣ ਲਈ /start ਭੇਜੋ।"
+  reply_received: "💬 ਸਹਾਇਤਾ ਜਵਾਬ ਪ੍ਰਾਪਤ ਹੋਇਆ।"
+  language_changed: "🌐 ਭਾਸ਼ਾ ਸੈੱਟ ਕੀਤੀ ਗਈ: {lang}।"
+  language_list_header: "ਆਪਣੀ ਭਾਸ਼ਾ ਚੁਣੋ:"
+  no_active_ticket: "ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਕਿਰਿਆਸ਼ੀਲ ਟਿਕਟ ਨਹੀਂ ਹੈ। ਖੋਲ੍ਹਣ ਲਈ /start ਭੇਜੋ।"
+  thanks_for_feedback: "🙏 ਤੁਹਾਡੇ ਫੀਡਬੈਕ ਲਈ ਧੰਨਵਾਦ!"

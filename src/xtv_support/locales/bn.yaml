@@ -1,0 +1,21 @@
+# Bengali — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: bn
+  name: Bengali
+  native_name: "বাংলা"
+  flag: "\U0001F1E7\U0001F1E9"   # 🇧🇩
+
+user:
+  welcome: "👋 স্বাগতম! টিকিট খুলতে /start পাঠান।"
+  welcome_back: "👋 ফিরে আসার জন্য স্বাগতম, {name}।"
+  pick_project: "একটি প্রোজেক্ট বেছে নিন:"
+  blocked: "⛔ আপনাকে এই বটে ব্লক করা হয়েছে।"
+  cooldown: "⏱️ একটু ধীরে — আপনি {seconds} সেকেন্ডে আবার লিখতে পারবেন।"
+  ticket_created: "🎫 টিকিট #{ticket_id} তৈরি হয়েছে। দল এখানে উত্তর দেবে।"
+  ticket_closed: "✅ আপনার টিকিট বন্ধ হয়েছে। নতুনটি খুলতে /start পাঠান।"
+  reply_received: "💬 সাপোর্টের উত্তর পাওয়া গেছে।"
+  language_changed: "🌐 ভাষা সেট করা হয়েছে: {lang}।"
+  language_list_header: "আপনার ভাষা বেছে নিন:"
+  no_active_ticket: "আপনার কোনো সক্রিয় টিকিট নেই। খুলতে /start পাঠান।"
+  thanks_for_feedback: "🙏 আপনার মতামতের জন্য ধন্যবাদ!"

@@ -1,0 +1,21 @@
+# Tamil — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: ta
+  name: Tamil
+  native_name: "தமிழ்"
+  flag: "\U0001F1EE\U0001F1F3"   # 🇮🇳
+
+user:
+  welcome: "👋 வரவேற்கிறோம்! டிக்கெட் திறக்க /start அனுப்பவும்."
+  welcome_back: "👋 மீண்டும் வரவேற்கிறோம், {name}."
+  pick_project: "ஒரு திட்டத்தைத் தேர்ந்தெடுக்கவும்:"
+  blocked: "⛔ நீங்கள் இந்த போட்டில் தடுக்கப்பட்டுள்ளீர்கள்."
+  cooldown: "⏱️ மெதுவாக — {seconds} விநாடிகளில் மீண்டும் எழுதலாம்."
+  ticket_created: "🎫 டிக்கெட் #{ticket_id} உருவாக்கப்பட்டது. குழு இங்கே பதிலளிக்கும்."
+  ticket_closed: "✅ உங்கள் டிக்கெட் மூடப்பட்டது. புதியது திறக்க /start அனுப்பவும்."
+  reply_received: "💬 ஆதரவு பதில் கிடைத்தது."
+  language_changed: "🌐 மொழி அமைக்கப்பட்டது: {lang}."
+  language_list_header: "உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்:"
+  no_active_ticket: "உங்களிடம் செயலில் உள்ள டிக்கெட் இல்லை. திறக்க /start அனுப்பவும்."
+  thanks_for_feedback: "🙏 உங்கள் கருத்துக்கு நன்றி!"

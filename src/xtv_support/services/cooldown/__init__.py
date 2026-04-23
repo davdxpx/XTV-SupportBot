@@ -1,0 +1,1 @@
+"""cooldown service package."""

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.core.callback_data import (
+from xtv_support.core.callback_data import (
     CbAssignPick,
     CbPriorityPick,
     CbRate,
@@ -8,9 +8,9 @@ from app.core.callback_data import (
     CbTicket,
     starts_with,
 )
-from app.utils.ids import safe_objectid, short_ticket_id
-from app.utils.text import collapse_ws, escape_html, truncate, user_mention
-from app.utils.time import humanize_delta
+from xtv_support.utils.ids import safe_objectid, short_ticket_id
+from xtv_support.utils.text import collapse_ws, escape_html, truncate, user_mention
+from xtv_support.utils.time import humanize_delta
 
 
 def test_safe_objectid_valid():

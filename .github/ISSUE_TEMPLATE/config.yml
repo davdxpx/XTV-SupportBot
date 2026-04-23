@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://t.me/XTVbots
+    about: General questions and usage discussion on the XTV bots Telegram channel.
+  - name: Security (private)
+    url: https://t.me/davdxpx
+    about: Report a vulnerability privately — do NOT open a public issue.

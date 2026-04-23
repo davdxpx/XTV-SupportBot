@@ -1,0 +1,21 @@
+# Russian — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: ru
+  name: Russian
+  native_name: "Русский"
+  flag: "\U0001F1F7\U0001F1FA"   # 🇷🇺
+
+user:
+  welcome: "👋 Добро пожаловать! Отправьте /start, чтобы открыть тикет."
+  welcome_back: "👋 С возвращением, {name}."
+  pick_project: "Выберите проект:"
+  blocked: "⛔ Вы заблокированы в этом боте."
+  cooldown: "⏱️ Не так быстро — вы сможете писать снова через {seconds} с."
+  ticket_created: "🎫 Тикет #{ticket_id} создан. Команда ответит здесь."
+  ticket_closed: "✅ Ваш тикет закрыт. Отправьте /start, чтобы открыть новый."
+  reply_received: "💬 Получен ответ поддержки."
+  language_changed: "🌐 Язык установлен: {lang}."
+  language_list_header: "Выберите язык:"
+  no_active_ticket: "У вас нет активного тикета. Отправьте /start, чтобы открыть."
+  thanks_for_feedback: "🙏 Спасибо за отзыв!"

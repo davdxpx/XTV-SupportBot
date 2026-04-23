@@ -1,0 +1,21 @@
+# Gujarati — minimal seed. Missing keys fall back to en.yaml.
+
+meta:
+  code: gu
+  name: Gujarati
+  native_name: "ગુજરાતી"
+  flag: "\U0001F1EE\U0001F1F3"   # 🇮🇳
+
+user:
+  welcome: "👋 સ્વાગત છે! ટિકિટ ખોલવા માટે /start મોકલો."
+  welcome_back: "👋 પરત સ્વાગત છે, {name}."
+  pick_project: "એક પ્રોજેક્ટ પસંદ કરો:"
+  blocked: "⛔ તમને આ બૉટમાંથી અવરોધિત કરવામાં આવ્યા છે."
+  cooldown: "⏱️ થોડું ધીમે — તમે {seconds} સેકંડમાં ફરી લખી શકશો."
+  ticket_created: "🎫 ટિકિટ #{ticket_id} બનાવી. ટીમ અહીં જવાબ આપશે."
+  ticket_closed: "✅ તમારી ટિકિટ બંધ કરી દીધી છે. નવી ખોલવા માટે /start મોકલો."
+  reply_received: "💬 સપોર્ટ જવાબ મળ્યો."
+  language_changed: "🌐 ભાષા સેટ કરી: {lang}."
+  language_list_header: "તમારી ભાષા પસંદ કરો:"
+  no_active_ticket: "તમારી પાસે કોઈ સક્રિય ટિકિટ નથી. ખોલવા માટે /start મોકલો."
+  thanks_for_feedback: "🙏 તમારા અભિપ્રાય માટે આભાર!"
