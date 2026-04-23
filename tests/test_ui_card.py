@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.ui.card import Card
-from app.ui.progress import bar, percentage
+from xtv_support.ui.primitives.card import Card
+from xtv_support.ui.primitives.progress import bar, percentage
 
 
 def test_progress_bar_full():

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from app.config import settings
-from app.core.logger import get_logger
+from xtv_support.config.settings import settings
+from xtv_support.core.logger import get_logger
 
 log = get_logger("db")
 

@@ -3,16 +3,16 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery
 
-from app.constants import CallbackPrefix, UserState
-from app.core.context import get_context
-from app.core.filters import cb_prefix
-from app.db import users as users_repo
-from app.middlewares.admin_guard import require_admin
-from app.ui.card import Card, edit_card
+from xtv_support.core.constants import CallbackPrefix, UserState
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.middlewares.admin_guard import require_admin
+from xtv_support.ui.primitives.card import Card, edit_card
 
 
 def _ask_anon_card() -> Card:
-    from app.ui.keyboards import btn, rows
+    from xtv_support.ui.keyboards.base import btn, rows
 
     buttons = rows(
         [

@@ -3,12 +3,12 @@ from __future__ import annotations
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-from app.constants import HandlerGroup
-from app.core.context import get_context
-from app.core.filters import is_admin_user, is_private
-from app.db import tickets as tickets_repo
-from app.ui.card import send_card
-from app.ui.templates import user_messages
+from xtv_support.core.constants import HandlerGroup
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import is_admin_user, is_private
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.ui.primitives.card import send_card
+from xtv_support.ui.templates import user_messages
 
 
 @Client.on_message(

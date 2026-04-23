@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable
 
-from app.core.logger import get_logger
+from xtv_support.core.logger import get_logger
 
 log = get_logger("scheduler")
 

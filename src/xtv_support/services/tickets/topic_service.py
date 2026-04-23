@@ -10,14 +10,14 @@ from pyrogram import Client, raw
 from pyrogram.enums import ParseMode
 from pyrogram.errors import RPCError
 
-from app.config import settings
-from app.core.errors import TopicCreationError, TopicsNotSupported
-from app.core.logger import get_logger
-from app.db import tickets as tickets_repo
-from app.ui.card import edit_card, send_card
-from app.ui.templates.ticket_header import render as render_header
-from app.utils.ids import short_ticket_id
-from app.utils.retry import async_retry
+from xtv_support.config.settings import settings
+from xtv_support.core.errors import TopicCreationError, TopicsNotSupported
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.ui.primitives.card import edit_card, send_card
+from xtv_support.ui.templates.ticket_header import render as render_header
+from xtv_support.utils.ids import short_ticket_id
+from xtv_support.utils.retry import async_retry
 
 log = get_logger("topic")
 

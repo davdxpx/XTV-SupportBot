@@ -3,22 +3,22 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import Message
 
-from app.constants import (
+from xtv_support.core.constants import (
     MAX_PROJECT_DESC_LEN,
     MAX_PROJECT_NAME_LEN,
     HandlerGroup,
     UserState,
 )
-from app.core.context import get_context
-from app.core.filters import has_any_state, is_admin_user, is_private
-from app.core.logger import get_logger
-from app.db import audit as audit_repo
-from app.db import contact_links as contact_links_repo
-from app.db import projects as projects_repo
-from app.db import tags as tags_repo
-from app.db import users as users_repo
-from app.ui.card import Card, send_card
-from app.ui.templates import project_wizard
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import has_any_state, is_admin_user, is_private
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import audit as audit_repo
+from xtv_support.infrastructure.db import contact_links as contact_links_repo
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tags as tags_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.ui.primitives.card import Card, send_card
+from xtv_support.ui.templates import project_wizard
 
 log = get_logger("admin.input_router")
 

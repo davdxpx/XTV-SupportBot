@@ -3,16 +3,16 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery
 
-from app.constants import CallbackPrefix, UserState
-from app.core.context import get_context
-from app.core.filters import cb_prefix
-from app.db import projects as projects_repo
-from app.db import tickets as tickets_repo
-from app.db import users as users_repo
-from app.middlewares.admin_guard import require_admin
-from app.ui.card import edit_card, send_card
-from app.ui.templates import admin_dashboard, project_wizard
-from app.utils.ids import short_ticket_id
+from xtv_support.core.constants import CallbackPrefix, UserState
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.middlewares.admin_guard import require_admin
+from xtv_support.ui.primitives.card import edit_card, send_card
+from xtv_support.ui.templates import admin_dashboard, project_wizard
+from xtv_support.utils.ids import short_ticket_id
 
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.ADMIN_PROJECTS))
@@ -69,7 +69,7 @@ async def view_project_tickets(client: Client, callback: CallbackQuery) -> None:
     lines = [
         f"#{short_ticket_id(t['_id'])} • user <code>{t['user_id']}</code>" for t in tickets[:15]
     ]
-    from app.ui.card import Card
+    from xtv_support.ui.primitives.card import Card
 
     card = Card(
         title="Open tickets",

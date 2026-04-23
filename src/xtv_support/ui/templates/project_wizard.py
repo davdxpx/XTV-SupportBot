@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pyrogram.types import InlineKeyboardMarkup
 
-from app.constants import CallbackPrefix
-from app.ui.card import Card
-from app.ui.keyboards import btn, rows
+from xtv_support.core.constants import CallbackPrefix
+from xtv_support.ui.primitives.card import Card
+from xtv_support.ui.keyboards.base import btn, rows
 
 
 def _step(

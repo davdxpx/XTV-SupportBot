@@ -3,11 +3,11 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import Message
 
-from app.constants import HandlerGroup
-from app.core.context import get_context
-from app.core.filters import is_private
-from app.core.logger import get_logger
-from app.db import users as users_repo
+from xtv_support.core.constants import HandlerGroup
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import is_private
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import users as users_repo
 
 log = get_logger("blocked_mw")
 

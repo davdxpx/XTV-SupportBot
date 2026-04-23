@@ -5,11 +5,11 @@ from typing import Any, Iterable
 
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from app.constants import CallbackPrefix
-from app.ui.card import Card
-from app.ui.keyboards import btn
-from app.utils.text import escape_html, truncate
-from app.utils.time import humanize_delta, utcnow
+from xtv_support.core.constants import CallbackPrefix
+from xtv_support.ui.primitives.card import Card
+from xtv_support.ui.keyboards.base import btn
+from xtv_support.utils.text import escape_html, truncate
+from xtv_support.utils.time import humanize_delta, utcnow
 
 
 def _has_new_reply(ticket: dict[str, Any], last_seen: datetime | None) -> bool:

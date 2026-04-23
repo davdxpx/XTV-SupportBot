@@ -9,10 +9,10 @@ from pyrogram.enums import ParseMode
 from pyrogram.errors import FloodWait, MessageNotModified
 from pyrogram.types import InlineKeyboardMarkup, Message
 
-from app.config import settings
-from app.core.logger import get_logger
-from app.ui.progress import bar as progress_bar
-from app.ui.progress import percentage as pct_str
+from xtv_support.config.settings import settings
+from xtv_support.core.logger import get_logger
+from xtv_support.ui.primitives.progress import bar as progress_bar
+from xtv_support.ui.primitives.progress import percentage as pct_str
 
 log = get_logger("ui")
 

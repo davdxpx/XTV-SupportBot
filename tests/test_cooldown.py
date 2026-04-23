@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from app.services.cooldown_service import CooldownService
+from xtv_support.services.cooldown.service import CooldownService
 
 
 @pytest.mark.asyncio

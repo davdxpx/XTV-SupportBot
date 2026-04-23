@@ -3,9 +3,9 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery
 
-from app.config import settings
-from app.core.errors import AdminOnly
-from app.core.logger import get_logger
+from xtv_support.config.settings import settings
+from xtv_support.core.errors import AdminOnly
+from xtv_support.core.logger import get_logger
 
 log = get_logger("admin_guard")
 

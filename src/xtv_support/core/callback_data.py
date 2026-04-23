@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 
-from app.constants import CallbackPrefix
+from xtv_support.core.constants import CallbackPrefix
 
 SEP = "|"
 

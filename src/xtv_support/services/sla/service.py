@@ -8,15 +8,15 @@ from pyrogram import Client
 from pyrogram.enums import ParseMode
 from pyrogram.errors import RPCError
 
-from app.config import settings
-from app.core.logger import get_logger
-from app.db import tickets as tickets_repo
-from app.services import topic_service
-from app.utils.text import user_mention
-from app.utils.time import utcnow
+from xtv_support.config.settings import settings
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.services.tickets import topic_service
+from xtv_support.utils.text import user_mention
+from xtv_support.utils.time import utcnow
 
 if TYPE_CHECKING:  # pragma: no cover
-    from app.services.cooldown_service import CooldownService
+    from xtv_support.services.cooldown.service import CooldownService
 
 log = get_logger("sla")
 
@@ -79,7 +79,7 @@ class SlaService:
         # Also rerender the header card so its bar flips to breached.
         project = None
         if ticket.get("project_id"):
-            from app.db import projects as projects_repo
+            from xtv_support.infrastructure.db import projects as projects_repo
 
             project = await projects_repo.get(self._db, ticket["project_id"])
         try:

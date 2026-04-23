@@ -5,13 +5,13 @@ from typing import Any
 
 from pyrogram.types import InlineKeyboardMarkup
 
-from app.constants import CallbackPrefix
-from app.ui.card import Card
-from app.ui.keyboards import btn, rows
-from app.ui.progress import bar as progress_bar
-from app.ui.progress import percentage as pct_str
-from app.utils.text import escape_html, truncate, user_mention
-from app.utils.time import format_iso, humanize_delta
+from xtv_support.core.constants import CallbackPrefix
+from xtv_support.ui.primitives.card import Card
+from xtv_support.ui.keyboards.base import btn, rows
+from xtv_support.ui.primitives.progress import bar as progress_bar
+from xtv_support.ui.primitives.progress import percentage as pct_str
+from xtv_support.utils.text import escape_html, truncate, user_mention
+from xtv_support.utils.time import format_iso, humanize_delta
 
 
 def _priority_label(prio: str) -> str:

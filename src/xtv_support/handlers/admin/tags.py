@@ -3,22 +3,22 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
 
-from app.constants import CallbackPrefix, UserState
-from app.core.callback_data import CbTagToggle
-from app.core.context import get_context
-from app.core.filters import cb_prefix
-from app.core.logger import get_logger
-from app.db import audit as audit_repo
-from app.db import projects as projects_repo
-from app.db import tags as tags_repo
-from app.db import tickets as tickets_repo
-from app.db import users as users_repo
-from app.middlewares.admin_guard import require_admin
-from app.services import topic_service
-from app.ui.card import Card, edit_card
-from app.ui.keyboards import btn, chunk
-from app.ui.templates import admin_dashboard
-from app.utils.ids import safe_objectid
+from xtv_support.core.constants import CallbackPrefix, UserState
+from xtv_support.core.callback_data import CbTagToggle
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import audit as audit_repo
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tags as tags_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.middlewares.admin_guard import require_admin
+from xtv_support.services.tickets import topic_service
+from xtv_support.ui.primitives.card import Card, edit_card
+from xtv_support.ui.keyboards.base import btn, chunk
+from xtv_support.ui.templates import admin_dashboard
+from xtv_support.utils.ids import safe_objectid
 
 log = get_logger("admin.tags")
 

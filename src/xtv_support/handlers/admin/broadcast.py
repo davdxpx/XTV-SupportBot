@@ -3,15 +3,15 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, Message
 
-from app.constants import CallbackPrefix, HandlerGroup, MAX_BROADCAST_LEN, UserState
-from app.core.context import get_context
-from app.core.filters import cb_prefix, has_state, is_admin_user, is_private
-from app.core.logger import get_logger
-from app.db import broadcasts as broadcasts_repo
-from app.db import users as users_repo
-from app.middlewares.admin_guard import require_admin
-from app.ui.card import edit_card, send_card
-from app.ui.templates import broadcast as broadcast_tmpl
+from xtv_support.core.constants import CallbackPrefix, HandlerGroup, MAX_BROADCAST_LEN, UserState
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix, has_state, is_admin_user, is_private
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import broadcasts as broadcasts_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.middlewares.admin_guard import require_admin
+from xtv_support.ui.primitives.card import edit_card, send_card
+from xtv_support.ui.templates import broadcast as broadcast_tmpl
 
 log = get_logger("admin.broadcast")
 

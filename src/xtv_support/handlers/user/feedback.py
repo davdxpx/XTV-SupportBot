@@ -3,19 +3,19 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, Message
 
-from app.constants import CallbackPrefix, HandlerGroup, UserState
-from app.core.callback_data import CbRate
-from app.core.context import get_context
-from app.core.filters import cb_prefix, is_admin_user, is_private, not_command
-from app.core.logger import get_logger
-from app.db import contact_links as contact_links_repo
-from app.db import projects as projects_repo
-from app.db import tickets as tickets_repo
-from app.db import users as users_repo
-from app.services import ticket_service
-from app.ui.card import send_card
-from app.ui.templates import user_messages
-from app.utils.text import escape_html
+from xtv_support.core.constants import CallbackPrefix, HandlerGroup, UserState
+from xtv_support.core.callback_data import CbRate
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix, is_admin_user, is_private, not_command
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import contact_links as contact_links_repo
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.services.tickets import service as ticket_service
+from xtv_support.ui.primitives.card import send_card
+from xtv_support.ui.templates import user_messages
+from xtv_support.utils.text import escape_html
 
 log = get_logger("user.feedback")
 
@@ -61,8 +61,8 @@ async def user_message(client: Client, message: Message) -> None:
         except Exception as exc:  # noqa: BLE001
             log.exception("feedback.ticket_create_failed", user_id=user_id, error=str(exc))
             # Report into ERROR_LOG_TOPIC_ID so admins see the crash live.
-            from app.handlers.errors import report_error
-            from app.ui.card import Card
+            from xtv_support.handlers.errors import report_error
+            from xtv_support.ui.primitives.card import Card
 
             try:
                 await report_error(client, exc, context=f"ticket.create user={user_id}")
@@ -133,7 +133,7 @@ async def rating_submitted(client: Client, callback: CallbackQuery) -> None:
             )
             from pyrogram.enums import ParseMode
 
-            from app.config import settings
+            from xtv_support.config.settings import settings
 
             await client.send_message(
                 settings.ADMIN_CHANNEL_ID,
@@ -144,7 +144,7 @@ async def rating_submitted(client: Client, callback: CallbackQuery) -> None:
         except Exception as exc:  # noqa: BLE001
             log.warning("rating.forward_failed", error=str(exc))
 
-    from app.ui.card import edit_card
+    from xtv_support.ui.primitives.card import edit_card
 
     await edit_card(
         client,

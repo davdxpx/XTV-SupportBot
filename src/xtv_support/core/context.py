@@ -7,11 +7,11 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle avoidance
     from motor.motor_asyncio import AsyncIOMotorDatabase
     from pyrogram import Client
 
-    from app.config import Settings
-    from app.services.broadcast_service import BroadcastManager
-    from app.services.cooldown_service import CooldownService
-    from app.services.sla_service import SlaService
-    from app.tasks.scheduler import TaskManager
+    from xtv_support.config.settings import Settings
+    from xtv_support.services.broadcasts.service import BroadcastManager
+    from xtv_support.services.cooldown.service import CooldownService
+    from xtv_support.services.sla.service import SlaService
+    from xtv_support.tasks.scheduler import TaskManager
 
 
 @dataclass

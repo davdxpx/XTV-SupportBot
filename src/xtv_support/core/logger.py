@@ -5,7 +5,7 @@ import logging
 import sys
 from typing import Any
 
-from app.config import settings
+from xtv_support.config.settings import settings
 
 
 # === Classes ===

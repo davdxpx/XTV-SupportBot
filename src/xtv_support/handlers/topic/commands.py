@@ -3,18 +3,18 @@ from __future__ import annotations
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
-from app.constants import CallbackPrefix, HandlerGroup
-from app.core.callback_data import CbPriorityPick
-from app.core.context import get_context
-from app.core.filters import cb_prefix, is_admin_forum_topic, is_admin_user
-from app.core.logger import get_logger
-from app.db import projects as projects_repo
-from app.db import tags as tags_repo
-from app.db import tickets as tickets_repo
-from app.db import users as users_repo
-from app.middlewares.admin_guard import require_admin
-from app.services import topic_service
-from app.utils.ids import safe_objectid
+from xtv_support.core.constants import CallbackPrefix, HandlerGroup
+from xtv_support.core.callback_data import CbPriorityPick
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix, is_admin_forum_topic, is_admin_user
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tags as tags_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.middlewares.admin_guard import require_admin
+from xtv_support.services.tickets import topic_service
+from xtv_support.utils.ids import safe_objectid
 
 log = get_logger("topic.commands")
 
@@ -123,7 +123,7 @@ async def open_priority_picker(client: Client, callback: CallbackQuery) -> None:
     if oid is None:
         await callback.answer("Invalid.", show_alert=True)
         return
-    from app.ui.keyboards import btn, rows
+    from xtv_support.ui.keyboards.base import btn, rows
 
     keyboard = rows(
         [
@@ -179,7 +179,7 @@ async def close_button(client: Client, callback: CallbackQuery) -> None:
     if not ticket or ticket.get("status") != "open":
         await callback.answer("Already closed.", show_alert=True)
         return
-    from app.services import ticket_service
+    from xtv_support.services.tickets import service as ticket_service
 
     await ticket_service.close_ticket(
         client,

@@ -10,18 +10,18 @@ from pyrogram.enums import ParseMode
 from pyrogram.errors import RPCError
 from pyrogram.types import Message
 
-from app.config import settings
-from app.core.errors import TopicsNotSupported
-from app.core.logger import get_logger
-from app.db import audit as audit_repo
-from app.db import projects as projects_repo
-from app.db import tickets as tickets_repo
-from app.services import topic_service
-from app.ui.card import send_card
-from app.ui.templates import user_messages
-from app.utils.ids import short_ticket_id
-from app.utils.text import escape_html
-from app.utils.time import utcnow
+from xtv_support.config.settings import settings
+from xtv_support.core.errors import TopicsNotSupported
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import audit as audit_repo
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.services.tickets import topic_service
+from xtv_support.ui.primitives.card import send_card
+from xtv_support.ui.templates import user_messages
+from xtv_support.utils.ids import short_ticket_id
+from xtv_support.utils.text import escape_html
+from xtv_support.utils.time import utcnow
 
 log = get_logger("ticket_service")
 

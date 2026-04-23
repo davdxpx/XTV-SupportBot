@@ -3,17 +3,17 @@ from __future__ import annotations
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, Message
 
-from app.constants import CallbackPrefix, HandlerGroup
-from app.core.context import get_context
-from app.core.filters import cb_prefix, is_private
-from app.core.logger import get_logger
-from app.db import projects as projects_repo
-from app.db import tickets as tickets_repo
-from app.db import users as users_repo
-from app.services import ticket_service
-from app.ui.card import edit_card, send_card
-from app.ui.templates import user_tickets as tpl
-from app.utils.ids import safe_objectid
+from xtv_support.core.constants import CallbackPrefix, HandlerGroup
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import cb_prefix, is_private
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import projects as projects_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.services.tickets import service as ticket_service
+from xtv_support.ui.primitives.card import edit_card, send_card
+from xtv_support.ui.templates import user_tickets as tpl
+from xtv_support.utils.ids import safe_objectid
 
 log = get_logger("user.tickets")
 

@@ -6,13 +6,13 @@ from typing import Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pyrogram import Client
 
-from app.config import settings
-from app.core.logger import get_logger
-from app.db import tickets as tickets_repo
-from app.services import ticket_service, topic_service
-from app.ui.card import send_card
-from app.ui.templates import user_messages
-from app.utils.ids import short_ticket_id
+from xtv_support.config.settings import settings
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.services.tickets import service as ticket_service, topic_service
+from xtv_support.ui.primitives.card import send_card
+from xtv_support.ui.templates import user_messages
+from xtv_support.utils.ids import short_ticket_id
 
 log = get_logger("autoclose")
 

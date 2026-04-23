@@ -3,8 +3,8 @@ from __future__ import annotations
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, Message
 
-from app.constants import HandlerGroup
-from app.core.logger import get_logger
+from xtv_support.core.constants import HandlerGroup
+from xtv_support.core.logger import get_logger
 
 log = get_logger("msg")
 cb_log = get_logger("cb")

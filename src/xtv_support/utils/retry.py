@@ -4,7 +4,7 @@ import asyncio
 from functools import wraps
 from typing import Awaitable, Callable, TypeVar
 
-from app.core.logger import get_logger
+from xtv_support.core.logger import get_logger
 
 T = TypeVar("T")
 log = get_logger("retry")

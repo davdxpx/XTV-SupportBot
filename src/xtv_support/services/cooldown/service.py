@@ -5,7 +5,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 
-from app.config import settings
+from xtv_support.config.settings import settings
 
 
 @dataclass

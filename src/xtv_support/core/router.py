@@ -3,12 +3,12 @@ from __future__ import annotations
 import importlib
 from typing import TYPE_CHECKING
 
-from app.core.logger import get_logger
+from xtv_support.core.logger import get_logger
 
 if TYPE_CHECKING:
     from pyrogram import Client
 
-    from app.core.context import HandlerContext
+    from xtv_support.core.context import HandlerContext
 
 log = get_logger("router")
 
@@ -54,7 +54,7 @@ def register_all(client: "Client", ctx: "HandlerContext") -> None:
     plugin-loader's job here explicitly so the registration is independent
     of import-time magic and visible in the logs.
     """
-    from app.core.context import bind_context
+    from xtv_support.core.context import bind_context
 
     bind_context(client, ctx)
 

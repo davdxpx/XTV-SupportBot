@@ -6,8 +6,8 @@ from typing import Any
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.constants import TAG_NAME_REGEX
-from app.utils.time import utcnow
+from xtv_support.core.constants import TAG_NAME_REGEX
+from xtv_support.utils.time import utcnow
 
 _TAG_RE = re.compile(TAG_NAME_REGEX)
 

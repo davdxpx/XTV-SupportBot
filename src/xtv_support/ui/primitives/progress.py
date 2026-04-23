@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.constants import DEFAULT_PROGRESS_WIDTH
-from app.ui.glyphs import EMPTY, FILL
+from xtv_support.core.constants import DEFAULT_PROGRESS_WIDTH
+from xtv_support.ui.primitives.glyphs import EMPTY, FILL
 
 
 def clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:

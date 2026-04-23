@@ -3,8 +3,8 @@ from __future__ import annotations
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pyrogram import Client
 
-from app.core.logger import get_logger
-from app.services import autoclose_service
+from xtv_support.core.logger import get_logger
+from xtv_support.services.autoclose import service as autoclose_service
 
 log = get_logger("task.autoclose")
 

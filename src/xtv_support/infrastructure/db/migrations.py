@@ -4,8 +4,8 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import OperationFailure
 
-from app.config import settings
-from app.core.logger import get_logger
+from xtv_support.config.settings import settings
+from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from app.constants import CallbackPrefix, MAX_BROADCAST_LEN
-from app.ui.card import Card, ProgressCard
-from app.ui.keyboards import btn, rows
-from app.utils.text import escape_html, truncate
+from xtv_support.core.constants import CallbackPrefix, MAX_BROADCAST_LEN
+from xtv_support.ui.primitives.card import Card, ProgressCard
+from xtv_support.ui.keyboards.base import btn, rows
+from xtv_support.utils.text import escape_html, truncate
 
 
 def prompt() -> Card:

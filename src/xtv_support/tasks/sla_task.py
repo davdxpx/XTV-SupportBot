@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.core.logger import get_logger
-from app.services.sla_service import SlaService
+from xtv_support.core.logger import get_logger
+from xtv_support.services.sla.service import SlaService
 
 log = get_logger("task.sla")
 

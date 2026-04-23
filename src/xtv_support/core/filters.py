@@ -7,7 +7,7 @@ from pyrogram.enums import ChatType
 from pyrogram.filters import Filter
 from pyrogram.types import CallbackQuery, Message
 
-from app.config import settings
+from xtv_support.config.settings import settings
 
 # --- Message filters ---
 
@@ -54,7 +54,7 @@ def has_state(*state_names: str) -> Filter:
     async def _check(_, client, m: Message) -> bool:
         if not m.from_user:
             return False
-        from app.core.context import get_context
+        from xtv_support.core.context import get_context
 
         try:
             ctx = get_context(client)
@@ -73,7 +73,7 @@ def has_state(*state_names: str) -> Filter:
 async def _has_any_state(_, client, m: Message) -> bool:
     if not m.from_user:
         return False
-    from app.core.context import get_context
+    from xtv_support.core.context import get_context
 
     try:
         ctx = get_context(client)
@@ -102,7 +102,7 @@ not_command = filters.create(_not_command, name="NotCommand")
 
 def cb_prefix(prefix: str) -> Filter:
     """Match callback queries whose data starts with the given prefix (followed by SEP or end)."""
-    from app.core.callback_data import SEP
+    from xtv_support.core.callback_data import SEP
 
     async def _check(_, __, cb: CallbackQuery) -> bool:
         if not cb.data:

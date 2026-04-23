@@ -10,11 +10,11 @@ from pyrogram import Client
 from pyrogram.enums import ParseMode
 from pyrogram.errors import FloodWait, InputUserDeactivated, RPCError, UserIsBlocked
 
-from app.config import settings
-from app.core.logger import get_logger
-from app.db import broadcasts as broadcasts_repo
-from app.db import users as users_repo
-from app.ui.templates import broadcast as broadcast_tmpl
+from xtv_support.config.settings import settings
+from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import broadcasts as broadcasts_repo
+from xtv_support.infrastructure.db import users as users_repo
+from xtv_support.ui.templates import broadcast as broadcast_tmpl
 
 log = get_logger("broadcast")
 

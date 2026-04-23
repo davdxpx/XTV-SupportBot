@@ -81,14 +81,18 @@ Changelog = "https://github.com/davdxpx/XTV-SupportBot/blob/main/CHANGELOG.md"
 "XTV Network" = "https://t.me/XTVglobal"
 
 [project.scripts]
-xtv-support = "main:entrypoint"
+xtv-support = "xtv_support:entrypoint"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["xtv_support*"]
+
+[tool.setuptools.package-data]
+"xtv_support" = ["locales/*.yaml", "locales/*.yml", "py.typed"]
 
 [tool.ruff]
 line-length = 100
@@ -100,11 +104,16 @@ ignore = ["PLR0913", "PLR2004"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
+markers = [
+    "integration: tests that need mongomock / fakeredis",
+    "e2e: end-to-end tests, disabled by default",
+]
 
 [tool.coverage.run]
-source = ["app"]
+source = ["src/xtv_support"]
 branch = true
 
 [tool.coverage.report]
@@ -116,5 +125,7 @@ exclude_lines = [
 
 [tool.mypy]
 python_version = "3.12"
+mypy_path = ["src"]
+packages = ["xtv_support"]
 strict_optional = true
 ignore_missing_imports = true

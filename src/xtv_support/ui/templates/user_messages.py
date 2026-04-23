@@ -4,10 +4,10 @@ from typing import Sequence
 
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from app.constants import CallbackPrefix
-from app.ui.card import Card
-from app.ui.keyboards import btn, chunk
-from app.utils.text import escape_html
+from xtv_support.core.constants import CallbackPrefix
+from xtv_support.ui.primitives.card import Card
+from xtv_support.ui.keyboards.base import btn, chunk
+from xtv_support.utils.text import escape_html
 
 
 def welcome_no_projects() -> Card:

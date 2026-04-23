@@ -3,12 +3,12 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import Message
 
-from app.constants import HandlerGroup
-from app.core.context import get_context
-from app.core.filters import is_admin_user, is_private, not_command
-from app.core.logger import get_logger
-from app.ui.card import send_card
-from app.ui.templates.user_messages import cooldown_card
+from xtv_support.core.constants import HandlerGroup
+from xtv_support.core.context import get_context
+from xtv_support.core.filters import is_admin_user, is_private, not_command
+from xtv_support.core.logger import get_logger
+from xtv_support.ui.primitives.card import send_card
+from xtv_support.ui.templates.user_messages import cooldown_card
 
 log = get_logger("cooldown_mw")
 
