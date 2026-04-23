@@ -50,6 +50,11 @@ class CallbackPrefix(StrEnum):
     USER_TICKETS_CLOSE = "u:tkc"
     USER_LANG_PICK = "u:lang"
 
+    # KB gate (Phase 6c)
+    USER_KB_HELPFUL = "u:kbh"
+    USER_KB_NOT_HELPFUL = "u:kbn"
+    USER_KB_HUMAN = "u:kbm"
+
     # Admin dashboard
     ADMIN_HOME = "a:home"
     ADMIN_CLOSE = "a:close"
