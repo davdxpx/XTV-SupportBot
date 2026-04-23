@@ -1,0 +1,60 @@
+# Default values for the xtv-support chart.
+#
+# Override with:
+#   helm install xtv-support deploy/helm/xtv-support -f my-values.yaml
+#
+# Secrets (API_HASH, BOT_TOKEN, MONGO_URI) should come from an
+# existing Secret — set secrets.existingSecretName to reference it.
+
+image:
+  repository: ghcr.io/davdxpx/xtv-support
+  tag: "0.9.0"
+  pullPolicy: IfNotPresent
+
+# Pyrofork session is single-holder. More replicas requires external
+# session-brokering which is an operator responsibility.
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+env:
+  LOG_LEVEL: INFO
+  API_ENABLED: "false"
+  METRICS_ENABLED: "false"
+  DEFAULT_LANG: "en"
+
+secrets:
+  # Set to the name of a Kubernetes Secret with keys:
+  # API_ID, API_HASH, BOT_TOKEN, MONGO_URI, ADMIN_IDS, ADMIN_CHANNEL_ID,
+  # optional REDIS_URL, DISCORD_WEBHOOK_URL, SLACK_WEBHOOK_URL, etc.
+  existingSecretName: xtv-support-secrets
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  host: chart-example.local
+  tls: []
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
