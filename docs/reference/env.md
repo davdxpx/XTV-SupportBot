@@ -1,0 +1,68 @@
+# Environment reference
+
+The canonical list lives in
+[`.env.example`](https://github.com/davdxpx/XTV-SupportBot/blob/main/.env.example).
+This page groups variables by purpose.
+
+## Required
+
+| Variable | Purpose |
+|---|---|
+| `API_ID` | my.telegram.org API id |
+| `API_HASH` | my.telegram.org API hash |
+| `BOT_TOKEN` | @BotFather token |
+| `MONGO_URI` | MongoDB connection string |
+| `ADMIN_IDS` | Comma-separated Telegram user ids |
+| `ADMIN_CHANNEL_ID` | Forum supergroup id (`-100…`) |
+
+## Logging
+
+`LOG_LEVEL`, `LOG_JSON`, `DEBUG_MODE`, `ERROR_LOG_TOPIC_ID`.
+
+## SLA / auto-close / cooldown
+
+`SLA_WARN_MINUTES`, `SLA_BREACH_MINUTES`, `AUTO_CLOSE_DAYS`,
+`AUTO_CLOSE_SWEEP_MINUTES`, `COOLDOWN_RATE`, `COOLDOWN_WINDOW`,
+`COOLDOWN_MUTE_SECONDS`.
+
+## i18n
+
+`DEFAULT_LANG` (default `en`).
+
+## Redis (optional)
+
+`REDIS_URL`, `REDIS_NAMESPACE`.
+
+## AI (optional)
+
+`AI_ENABLED`, `AI_MODEL_DEFAULT`, `AI_MODEL_FAST`, `AI_MODEL_VISION`,
+`AI_MODEL_TRANSCRIBE`, `AI_MAX_TOKENS`, `AI_TEMPERATURE`,
+`AI_REQUEST_TIMEOUT_S`, `AI_PII_REDACTION`. Provider keys:
+`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`.
+
+## Feature flags
+
+`FEATURE_AI_DRAFTS`, `FEATURE_AI_SUMMARY`, `FEATURE_AI_SENTIMENT`,
+`FEATURE_AI_ROUTING`, `FEATURE_AI_TRANSLATE`,
+`FEATURE_AI_TRANSCRIBE`, `FEATURE_AI_KB_DRAFTER`,
+`FEATURE_BUSINESS_HOURS`, `FEATURE_CSAT`,
+`FEATURE_ANALYTICS_DIGEST`, `FEATURE_KB_GATE`,
+`FEATURE_LINK_SCANNER`, `FEATURE_START_CAPTCHA`,
+`FEATURE_WEBHOOKS_OUT`, `FEATURE_DISCORD_BRIDGE`,
+`FEATURE_SLACK_BRIDGE`, `FEATURE_EMAIL_INGRESS`.
+
+## Integrations
+
+`WEBHOOK_SECRET`, `CAPTCHA_SECRET`, `DISCORD_WEBHOOK_URL`,
+`SLACK_WEBHOOK_URL`, `DIGEST_TOPIC_ID`.
+
+## REST API
+
+`API_ENABLED`, `API_HOST`, `API_PORT`, `API_CORS_ORIGINS`,
+`API_RATE_LIMIT_PER_MINUTE`.
+
+## Observability
+
+`METRICS_ENABLED`, `METRICS_PATH`, `OTEL_SERVICE_NAME`,
+`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL`,
+`OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`.

@@ -1,0 +1,63 @@
+site_name: XTV-SupportBot
+site_description: Enterprise Telegram support / feedback bot — documentation.
+site_url: https://davdxpx.github.io/XTV-SupportBot/
+repo_url: https://github.com/davdxpx/XTV-SupportBot
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/install.md
+      - getting-started/first-run.md
+      - getting-started/configuration.md
+  - Architecture:
+      - architecture/overview.md
+      - architecture/plugins.md
+      - architecture/events.md
+  - Features:
+      - features/rbac-and-teams.md
+      - features/macros-and-kb.md
+      - features/ai.md
+      - features/analytics.md
+      - features/integrations.md
+  - Operations:
+      - ops/deployment.md
+      - ops/observability.md
+      - ops/gdpr.md
+  - Reference:
+      - reference/env.md
+      - reference/api.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
