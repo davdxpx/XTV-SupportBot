@@ -4,10 +4,13 @@ from pyrogram import Client
 from pyrogram.enums import ParseMode
 
 from xtv_support.config.flags import FeatureFlags, get_flags
+from xtv_support.config.i18n import load_locales
 from xtv_support.config.settings import settings
+from xtv_support.core import i18n as i18n_mod
 from xtv_support.core.container import Container
 from xtv_support.core.context import HandlerContext
 from xtv_support.core.events import EventBus
+from xtv_support.core.i18n import I18n
 from xtv_support.core.logger import configure_logging, get_logger
 from xtv_support.core.state import MemoryStateStore, StateMachine, StateStore
 from xtv_support.infrastructure.db import migrations as db_migrations
@@ -61,11 +64,22 @@ async def build_context(client: Client) -> HandlerContext:
     state_machine = StateMachine(state_store)
     registry = PluginRegistry()
 
+    # --- i18n (Phase 4) ---------------------------------------------
+    i18n_locales = load_locales()
+    i18n = I18n(locales=i18n_locales, default_lang=settings.DEFAULT_LANG)
+    i18n_mod.set_instance(i18n)
+    log.info(
+        "i18n.loaded",
+        supported=i18n.supported(),
+        default=i18n.default_lang,
+    )
+
     # Register every singleton the rest of the app may want to resolve.
     container.register_instance(Client, client)
     container.register_instance(EventBus, bus)
     container.register_instance(FeatureFlags, flags)
     container.register_instance(StateMachine, state_machine)
+    container.register_instance(I18n, i18n)
     container.register_instance(TaskManager, tasks)
     container.register_instance(CooldownService, cooldown)
     container.register_instance(SlaService, sla)
@@ -90,6 +104,7 @@ async def build_context(client: Client) -> HandlerContext:
         state=state_machine,
         plugin_loader=loader,
         plugin_registry=registry,
+        i18n=i18n,
     )
     log.info(
         "bootstrap.ready",
@@ -109,6 +124,7 @@ async def shutdown() -> None:
         except Exception as exc:  # noqa: BLE001
             log.warning("shutdown.plugin_unload_failed", error=str(exc))
         _plugin_loader = None
+    i18n_mod.reset_instance()
     await close_db()
 
 

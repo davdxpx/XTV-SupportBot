@@ -104,6 +104,24 @@ async def count(db: AsyncIOMotorDatabase, *, blocked: bool | None = None) -> int
     return await db.users.count_documents(query)
 
 
+async def get_preferred_lang(db: AsyncIOMotorDatabase, user_id: int) -> str | None:
+    """Return the user's explicitly-chosen language code, or ``None``."""
+    doc = await db.users.find_one({"user_id": user_id}, projection={"lang": 1})
+    lang = (doc or {}).get("lang")
+    return lang if isinstance(lang, str) and lang else None
+
+
+async def set_preferred_lang(
+    db: AsyncIOMotorDatabase, user_id: int, code: str
+) -> None:
+    """Persist the user's language choice — used by the /lang command."""
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"lang": code, "lang_updated_at": utcnow()}},
+        upsert=True,
+    )
+
+
 async def iter_active(
     db: AsyncIOMotorDatabase, *, batch_size: int = 500
 ) -> "list[dict[str, Any]]":

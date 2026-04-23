@@ -30,11 +30,48 @@ warning is logged on the ``xtv_support.i18n`` logger.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextvars import ContextVar
 from typing import Any
 
 from xtv_support.core.logger import get_logger
 
 _log = get_logger("xtv_support.i18n")
+
+# Per-update current locale. The i18n middleware writes to this at the
+# start of each Telegram update so deeper handlers can call :func:`tr`
+# without threading the locale through every signature.
+current_locale: ContextVar[str | None] = ContextVar("current_locale", default=None)
+
+# Process-wide I18n singleton. The bootstrap assigns it once; tests can
+# override via :func:`set_instance` / :func:`reset_instance`.
+_instance: "I18n | None" = None
+
+
+def set_instance(instance: "I18n") -> None:
+    global _instance
+    _instance = instance
+
+
+def reset_instance() -> None:
+    global _instance
+    _instance = None
+
+
+def get_instance() -> "I18n | None":
+    return _instance
+
+
+def tr(key: str, **kwargs: Any) -> str:
+    """Translate using the process-wide :class:`I18n` + the current-locale ContextVar.
+
+    Convenience for handlers and templates — falls back to the raw key if
+    the middleware has not been installed (so tests without a middleware
+    still render something).
+    """
+    instance = _instance
+    if instance is None:
+        return key
+    return instance.t(key, locale=current_locale.get(), **kwargs)
 
 
 class I18n:
@@ -128,3 +165,38 @@ def _walk_dotted(data: Mapping[str, Any], dotted: str) -> Any:
         if cursor is None:
             return None
     return cursor
+
+
+# ----------------------------------------------------------------------
+# Pure locale resolution — used by :mod:`xtv_support.middlewares.i18n_mw`.
+# Kept here (not in the middleware file) so tests and non-Telegram code
+# paths can exercise it without pulling pyrogram as a dependency.
+# ----------------------------------------------------------------------
+def normalise_lang_code(code: str | None) -> str | None:
+    """``"en-US"`` -> ``"en"``, ``""`` -> ``None``, trims and lowers."""
+    if not code:
+        return None
+    base = code.split("-", 1)[0].strip().lower()
+    return base or None
+
+
+def pick_locale(
+    *,
+    preferred: str | None,
+    telegram_code: str | None,
+    supported: list[str],
+    default_lang: str,
+) -> str:
+    """Return the best locale code given the three input signals.
+
+    Precedence:
+    1. ``preferred`` if it's in ``supported``
+    2. ``telegram_code`` normalised if it's in ``supported``
+    3. ``default_lang``
+    """
+    if preferred and preferred in supported:
+        return preferred
+    tg = normalise_lang_code(telegram_code)
+    if tg and tg in supported:
+        return tg
+    return default_lang

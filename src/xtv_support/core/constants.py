@@ -48,6 +48,7 @@ class CallbackPrefix(StrEnum):
     USER_TICKETS_LIST = "u:tks"
     USER_TICKETS_VIEW = "u:tkv"
     USER_TICKETS_CLOSE = "u:tkc"
+    USER_LANG_PICK = "u:lang"
 
     # Admin dashboard
     ADMIN_HOME = "a:home"

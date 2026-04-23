@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle avoidance
     from xtv_support.config.settings import Settings
     from xtv_support.core.container import Container
     from xtv_support.core.events import EventBus
+    from xtv_support.core.i18n import I18n
     from xtv_support.core.state import StateMachine
     from xtv_support.plugins.loader import PluginLoader
     from xtv_support.plugins.registry import PluginRegistry
@@ -50,6 +51,9 @@ class HandlerContext:
     state: "StateMachine" = field(default=None)  # type: ignore[assignment]
     plugin_loader: "PluginLoader | None" = None
     plugin_registry: "PluginRegistry | None" = None
+
+    # --- Phase 4: i18n ----------------------------------------------
+    i18n: "I18n | None" = None
 
 
 def bind_context(client: "Client", ctx: HandlerContext) -> None:

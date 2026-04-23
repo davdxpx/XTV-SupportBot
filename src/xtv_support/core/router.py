@@ -19,28 +19,30 @@ log = get_logger("router")
 # handlers share the same group.
 _HANDLER_MODULES: tuple[str, ...] = (
     # Middleware (negative groups)
-    "app.middlewares.logging_mw",
-    "app.middlewares.blocked_mw",
-    "app.middlewares.cooldown_mw",
+    "xtv_support.middlewares.logging_mw",
+    "xtv_support.middlewares.blocked_mw",
+    "xtv_support.middlewares.i18n_mw",
+    "xtv_support.middlewares.cooldown_mw",
     # Commands (group 0)
-    "app.handlers.start",
-    "app.handlers.admin.dashboard",
-    "app.handlers.admin.projects",
-    "app.handlers.admin.contact_links",
-    "app.handlers.admin.block",
-    "app.handlers.admin.broadcast",
-    "app.handlers.admin.assign",
-    "app.handlers.admin.tags",
-    "app.handlers.user.feedback",
-    "app.handlers.user.close",
-    "app.handlers.user.history",
-    "app.handlers.user.tickets",
-    "app.handlers.topic.reply",
-    "app.handlers.topic.commands",
+    "xtv_support.handlers.start",
+    "xtv_support.handlers.user.lang",
+    "xtv_support.handlers.admin.dashboard",
+    "xtv_support.handlers.admin.projects",
+    "xtv_support.handlers.admin.contact_links",
+    "xtv_support.handlers.admin.block",
+    "xtv_support.handlers.admin.broadcast",
+    "xtv_support.handlers.admin.assign",
+    "xtv_support.handlers.admin.tags",
+    "xtv_support.handlers.user.feedback",
+    "xtv_support.handlers.user.close",
+    "xtv_support.handlers.user.history",
+    "xtv_support.handlers.user.tickets",
+    "xtv_support.handlers.topic.reply",
+    "xtv_support.handlers.topic.commands",
     # State machine (group 1)
-    "app.handlers.admin.input_router",
+    "xtv_support.handlers.admin.input_router",
     # Catch-all
-    "app.handlers.errors",
+    "xtv_support.handlers.errors",
 )
 
 
