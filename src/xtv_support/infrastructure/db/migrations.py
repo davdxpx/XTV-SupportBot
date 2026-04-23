@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -82,6 +82,18 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
 
     await db.teams.create_index([("_id", ASCENDING)], name="ix_team_id")
     await db.teams.create_index([("member_ids", ASCENDING)], name="ix_team_members")
+
+    # --- Phase 6: Macros ---------------------------------------------
+    # Name must be unique per scope (team_id). Using a unique compound
+    # lets the same macro name exist as both a global and a per-team
+    # macro if the operator really wants that.
+    await db.macros.create_index(
+        [("name", ASCENDING), ("team_id", ASCENDING)],
+        unique=True,
+        name="ux_macro_name_scope",
+    )
+    await db.macros.create_index([("team_id", ASCENDING)], name="ix_macro_team")
+    await db.macros.create_index([("tags", ASCENDING)], name="ix_macro_tags")
 
     log.info("db.indexes_ensured")
 

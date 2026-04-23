@@ -46,6 +46,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.user.tickets",
     "xtv_support.handlers.topic.reply",
     "xtv_support.handlers.topic.commands",
+    "xtv_support.handlers.topic.macros",
     # State machine (group 1)
     "xtv_support.handlers.admin.input_router",
     # Catch-all

@@ -139,6 +139,18 @@ class TeamDoc(TypedDict, total=False):
     created_by: int
     created_at: datetime
 
+
+class MacroDoc(TypedDict, total=False):
+    _id: ObjectId
+    name: str
+    body: str
+    team_id: str | None          # None -> global
+    tags: list[str]
+    usage_count: int
+    created_by: int
+    created_at: datetime
+    updated_at: datetime
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

@@ -14,6 +14,7 @@ from xtv_support.domain.events.broadcasts import (
     BroadcastResumed,
     BroadcastStarted,
 )
+from xtv_support.domain.events.macros import MacroUsed
 from xtv_support.domain.events.messaging import MessageReceived, MessageSent
 from xtv_support.domain.events.plugins import PluginFailed, PluginLoaded, PluginUnloaded
 from xtv_support.domain.events.projects import ProjectCreated, ProjectDeleted
@@ -50,6 +51,8 @@ __all__ = [
     # Messaging
     "MessageReceived",
     "MessageSent",
+    # Macros (Phase 6)
+    "MacroUsed",
     # Users
     "UserRegistered",
     "UserBlocked",
