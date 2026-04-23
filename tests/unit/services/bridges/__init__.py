@@ -1,0 +1,1 @@
+"""Bridge-formatter tests."""
