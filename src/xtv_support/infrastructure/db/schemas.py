@@ -151,6 +151,22 @@ class MacroDoc(TypedDict, total=False):
     created_at: datetime
     updated_at: datetime
 
+
+class KbArticleDoc(TypedDict, total=False):
+    _id: ObjectId
+    slug: str
+    title: str
+    body: str
+    lang: str
+    tags: list[str]
+    project_ids: list[str]
+    views: int
+    helpful: int
+    not_helpful: int
+    created_by: int
+    created_at: datetime
+    updated_at: datetime
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

@@ -39,6 +39,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.admin.tags",
     "xtv_support.handlers.admin.teams",
     "xtv_support.handlers.admin.roles",
+    "xtv_support.handlers.admin.kb",
     "xtv_support.handlers.agent.queue",
     "xtv_support.handlers.user.feedback",
     "xtv_support.handlers.user.close",

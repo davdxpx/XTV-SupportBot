@@ -14,6 +14,11 @@ from xtv_support.domain.events.broadcasts import (
     BroadcastResumed,
     BroadcastStarted,
 )
+from xtv_support.domain.events.kb import (
+    KbArticleDismissed,
+    KbArticleHelpful,
+    KbArticleShown,
+)
 from xtv_support.domain.events.macros import MacroUsed
 from xtv_support.domain.events.messaging import MessageReceived, MessageSent
 from xtv_support.domain.events.plugins import PluginFailed, PluginLoaded, PluginUnloaded
@@ -51,8 +56,12 @@ __all__ = [
     # Messaging
     "MessageReceived",
     "MessageSent",
-    # Macros (Phase 6)
+    # Macros (Phase 6a)
     "MacroUsed",
+    # Knowledge Base (Phase 6b/6c)
+    "KbArticleShown",
+    "KbArticleHelpful",
+    "KbArticleDismissed",
     # Users
     "UserRegistered",
     "UserBlocked",

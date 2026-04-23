@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -94,6 +94,28 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
     )
     await db.macros.create_index([("team_id", ASCENDING)], name="ix_macro_team")
     await db.macros.create_index([("tags", ASCENDING)], name="ix_macro_tags")
+
+    # --- Phase 6b: Knowledge Base ------------------------------------
+    await db.kb_articles.create_index(
+        [("slug", ASCENDING)], unique=True, name="ux_kb_slug"
+    )
+    await db.kb_articles.create_index([("lang", ASCENDING)], name="ix_kb_lang")
+    await db.kb_articles.create_index([("tags", ASCENDING)], name="ix_kb_tags")
+    await db.kb_articles.create_index(
+        [("project_ids", ASCENDING)], name="ix_kb_projects"
+    )
+    # Full-text index — title weighs more than body or tags so a
+    # ``?q=reset password`` query with a matching title beats a body
+    # hit by default.
+    try:
+        await db.kb_articles.create_index(
+            [("title", "text"), ("body", "text"), ("tags", "text")],
+            weights={"title": 10, "body": 3, "tags": 5},
+            default_language="english",
+            name="fts_kb",
+        )
+    except OperationFailure as exc:
+        log.warning("db.kb_fts_index_failed", error=str(exc))
 
     log.info("db.indexes_ensured")
 
