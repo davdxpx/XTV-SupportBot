@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from typing import Any
-
-from xtv_support.config.settings import settings
 
 
 # === Classes ===
@@ -132,7 +131,10 @@ _configured = False
 
 # === Helper Functions ===
 def _level_for_settings() -> int:
-    level_name = (settings.LOG_LEVEL or "INFO").upper()
+    # Read the env var directly so the logger stays independent of the full
+    # pydantic Settings object. This also means tests that don't set up
+    # credentials can still use the logger.
+    level_name = (os.environ.get("LOG_LEVEL") or "INFO").upper()
     return getattr(logging, level_name, logging.INFO)
 
 
