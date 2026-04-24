@@ -22,49 +22,35 @@ export function Rules() {
   });
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0 }}>Automation rules</h1>
-      <p style={{ opacity: 0.7, fontSize: 13 }}>
-        Read-only view. Use <code>/admin → Rules</code> in the bot to create,
-        edit, or toggle rules — the full builder GUI lands in a later phase.
+    <div className="stack stack-lg">
+      <div className="heading-row">
+        <h1 className="heading">Automation rules</h1>
+      </div>
+      <p className="muted" style={{ fontSize: 13 }}>
+        Read-only view. Use <code>/admin → Rules</code> in the bot to create, edit,
+        or toggle rules — the full builder GUI lands in a later phase.
       </p>
 
-      {isLoading && <p>Loading…</p>}
+      {isLoading && <p className="muted">Loading…</p>}
       {data && data.items.length === 0 && (
-        <p style={{ opacity: 0.7 }}>No rules configured yet.</p>
+        <p className="muted">No rules configured yet.</p>
       )}
 
-      <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 10 }}>
+      <ul className="ticket-list">
         {data?.items.map((r) => (
-          <li
-            key={r.id}
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              padding: 14,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <li key={r.id} className="card stack" style={{ gap: 8 }}>
+            <div className="row">
               <strong>{r.name}</strong>
-              <span
-                style={{
-                  fontSize: 11,
-                  padding: '2px 8px',
-                  borderRadius: 999,
-                  background: r.enabled ? '#dcfce7' : '#f3f4f6',
-                  color: r.enabled ? '#166534' : '#374151',
-                  fontWeight: 600,
-                }}
-              >
+              <span className={`pill ${r.enabled ? 'pill-success' : 'pill-muted'}`}>
                 {r.enabled ? 'enabled' : 'disabled'}
               </span>
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: '#6b7280' }}>
+              <span className="muted" style={{ marginLeft: 'auto', fontSize: 12 }}>
                 on {r.trigger}
               </span>
             </div>
 
             {r.conditions.length > 0 && (
-              <div style={{ marginTop: 8, fontSize: 13, color: '#374151' }}>
+              <div style={{ fontSize: 13 }}>
                 <strong>WHEN</strong>{' '}
                 {r.conditions.map((c, i) => (
                   <span key={i}>
@@ -76,16 +62,14 @@ export function Rules() {
                 ))}
               </div>
             )}
-            <div style={{ marginTop: 4, fontSize: 13, color: '#374151' }}>
+            <div style={{ fontSize: 13 }}>
               <strong>THEN</strong>{' '}
               {r.actions.map((a, i) => (
                 <span key={i}>
                   {i > 0 && ', '}
                   <code>{a.name}</code>
                   {a.params && Object.keys(a.params).length > 0 && (
-                    <span style={{ opacity: 0.7 }}>
-                      ({JSON.stringify(a.params)})
-                    </span>
+                    <span className="muted">({JSON.stringify(a.params)})</span>
                   )}
                 </span>
               ))}

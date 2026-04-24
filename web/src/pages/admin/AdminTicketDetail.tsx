@@ -43,7 +43,8 @@ export function AdminTicketDetail() {
     });
 
   const replyMut = useMutation({
-    mutationFn: () => post(`/api/v1/tickets/${ticketId}/reply`, { message: reply.trim() }),
+    mutationFn: () =>
+      post(`/api/v1/tickets/${ticketId}/reply`, { message: reply.trim() }),
     onSuccess: () => {
       setReply('');
       qc.invalidateQueries({ queryKey: ['admin-ticket', ticketId] });
@@ -69,49 +70,40 @@ export function AdminTicketDetail() {
     },
   });
 
-  if (isLoading) return <p>Loading ticket…</p>;
-  if (!data) return <p>Not found.</p>;
+  if (isLoading) return <p className="muted">Loading ticket…</p>;
+  if (!data) return <p className="muted">Not found.</p>;
 
   const isOpen = data.status === 'open';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
-      <div>
-        <Link to="/admin/inbox" style={{ color: '#2563eb' }}>
-          ← Inbox
-        </Link>
-        <h1 style={{ marginTop: 8 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28 }}>
+      <div className="stack">
+        <Link to="/admin/inbox" className="muted">← Inbox</Link>
+        <h1 className="heading">
           Ticket #{data._id.slice(-6)} · {data.status}
         </h1>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="thread">
           {(data.history ?? []).map((h, i) => (
             <HistoryBubble key={i} entry={h} />
           ))}
         </div>
 
         {isOpen ? (
-          <section style={{ marginTop: 16 }}>
+          <section className="stack">
             <textarea
               rows={4}
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               placeholder="Agent reply…"
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #e5e7eb',
-                borderRadius: 8,
-                fontFamily: 'inherit',
-                fontSize: 14,
-              }}
+              className="textarea"
             />
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div className="row">
               <button
                 type="button"
                 disabled={!reply.trim() || replyMut.isPending}
                 onClick={() => replyMut.mutate()}
-                style={btn('#2563eb', '#fff')}
+                className="btn btn-primary"
               >
                 {replyMut.isPending ? 'Sending…' : 'Send reply'}
               </button>
@@ -119,18 +111,18 @@ export function AdminTicketDetail() {
                 type="button"
                 disabled={closeMut.isPending}
                 onClick={() => closeMut.mutate()}
-                style={btn('#fff', '#991b1b', '#fca5a5')}
+                className="btn btn-danger"
               >
                 Close
               </button>
             </div>
           </section>
         ) : (
-          <section style={{ marginTop: 16 }}>
+          <section>
             <button
               type="button"
               onClick={() => reopenMut.mutate()}
-              style={btn('#2563eb', '#fff')}
+              className="btn btn-primary"
             >
               Reopen
             </button>
@@ -138,9 +130,9 @@ export function AdminTicketDetail() {
         )}
       </div>
 
-      <aside style={{ borderLeft: '1px solid #e5e7eb', paddingLeft: 16 }}>
-        <h3>Meta</h3>
-        <dl style={{ fontSize: 13 }}>
+      <aside className="card stack">
+        <h3 style={{ margin: 0 }}>Meta</h3>
+        <dl className="stack" style={{ margin: 0, gap: 4, fontSize: 13 }}>
           <DItem k="User ID" v={String(data.user_id)} />
           <DItem k="Priority" v={data.priority ?? '—'} />
           <DItem k="Assignee" v={data.assignee_id ? String(data.assignee_id) : '—'} />
@@ -153,41 +145,26 @@ export function AdminTicketDetail() {
           )}
         </dl>
 
-        <h3 style={{ marginTop: 20 }}>Tags</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <h3 style={{ margin: '10px 0 0' }}>Tags</h3>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 4 }}>
           {(data.tags ?? []).map((tag) => (
-            <span
-              key={tag}
-              style={{
-                background: '#f3f4f6',
-                padding: '2px 8px',
-                borderRadius: 6,
-                fontSize: 12,
-              }}
-            >
-              #{tag}
-            </span>
+            <span key={tag} className="pill pill-muted">#{tag}</span>
           ))}
         </div>
-        <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
+        <div className="row" style={{ gap: 4 }}>
           <input
             type="text"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             placeholder="add tag"
-            style={{
-              flex: 1,
-              padding: 6,
-              border: '1px solid #e5e7eb',
-              borderRadius: 6,
-              fontSize: 12,
-            }}
+            className="input"
+            style={{ padding: 8, fontSize: 13 }}
           />
           <button
             type="button"
             disabled={!tagInput.trim() || addTagMut.isPending}
             onClick={() => addTagMut.mutate(tagInput.trim())}
-            style={btn('#2563eb', '#fff')}
+            className="btn btn-primary btn-sm"
           >
             Add
           </button>
@@ -200,31 +177,13 @@ export function AdminTicketDetail() {
 function HistoryBubble({ entry }: { entry: HistoryEntry }) {
   const fromAgent = entry.sender === 'admin' || entry.sender === 'agent';
   return (
-    <div
-      style={{
-        alignSelf: fromAgent ? 'flex-end' : 'flex-start',
-        background: fromAgent ? '#eff6ff' : '#f3f4f6',
-        padding: '8px 12px',
-        borderRadius: 10,
-        maxWidth: '80%',
-      }}
-    >
-      <div
-        style={{
-          fontSize: 11,
-          color: '#6b7280',
-          marginBottom: 4,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-        }}
-      >
+    <div className={`bubble ${fromAgent ? 'bubble-user' : 'bubble-agent'}`}>
+      <div className="muted" style={{ fontSize: 10, marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', color: 'inherit', opacity: 0.7 }}>
         {entry.sender}
       </div>
-      <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{entry.text}</div>
+      <div style={{ whiteSpace: 'pre-wrap' }}>{entry.text}</div>
       {entry.timestamp && (
-        <div style={{ marginTop: 4, fontSize: 10, color: '#9ca3af' }}>
-          {new Date(entry.timestamp).toLocaleString()}
-        </div>
+        <div className="bubble-time">{new Date(entry.timestamp).toLocaleString()}</div>
       )}
     </div>
   );
@@ -232,21 +191,9 @@ function HistoryBubble({ entry }: { entry: HistoryEntry }) {
 
 function DItem({ k, v }: { k: string; v: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-      <dt style={{ color: '#6b7280' }}>{k}</dt>
+    <div className="row" style={{ justifyContent: 'space-between' }}>
+      <dt className="muted">{k}</dt>
       <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>{v}</dd>
     </div>
   );
-}
-
-function btn(bg: string, fg: string, border?: string): React.CSSProperties {
-  return {
-    padding: '8px 14px',
-    background: bg,
-    color: fg,
-    border: border ? `1px solid ${border}` : 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    fontSize: 13,
-  };
 }

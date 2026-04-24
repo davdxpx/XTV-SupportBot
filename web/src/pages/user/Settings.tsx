@@ -42,7 +42,7 @@ export function UserSettings() {
     },
   });
 
-  if (!local) return <p>Loading…</p>;
+  if (!local) return <p className="muted">Loading…</p>;
 
   const patch = (p: Partial<UserSettings>) => {
     setLocal({ ...local, ...p });
@@ -50,20 +50,12 @@ export function UserSettings() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h2 style={{ margin: 0 }}>⚙️ Settings</h2>
+    <div className="stack stack-lg">
+      <h2 className="heading">⚙️ Settings</h2>
 
       <section>
-        <h3 style={{ fontSize: 14, opacity: 0.7, marginBottom: 8 }}>
-          🌐 Language
-        </h3>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 6,
-          }}
-        >
+        <p className="section-title">🌐 Language</p>
+        <div className="tiles">
           {LANGUAGES.map((lang) => {
             const active = lang.code === local.language;
             return (
@@ -71,18 +63,10 @@ export function UserSettings() {
                 key={lang.code}
                 type="button"
                 onClick={() => patch({ language: lang.code })}
-                style={{
-                  padding: '10px 12px',
-                  border: active
-                    ? '2px solid #2563eb'
-                    : '1px solid #e5e7eb',
-                  background: active ? '#eff6ff' : 'transparent',
-                  borderRadius: 10,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
+                className={`tile${active ? ' tile-active' : ''}`}
               >
-                {active ? '✅' : '·'} {lang.label}
+                {active ? '✅ ' : '· '}
+                {lang.label}
               </button>
             );
           })}
@@ -90,31 +74,29 @@ export function UserSettings() {
       </section>
 
       <section>
-        <h3 style={{ fontSize: 14, opacity: 0.7, marginBottom: 8 }}>
-          🔔 Notifications
-        </h3>
-        <Toggle
-          label="Notify me on agent replies"
-          value={local.notify_on_reply}
-          onChange={(v) => patch({ notify_on_reply: v })}
-        />
-        <Toggle
-          label="Ask for satisfaction after close"
-          value={local.notify_csat}
-          onChange={(v) => patch({ notify_csat: v })}
-        />
-        <Toggle
-          label="Announcements from the team"
-          value={local.notify_announcements}
-          onChange={(v) => patch({ notify_announcements: v })}
-        />
+        <p className="section-title">🔔 Notifications</p>
+        <div className="stack" style={{ gap: 6 }}>
+          <Toggle
+            label="Notify me on agent replies"
+            value={local.notify_on_reply}
+            onChange={(v) => patch({ notify_on_reply: v })}
+          />
+          <Toggle
+            label="Ask for satisfaction after close"
+            value={local.notify_csat}
+            onChange={(v) => patch({ notify_csat: v })}
+          />
+          <Toggle
+            label="Announcements from the team"
+            value={local.notify_announcements}
+            onChange={(v) => patch({ notify_announcements: v })}
+          />
+        </div>
       </section>
 
       <section>
-        <h3 style={{ fontSize: 14, opacity: 0.7, marginBottom: 8 }}>
-          🖥 UI preference
-        </h3>
-        <div style={{ display: 'grid', gap: 6 }}>
+        <p className="section-title">🖥 UI preference</p>
+        <div className="stack" style={{ gap: 6 }}>
           {(
             [
               { value: null, label: 'Use server default' },
@@ -129,18 +111,10 @@ export function UserSettings() {
                 key={String(opt.value)}
                 type="button"
                 onClick={() => patch({ ui_pref: opt.value })}
-                style={{
-                  padding: '10px 12px',
-                  border: active
-                    ? '2px solid #2563eb'
-                    : '1px solid #e5e7eb',
-                  background: active ? '#eff6ff' : 'transparent',
-                  borderRadius: 10,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
+                className={`tile${active ? ' tile-active' : ''}`}
               >
-                {active ? '✅' : '·'} {opt.label}
+                {active ? '✅ ' : '· '}
+                {opt.label}
               </button>
             );
           })}
@@ -163,19 +137,7 @@ function Toggle({
     <button
       type="button"
       onClick={() => onChange(!value)}
-      style={{
-        width: '100%',
-        padding: '12px 14px',
-        border: '1px solid #e5e7eb',
-        background: 'transparent',
-        borderRadius: 10,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        textAlign: 'left',
-        marginBottom: 6,
-      }}
+      className="tile row"
     >
       <span style={{ fontSize: 18 }}>{value ? '✅' : '⬜'}</span>
       <span>{label}</span>

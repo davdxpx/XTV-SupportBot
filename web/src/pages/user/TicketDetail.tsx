@@ -57,63 +57,46 @@ export function TicketDetail() {
     },
   });
 
-  if (isLoading) return <p>Loading ticket…</p>;
-  if (!data) return <p>Ticket not found.</p>;
+  if (isLoading) return <p className="muted">Loading ticket…</p>;
+  if (!data) return <p className="muted">Ticket not found.</p>;
 
   const isOpen = data.status === 'open';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <Link to="/tickets" style={{ color: '#2563eb', fontSize: 14 }}>
+    <div className="stack stack-lg">
+      <Link to="/tickets" className="muted" style={{ fontSize: 14 }}>
         ← Back to tickets
       </Link>
-      <header>
-        <h2 style={{ margin: '4px 0 6px' }}>{data.subject || 'Ticket'}</h2>
-        <div style={{ fontSize: 12, opacity: 0.7 }}>
+      <header className="stack" style={{ gap: 4 }}>
+        <h2 style={{ margin: 0 }}>{data.subject || 'Ticket'}</h2>
+        <div className="muted" style={{ fontSize: 12 }}>
           {data.status} · {data.priority ?? 'normal'} ·{' '}
-          {data.created_at
-            ? new Date(data.created_at).toLocaleString()
-            : '—'}
+          {data.created_at ? new Date(data.created_at).toLocaleString() : '—'}
         </div>
       </header>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="thread">
         {data.history.map((h, i) => (
           <Bubble key={i} entry={h} />
         ))}
       </div>
 
       {isOpen ? (
-        <section style={{ marginTop: 8 }}>
+        <section className="stack">
           <textarea
+            className="textarea"
+            rows={4}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            rows={4}
             placeholder="Write a reply…"
-            style={{
-              width: '100%',
-              padding: 10,
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              fontFamily: 'inherit',
-              fontSize: 15,
-              resize: 'vertical',
-            }}
           />
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <div className="row">
             <button
               type="button"
               onClick={() => reply.mutate()}
               disabled={!draft.trim() || reply.isPending}
-              style={{
-                padding: '10px 18px',
-                background: '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: 10,
-                cursor: 'pointer',
-                flex: 1,
-              }}
+              className="btn btn-primary"
+              style={{ flex: 1 }}
             >
               {reply.isPending ? 'Sending…' : 'Send reply'}
             </button>
@@ -123,30 +106,14 @@ export function TicketDetail() {
                 if (confirm('Close this ticket?')) close.mutate();
               }}
               disabled={close.isPending}
-              style={{
-                padding: '10px 14px',
-                background: 'transparent',
-                color: '#991b1b',
-                border: '1px solid #fca5a5',
-                borderRadius: 10,
-                cursor: 'pointer',
-              }}
+              className="btn btn-danger"
             >
               Close
             </button>
           </div>
         </section>
       ) : (
-        <div
-          style={{
-            padding: 12,
-            background: '#f3f4f6',
-            color: '#374151',
-            borderRadius: 10,
-            fontSize: 13,
-            textAlign: 'center',
-          }}
-        >
+        <div className="card muted" style={{ textAlign: 'center' }}>
           This ticket is closed.
         </div>
       )}
@@ -157,30 +124,10 @@ export function TicketDetail() {
 function Bubble({ entry }: { entry: HistoryEntry }) {
   const fromUser = entry.sender === 'user';
   return (
-    <div
-      style={{
-        alignSelf: fromUser ? 'flex-end' : 'flex-start',
-        maxWidth: '85%',
-        background: fromUser ? '#2563eb' : '#f3f4f6',
-        color: fromUser ? '#ffffff' : '#111827',
-        padding: '8px 12px',
-        borderRadius: 12,
-        borderBottomRightRadius: fromUser ? 2 : 12,
-        borderBottomLeftRadius: fromUser ? 12 : 2,
-      }}
-    >
-      <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{entry.text}</div>
+    <div className={`bubble ${fromUser ? 'bubble-user' : 'bubble-agent'}`}>
+      <div style={{ whiteSpace: 'pre-wrap' }}>{entry.text}</div>
       {entry.timestamp && (
-        <div
-          style={{
-            marginTop: 4,
-            fontSize: 10,
-            opacity: 0.7,
-            textAlign: 'right',
-          }}
-        >
-          {new Date(entry.timestamp).toLocaleString()}
-        </div>
+        <div className="bubble-time">{new Date(entry.timestamp).toLocaleString()}</div>
       )}
     </div>
   );

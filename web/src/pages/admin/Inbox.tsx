@@ -27,101 +27,62 @@ export function Inbox() {
       : (data?.items ?? []);
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0 }}>Inbox</h1>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {VIEWS.map((v) => {
-          const active = v.key === view;
-          return (
-            <button
-              key={v.key}
-              type="button"
-              onClick={() => setView(v.key)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 999,
-                border: active ? '1px solid #2563eb' : '1px solid #e5e7eb',
-                background: active ? '#2563eb' : 'transparent',
-                color: active ? '#ffffff' : 'inherit',
-                cursor: 'pointer',
-              }}
-            >
-              {v.label}
-            </button>
-          );
-        })}
+    <div className="stack stack-lg">
+      <div className="heading-row">
+        <h1 className="heading">Inbox</h1>
+      </div>
+      <div className="chips">
+        {VIEWS.map((v) => (
+          <button
+            key={v.key}
+            type="button"
+            onClick={() => setView(v.key)}
+            className={`chip${v.key === view ? ' chip-active' : ''}`}
+          >
+            {v.label}
+          </button>
+        ))}
       </div>
 
-      {isLoading && <p>Loading…</p>}
+      {isLoading && <p className="muted">Loading…</p>}
       {!isLoading && items.length === 0 && (
-        <p style={{ opacity: 0.7 }}>No tickets in this view.</p>
+        <p className="muted">No tickets in this view.</p>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>
-            <Th>Status</Th>
-            <Th>Priority</Th>
-            <Th>User</Th>
-            <Th>Tags</Th>
-            <Th>Created</Th>
-            <Th>Assignee</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((t) => (
-            <tr
-              key={t._id}
-              style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
-            >
-              <Td>
-                <Link
-                  to={`/admin/tickets/${t._id}`}
-                  style={{ color: '#2563eb', textDecoration: 'none' }}
-                >
-                  {t.status}
-                </Link>
-              </Td>
-              <Td>{t.priority ?? '—'}</Td>
-              <Td>{t.user_id}</Td>
-              <Td>
-                {(t.tags ?? []).map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      background: '#f3f4f6',
-                      padding: '2px 6px',
-                      borderRadius: 6,
-                      marginRight: 4,
-                      fontSize: 11,
-                    }}
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </Td>
-              <Td>
-                {t.created_at
-                  ? new Date(t.created_at).toLocaleString()
-                  : '—'}
-              </Td>
-              <Td>{t.assignee_id ?? '—'}</Td>
+      {items.length > 0 && (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>User</th>
+              <th>Tags</th>
+              <th>Created</th>
+              <th>Assignee</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map((t) => (
+              <tr key={t._id}>
+                <td>
+                  <Link to={`/admin/tickets/${t._id}`}>{t.status}</Link>
+                </td>
+                <td>{t.priority ?? '—'}</td>
+                <td>{t.user_id}</td>
+                <td>
+                  {(t.tags ?? []).map((tag) => (
+                    <span key={tag} className="pill pill-muted" style={{ marginRight: 4 }}>
+                      #{tag}
+                    </span>
+                  ))}
+                </td>
+                <td>{t.created_at ? new Date(t.created_at).toLocaleString() : '—'}</td>
+                <td>{t.assignee_id ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th style={{ padding: '8px 10px', fontSize: 12, color: '#6b7280', fontWeight: 500 }}>
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }: { children: React.ReactNode }) {
-  return <td style={{ padding: '10px', fontSize: 14 }}>{children}</td>;
 }

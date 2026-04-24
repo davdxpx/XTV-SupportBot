@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
+import '@/styles/theme.css';
 import { AdminLayout } from '@/components/AdminLayout';
 import { UserLayout } from '@/components/UserLayout';
 import { Login } from '@/pages/Login';
@@ -16,7 +17,7 @@ import { Inbox } from '@/pages/admin/Inbox';
 import { AdminTicketDetail } from '@/pages/admin/AdminTicketDetail';
 import { Projects } from '@/pages/admin/Projects';
 import { Rules } from '@/pages/admin/Rules';
-import { getMe, hasCredentials } from '@/lib/api';
+import { ApiError, getMe, hasCredentials } from '@/lib/api';
 import { bootTelegram, isInsideTelegram } from '@/lib/telegram';
 
 // Tell Telegram we're ready + expand the viewport so the Mini-App
@@ -28,24 +29,58 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 10_000,
       refetchOnWindowFocus: false,
+      retry: false,
     },
   },
 });
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  return hasCredentials() ? <>{children}</> : <Navigate to="/login" replace />;
-}
-
 /**
- * Root switcher — asks /api/v1/me once, then picks the right shell:
- *  - Desktop browser + admin key → AdminLayout (full dashboard)
- *  - Every Telegram user (admin or not) → UserLayout (Mini-App UX)
- *  - Telegram admins who want the power UI go to /admin/* explicitly
+ * Root guard — decides which shell to render based on /api/v1/me.
+ *
+ *   inside Telegram (any user)         → UserLayout  (Mini-App UX)
+ *   desktop browser + admin key + ok   → AdminLayout (full dashboard)
+ *   no credentials / 401 / 422         → Login
  */
 function Root() {
-  const { data: me, isLoading } = useQuery({ queryKey: ['me'], queryFn: getMe });
-  if (isLoading) return <div style={{ padding: 40 }}>Loading…</div>;
-  if (me?.is_admin && !isInsideTelegram()) {
+  const inTelegram = isInsideTelegram();
+  const hasKey = !!hasCredentials();
+
+  const me = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+    enabled: inTelegram || hasKey,
+  });
+
+  if (!inTelegram && !hasKey) return <Navigate to="/login" replace />;
+
+  if (me.isLoading) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', fontFamily: 'system-ui' }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
+        Loading…
+      </div>
+    );
+  }
+
+  if (me.isError) {
+    // 401 from a bad key → clear it & bounce to login. Other errors → surface.
+    const status = me.error instanceof ApiError ? me.error.status : 0;
+    if (status === 401 || status === 422) return <Navigate to="/login" replace />;
+    return (
+      <div
+        style={{
+          padding: 40,
+          textAlign: 'center',
+          fontFamily: 'system-ui',
+          color: '#991b1b',
+        }}
+      >
+        Couldn't reach the server ({status || 'network'}). Try reloading.
+      </div>
+    );
+  }
+
+  if (me.data?.is_admin && !inTelegram) {
     return <AdminLayout />;
   }
   return <UserLayout />;
@@ -58,14 +93,7 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/admin"
-            element={
-              <RequireAuth>
-                <AdminLayout />
-              </RequireAuth>
-            }
-          >
+          <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Overview />} />
             <Route path="inbox" element={<Inbox />} />
             <Route path="tickets/:ticketId" element={<AdminTicketDetail />} />
@@ -73,14 +101,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="rules" element={<Rules />} />
           </Route>
 
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <Root />
-              </RequireAuth>
-            }
-          >
+          <Route path="/" element={<Root />}>
             <Route index element={<UserHome />} />
             <Route path="tickets" element={<MyTickets />} />
             <Route path="tickets/:ticketId" element={<TicketDetail />} />
