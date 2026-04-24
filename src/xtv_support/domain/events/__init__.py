@@ -7,6 +7,12 @@ or :meth:`~xtv_support.core.events.EventBus.subscribe`.
 
 from __future__ import annotations
 
+from xtv_support.domain.events.actions import (
+    ActionExecuted,
+    ActionFailed,
+    BulkActionCompleted,
+    BulkActionStarted,
+)
 from xtv_support.domain.events.base import DomainEvent
 from xtv_support.domain.events.broadcasts import (
     BroadcastCancelled,
@@ -29,7 +35,20 @@ from xtv_support.domain.events.macros import MacroUsed
 from xtv_support.domain.events.messaging import MessageReceived, MessageSent
 from xtv_support.domain.events.plugins import PluginFailed, PluginLoaded, PluginUnloaded
 from xtv_support.domain.events.projects import ProjectCreated, ProjectDeleted
+from xtv_support.domain.events.rules import (
+    RuleCreated,
+    RuleDeleted,
+    RuleDisabled,
+    RuleEnabled,
+    RuleExecuted,
+    RuleSkipped,
+    RuleUpdated,
+)
 from xtv_support.domain.events.sla import SlaBreached, SlaWarned
+from xtv_support.domain.events.templates import (
+    ProjectTemplateFailed,
+    ProjectTemplateInstalled,
+)
 from xtv_support.domain.events.tickets import (
     TicketAssigned,
     TicketClosed,
@@ -48,6 +67,11 @@ from xtv_support.domain.events.users import (
 
 __all__ = [
     "DomainEvent",
+    # Actions (Phase 4.1 foundations)
+    "ActionExecuted",
+    "ActionFailed",
+    "BulkActionStarted",
+    "BulkActionCompleted",
     # Tickets
     "TicketCreated",
     "TicketAssigned",
@@ -82,6 +106,17 @@ __all__ = [
     # Projects
     "ProjectCreated",
     "ProjectDeleted",
+    # Project templates (Phase 4.2)
+    "ProjectTemplateInstalled",
+    "ProjectTemplateFailed",
+    # Automation rules (Phase 4.6)
+    "RuleCreated",
+    "RuleUpdated",
+    "RuleDeleted",
+    "RuleEnabled",
+    "RuleDisabled",
+    "RuleExecuted",
+    "RuleSkipped",
     # Plugins
     "PluginLoaded",
     "PluginUnloaded",

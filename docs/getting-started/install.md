@@ -45,8 +45,9 @@
 
 === "Railway / Nixpacks"
 
-    Repo root ships a thin Dockerfile + `Procfile` / `nixpacks.toml`.
-    Push to Railway and fill the env vars in the project settings.
+    Repo root ships `Procfile` (`web: python main.py`) + `nixpacks.toml`
+    + `requirements.txt`. Push to Railway and fill the env vars.
+    Full walkthrough: [Railway deployment guide](../ops/railway.md).
 
 ## Optional extras
 

@@ -2,12 +2,14 @@
 
 Orchestrates the boot sequence: configure logging, construct the Telegram
 client, build the handler context, register handlers + background loops,
-then idle. Business-logic factories live in :mod:`xtv_support.core.bootstrap`.
+optionally start the REST API, then idle. Business-logic factories live
+in :mod:`xtv_support.core.bootstrap`.
 """
 
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import platform
 import sys
 
@@ -88,6 +90,7 @@ async def _amain() -> None:
             hint="Make sure the bot is a member of the supergroup with Manage Topics.",
         )
 
+    api_server: "_UvicornRunner | None" = None
     try:
         ctx = await build_context(client)
         register_all(client, ctx)
@@ -103,6 +106,21 @@ async def _amain() -> None:
             name="autoclose_loop",
             interval=max(60, ctx.settings.AUTO_CLOSE_SWEEP_MINUTES * 60),
         )
+
+        if settings.API_ENABLED:
+            api_server = await _start_api(ctx.db)
+            log.info(
+                "boot.api_started",
+                host=settings.API_HOST,
+                port=settings.effective_api_port,
+                cors_origins=settings.cors_origins or "<none>",
+            )
+        else:
+            log.info(
+                "boot.api_disabled",
+                hint="Set API_ENABLED=true to expose /health, /ready, /api/v1/*",
+            )
+
         log.info(
             "boot.ready",
             handlers="see router.registered above",
@@ -112,6 +130,8 @@ async def _amain() -> None:
         log.info("boot.tip", msg="Send /start in a private chat to test the user flow.")
         await idle()
         log.info("shutdown.starting")
+        if api_server is not None:
+            await api_server.stop()
         await ctx.tasks.stop()
     finally:
         try:
@@ -120,6 +140,81 @@ async def _amain() -> None:
             log.warning("shutdown.client_stop_failed", error=str(exc))
         await shutdown()
         log.info("shutdown.done")
+
+
+class _UvicornRunner:
+    """Lightweight wrapper around ``uvicorn.Server`` that co-exists with pyrofork.
+
+    Uvicorn's ``Server.serve()`` is an async coroutine — we schedule it as
+    a background task on the same event loop the Telegram client uses,
+    so both share one process, one loop, and one Mongo client.
+    """
+
+    def __init__(self, server: "uvicorn.Server") -> None:  # type: ignore[name-defined] # noqa: F821
+        self._server = server
+        self._task: asyncio.Task | None = None
+
+    async def start(self) -> None:
+        self._task = asyncio.create_task(self._server.serve(), name="uvicorn.serve")
+        # Give uvicorn a moment to bind the socket so the ``boot.ready``
+        # log line reflects the actual state.
+        for _ in range(50):  # ~5s max
+            if self._server.started:
+                return
+            await asyncio.sleep(0.1)
+
+    async def stop(self) -> None:
+        if self._task is None:
+            return
+        self._server.should_exit = True
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await asyncio.wait_for(self._task, timeout=10)
+        self._task = None
+
+
+async def _start_api(db) -> _UvicornRunner:
+    """Build the FastAPI app + spawn uvicorn as a background task."""
+    try:
+        import uvicorn
+    except ModuleNotFoundError as exc:  # pragma: no cover - guarded by requirements.txt
+        raise RuntimeError(
+            "API_ENABLED=true but uvicorn is not installed. "
+            "Install with `pip install 'xtv-support[api]'` or add "
+            "fastapi + uvicorn[standard] to requirements.txt."
+        ) from exc
+
+    from xtv_support.api.server import create_app
+
+    app = create_app(db=db)
+
+    if settings.cors_origins:
+        try:
+            from fastapi.middleware.cors import CORSMiddleware
+
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=settings.cors_origins,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+        except ModuleNotFoundError:  # pragma: no cover
+            pass
+
+    config = uvicorn.Config(
+        app,
+        host=settings.API_HOST,
+        port=settings.effective_api_port,
+        log_level=settings.LOG_LEVEL.lower(),
+        access_log=True,
+        # We own the loop (pyrofork runs on it) — let uvicorn reuse it.
+        loop="asyncio",
+        lifespan="off",
+    )
+    server = uvicorn.Server(config)
+    runner = _UvicornRunner(server)
+    await runner.start()
+    return runner
 
 
 def entrypoint() -> None:

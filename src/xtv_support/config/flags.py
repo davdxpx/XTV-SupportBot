@@ -60,6 +60,18 @@ class FeatureFlags(BaseSettings):
     SLACK_BRIDGE: bool = False
     EMAIL_INGRESS: bool = False
 
+    # --- v1.0 overhaul (Phase 4.3 / 4.4 / 4.5) --------------------------
+    # NEW_ONBOARDING flips /start from the legacy KB-gate-then-ticket
+    # flow into the new onboarding panel (New ticket / Browse help /
+    # My tickets / Settings). /home, /faq, /settings always work.
+    NEW_ONBOARDING: bool = False
+    # CUSTOMER_HISTORY_PIN pins a "last 5 tickets" card to every new
+    # topic (phase 4.5); default on so new deploys benefit immediately.
+    CUSTOMER_HISTORY_PIN: bool = True
+    # AGENT_INBOX exposes /inbox (phase 4.5). Default off until the full
+    # cockpit is shipped to avoid confusing agents during rollout.
+    AGENT_INBOX: bool = False
+
     def is_enabled(self, name: str) -> bool:
         """Lookup helper for dynamic names: ``flags.is_enabled("ai_drafts")``."""
         attr = name.upper()

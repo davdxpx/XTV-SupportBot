@@ -31,6 +31,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.start",
     "xtv_support.handlers.user.lang",
     "xtv_support.handlers.user.kb_gate",
+    "xtv_support.handlers.user.home",
     "xtv_support.handlers.admin.dashboard",
     "xtv_support.handlers.admin.projects",
     "xtv_support.handlers.admin.contact_links",
@@ -41,6 +42,9 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.admin.teams",
     "xtv_support.handlers.admin.roles",
     "xtv_support.handlers.admin.kb",
+    "xtv_support.handlers.admin.templates",
+    "xtv_support.handlers.admin.panel",
+    "xtv_support.handlers.admin.rules",
     "xtv_support.handlers.agent.queue",
     "xtv_support.handlers.user.feedback",
     "xtv_support.handlers.user.close",
@@ -50,6 +54,8 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.topic.commands",
     "xtv_support.handlers.topic.macros",
     "xtv_support.handlers.topic.ai_draft",
+    "xtv_support.handlers.topic.notes",
+    "xtv_support.handlers.agent.inbox",
     # State machine (group 1)
     "xtv_support.handlers.admin.input_router",
     # Catch-all
