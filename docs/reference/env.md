@@ -72,6 +72,28 @@ See also [API quickstart](api-quickstart.md),
 [API authentication](api-auth.md), and the dedicated
 [Railway guide](../ops/railway.md).
 
+## Admin SPA
+
+| Variable | Default | Notes |
+|---|---|---|
+| `WEB_ENABLED` | `true` | Mount the built React SPA at `/` with an `index.html` fallback so React-Router paths survive a refresh |
+| `WEB_DIST_DIR` | `web/dist` | Path (from repo root) to the build output; override only if your CI puts it somewhere else |
+
+## Dual-mode UI (Telegram WebApp)
+
+See [Web App feature](../features/web-app.md) and the dedicated
+[Deploy the Web App](../ops/deploy-webapp.md) guide for the full story.
+
+| Variable | Default | Notes |
+|---|---|---|
+| `UI_MODE` | `chat` | `chat` / `webapp` / `hybrid`. Typo-tolerant — unknown values fall back to `chat` |
+| `WEBAPP_URL` | `""` | Public HTTPS URL of the Mini-App. Must match the WebApp domain configured via @BotFather |
+| `WEBAPP_SET_MENU_BUTTON` | `false` | When true, the bot calls `setChatMenuButton` at boot so every chat shows a persistent "Open App" button |
+| `WEBAPP_MENU_BUTTON_TEXT` | `Open App` | Label for the global menu button |
+
+Per-user overrides (`users.ui_pref` + graceful fallback for old
+clients or empty `WEBAPP_URL`) are described in the feature doc.
+
 ## Observability
 
 `METRICS_ENABLED`, `METRICS_PATH`, `OTEL_SERVICE_NAME`,

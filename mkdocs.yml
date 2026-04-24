@@ -48,12 +48,14 @@ nav:
       - features/user-experience.md
       - features/agent-cockpit.md
       - features/automation-rules.md
+      - features/web-app.md
       - features/ai.md
       - features/analytics.md
       - features/integrations.md
   - Operations:
       - ops/deployment.md
       - ops/railway.md
+      - ops/deploy-webapp.md
       - ops/observability.md
       - ops/gdpr.md
   - Reference:
