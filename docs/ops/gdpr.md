@@ -2,17 +2,34 @@
 
 ## User-facing commands
 
-- `/gdpr export` — the bot sends a JSON document with the user's own
-  `user`, `tickets`, `csat_responses`, and audit entries.
-- `/gdpr delete` — marks `deleted_at` and schedules a hard purge after
-  30 days (`DEFAULT_GRACE_DAYS`). The user is blocked immediately.
+Both live in the user's DM with the bot and are wired to the
+real services in `xtv_support.services.gdpr`.
+
+- **`/gdpr_export`** — the bot runs
+  [`exporter.build_export`](https://github.com/davdxpx/XTV-SupportBot/blob/main/src/xtv_support/services/gdpr/exporter.py)
+  for the calling user and sends back a single `xtv_export_<user_id>.json`
+  document with every section the bot stores about them: their `user`
+  record, their `tickets`, their CSAT responses, and their audit
+  entries. Safe to run repeatedly.
+- **`/gdpr_delete`** — two-step:
+    1. The bot replies with a warning card that lists the grace window
+       (default 30 days, from `DEFAULT_GRACE_DAYS`) and offers
+       **✅ Yes, delete my data** / **◀ Cancel** buttons.
+    2. Confirm → the bot calls
+       [`deleter.request_deletion`](https://github.com/davdxpx/XTV-SupportBot/blob/main/src/xtv_support/services/gdpr/deleter.py),
+       which sets `users.deleted_at` and blocks the user from the bot
+       immediately. A periodic task (`purge_expired`) hard-deletes
+       the record after the grace window.
+
+The same two actions are reachable from `/settings` → 📥 Export my
+data / 🗑 Delete my data.
 
 ## Admin override
 
-- Soft-delete requests can be cancelled inside the grace window via
-  `/admin users` → "Cancel pending deletion".
-- `/gdpr purge-audit <days>` trims `audit_log` ad-hoc when you need
-  to reclaim retention.
+Admins can cancel a pending deletion inside the grace window by
+calling `deleter.cancel_deletion(db, user_id)` — there is no
+dedicated Telegram command yet; run it from the container shell or a
+small admin script.
 
 ## Audit trail
 

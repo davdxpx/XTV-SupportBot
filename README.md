@@ -213,43 +213,68 @@ See the full reference: **[Environment variables](https://davdxpx.github.io/XTV-
 
 ## Commands
 
+The bot is **menu-first**: `/start` for users and `/admin` for admins
+open everything as button-driven cards. The commands below are the
+**power-user shortcuts** — useful for scripting / automation / keyboard
+workflow, but you never *have* to type them.
+
 ### User DM
 
 | Command | What it does |
 |---|---|
-| `/start` | Welcome flow — pick a project or open the KB gate |
-| `/tickets` | Paginated list of your tickets with unread-reply badges |
-| `/close` | Close your currently-open ticket |
-| `/lang` | Change UI language |
-| `/gdpr export` / `/gdpr delete` | GDPR data export or erase (audit-logged) |
+| `/start` | Onboarding panel with New ticket / Browse help / My tickets / Settings. Deep-link payloads open contact or project flows directly. |
+| `/home` | Alias for `/start`. |
+| `/tickets` | Paginated list of your tickets with unread-reply badges. |
+| `/faq` | Pure knowledge-base browse. |
+| `/settings` | Language + notification preferences. |
+| `/close` | Close your currently-open ticket. |
+| `/lang` | Change UI language. |
+| `/gdpr_export` | Sends your full data export as a JSON document. |
+| `/gdpr_delete` | Two-step deletion with a 30-day grace window. |
+| `/humanplease` | Escape the KB gate if it loops. |
 
 ### Admin DM
 
 | Command | What it does |
 |---|---|
-| `/admin` | Stats dashboard (projects, users, open tickets) |
-| `/project create` / `list` / `view` / `delete` | Multi-step project wizard |
-| `/team list\|create\|rename\|delete` | Team CRUD + membership + timezone |
-| `/role list\|grant\|revoke` | RBAC assignments |
-| `/kb list\|add\|edit\|del\|search` | Knowledge-base article CRUD with FTS |
-| `/broadcast` | Draft → preview → send with live progress |
-| `/apikey create <scope>` / `list` / `revoke` | REST-API key lifecycle |
-| `/history <user_id>` | Last 10 tickets for a given user |
+| `/admin` | Tabbed control panel: Overview / Tickets / Teams / Projects / Rules / Broadcasts / Analytics / Settings. (Alias: `/panel`) |
+| `/history <user_id>` | Last 10 tickets for a given user. |
+| `/apikey [create <scopes> [label] \| revoke <id> \| list]` | API-key lifecycle (gated on `API_ENABLED=true`). |
+| `/templates` | List available project templates. |
+| `/project_template <template_slug> <project_slug> [name…]` | Create a project from a built-in template. |
+| `/team [list \| create \| rename \| delete \| tz \| members \| addmember \| removemember]` | Team CRUD (menu lives under `/admin → Teams`). |
+| `/role [list \| grant \| revoke]` | RBAC assignments. |
+| `/kb [list \| show \| add \| edit \| del \| search]` | Knowledge-base CRUD. |
+| `/rules` + `/rule_new`, `/rule_enable`, `/rule_disable`, `/rule_delete`, `/rule_test` | Automation rules. |
+
+Projects CRUD, broadcasts, and user block/unblock run **only through
+the `/admin` dashboard's buttons** — no direct commands for those.
+
+### Agent DM
+
+| Command | What it does |
+|---|---|
+| `/queue` | Open tickets routed to any team you belong to. |
+| `/mytickets` | Tickets currently assigned to you. |
+| `/inbox` | Agent cockpit with saved views + bulk actions (gated on `FEATURE_AGENT_INBOX=true`). |
 
 ### Inside a ticket topic
 
 | Command / button | What it does |
 |---|---|
-| *any non-command text* | Forwarded to the user as an admin reply |
-| `/close` | Close the ticket, notify the user, optional CSAT prompt |
-| `/assign <user_id \| me \| none>` | Assign / unassign an agent |
-| `/tag add\|rm <name>` | Mutate ticket tags in-place |
-| `/macro save\|use\|list\|show\|del` | Macro library (global + team-scoped) |
-| `/draft` | Generate an AI reply draft (gated on `FEATURE_AI_DRAFTS`) |
-| Header buttons | *Assign*, *Tag*, *Priority*, *AI Draft*, *Close* |
+| *any non-command text* | Forwarded to the user as an admin reply. |
+| `/close` | Close the ticket, notify the user, optional CSAT prompt. |
+| `/assign <user_id \| me \| none>` | Assign / unassign an agent. |
+| `/tag add\|rm <name>` | Mutate ticket tags in-place. |
+| `/macro [save \| use \| list \| show \| del]` | Macro library (global + team-scoped). |
+| `/note <text>` | Internal note, hidden from the user. |
+| `/draft` | Generate an AI reply draft (gated on `FEATURE_AI_DRAFTS`). |
+| Header buttons | *Assign*, *Tag*, *Priority*, *AI Draft*, *Close*. |
 
-A longer command walk-through lives in the
-[Getting-Started guide](https://davdxpx.github.io/XTV-SupportBot/getting-started/first-run/).
+`/cancel` in any wizard step aborts it and clears the FSM.
+
+The complete, verified-against-code command reference lives in the
+docs: **[Command reference](https://davdxpx.github.io/XTV-SupportBot/reference/commands/)**.
 
 ## Architecture
 
@@ -301,13 +326,14 @@ Root-level documents:
 ## Roadmap
 
 v0.9 is stabilising the public-pre-release surface. Several subsystems
-already ship behind feature flags and will stabilise toward **v1.0**:
+are already in place and will keep hardening toward **v1.0**:
 
-- Agent cockpit (`/inbox` with saved filters + bulk actions) — `FEATURE_AGENT_INBOX`
-- Automation rules engine (if-this-then-that over ticket events)
-- Project templates (seed a new project with macros / KB / routing / SLA)
-- Onboarding panel rework (`/home`, `/faq`, `/settings`) — `FEATURE_NEW_ONBOARDING`
-- REST API write endpoints (reply / close / assign via HTTP)
+- Onboarding panel rework (`/start` = home card, `/home`, `/faq`, `/settings`) — default
+- Automation rules engine (if-this-then-that over ticket events) — default
+- Project templates (seed a new project with macros / KB / routing / SLA) — default
+- Menu-first admin UX (`/admin` tabs + inline menus for Teams / API keys) — default
+- Agent cockpit (`/inbox` with saved filters + bulk actions) — gated on `FEATURE_AGENT_INBOX`
+- REST API write endpoints (reply / close / assign via HTTP) — default
 
 See the [CHANGELOG](CHANGELOG.md) for what already shipped, and
 [GitHub Issues](https://github.com/davdxpx/XTV-SupportBot/issues) for

@@ -3,10 +3,12 @@
 The v0.9 pre-release adds a proper home screen for end users, a pure
 browse-only help center, and per-user notification preferences.
 
-!!! info "Feature flag"
-    The new `/start` experience activates when
-    `FEATURE_NEW_ONBOARDING=true`. The new commands (`/home`, `/faq`,
-    `/settings`) are always available.
+!!! info "No flag needed"
+    The onboarding panel is the **default** for `/start` — no feature
+    flag. Deep-link payloads on `/start` (contact links, project-slug
+    deep links) keep their legacy fast path; only the no-payload call
+    renders the panel. `/home` is an alias of `/start`, `/faq` and
+    `/settings` are always available.
 
 ## `/home` — the onboarding panel
 
@@ -60,15 +62,18 @@ user document idempotently:
   notify_announcements: true}`
 - `onboarding_shown_at: null`
 
-## Legacy `/start` compatibility
+## Deep-link fast path
 
-When `FEATURE_NEW_ONBOARDING=false` (the default), `/start` runs
-exactly as before — straight into the KB gate or ticket flow. The new
-experience never fights with the old one.
+`/start` still handles two legacy deep-link payloads **before** the
+onboarding panel is rendered, so existing links keep working:
 
-Flip the flag and `/start` opens the home panel via a pre-propagation
-hijack (`message.stop_propagation()`), so the legacy handler stays
-registered but doesn't fire.
+- `t.me/YourBot?start=contact_<uuid>` — jumps straight into a
+  contact-form flow (the user is set to `AWAITING_CONTACT_MSG`).
+- `t.me/YourBot?start=<project_slug>` — jumps into that project's
+  intake flow (`AWAITING_FEEDBACK`).
+
+Only `/start` without a payload (and `/home`) renders the onboarding
+panel.
 
 ## Panel architecture
 

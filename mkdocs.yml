@@ -58,6 +58,7 @@ nav:
       - ops/gdpr.md
   - Reference:
       - reference/env.md
+      - reference/commands.md
       - reference/api.md
       - reference/api-quickstart.md
       - reference/api-auth.md

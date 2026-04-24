@@ -52,6 +52,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.user.close",
     "xtv_support.handlers.user.history",
     "xtv_support.handlers.user.tickets",
+    "xtv_support.handlers.user.gdpr",
     "xtv_support.handlers.topic.reply",
     "xtv_support.handlers.topic.commands",
     "xtv_support.handlers.topic.macros",
