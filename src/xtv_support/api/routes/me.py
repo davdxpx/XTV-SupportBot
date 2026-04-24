@@ -28,6 +28,12 @@ from xtv_support.core.logger import get_logger
 if TYPE_CHECKING:  # pragma: no cover
     from fastapi import APIRouter
 
+# Module-level import so the ``request: Request`` annotation on get_me
+# resolves via get_type_hints() — without ``from __future__ import
+# annotations`` would lazy-stringify the hint and FastAPI would treat
+# it as a query parameter (loc=["query","request"] → 422).
+from fastapi import Request
+
 _log = get_logger("api.me")
 
 
@@ -73,7 +79,7 @@ def _ticket_detail(doc: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_router() -> APIRouter:
-    from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+    from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
     from xtv_support.api.auth_webapp import (
         INIT_DATA_HEADER,
