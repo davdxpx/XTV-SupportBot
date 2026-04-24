@@ -223,9 +223,13 @@ async def _maybe_set_menu_button(client, log) -> None:
     """Wire the global Mini-App "Open App" button into every chat.
 
     No-op unless ``WEBAPP_SET_MENU_BUTTON=true`` and ``WEBAPP_URL`` is
-    a non-empty ``https://`` URL. Failure is logged but never fatal —
-    the bot still boots in chat-only mode if Telegram rejects the
-    call (e.g. because the WebApp domain isn't configured on BotFather).
+    a non-empty ``https://`` URL.
+
+    We hit the HTTP Bot API directly rather than pyrofork's MTProto
+    raw types because the ``BotMenuButtonWebApp`` TL constructor
+    isn't re-exported from every pyrofork layer. The Bot API's
+    ``setChatMenuButton`` is stable and supports ``web_app`` since
+    Bot API 6.0 (April 2022). Failure is logged but never fatal.
     """
     if not settings.WEBAPP_SET_MENU_BUTTON:
         return
@@ -238,17 +242,34 @@ async def _maybe_set_menu_button(client, log) -> None:
         )
         return
     try:
-        from pyrogram.raw.functions.bots import SetBotMenuButton
-        from pyrogram.raw.types import BotMenuButtonWebApp, InputUserEmpty
+        import httpx
 
-        button = BotMenuButtonWebApp(
-            text=settings.WEBAPP_MENU_BUTTON_TEXT or "Open App",
-            url=url,
-        )
-        # ``InputUserEmpty`` targets every chat the bot is in — per-user
-        # overrides would use ``InputUser(user_id=…)``.
-        await client.invoke(SetBotMenuButton(user_id=InputUserEmpty(), button=button))
-        log.info("boot.webapp_menu_set", url=url, text=button.text)
+        token = settings.BOT_TOKEN.get_secret_value()
+        body = {
+            "menu_button": {
+                "type": "web_app",
+                "text": settings.WEBAPP_MENU_BUTTON_TEXT or "Open App",
+                "web_app": {"url": url},
+            }
+        }
+        async with httpx.AsyncClient(timeout=10.0) as http:
+            resp = await http.post(
+                f"https://api.telegram.org/bot{token}/setChatMenuButton",
+                json=body,
+            )
+        data = resp.json() if resp.content else {}
+        if resp.status_code == 200 and data.get("ok"):
+            log.info(
+                "boot.webapp_menu_set",
+                url=url,
+                text=body["menu_button"]["text"],
+            )
+        else:
+            log.warning(
+                "boot.webapp_menu_failed",
+                status=resp.status_code,
+                description=data.get("description", "<no body>"),
+            )
     except Exception as exc:  # noqa: BLE001 — informational; never fatal
         log.warning("boot.webapp_menu_failed", error=str(exc))
 
