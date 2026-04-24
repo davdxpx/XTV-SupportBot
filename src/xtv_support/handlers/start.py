@@ -64,17 +64,36 @@ async def start_cmd(client: Client, message: Message) -> None:
             await send_card(client, user.id, user_messages.project_intro(project))
             return
 
-    await _send_project_selection(client, user.id)
+    # No payload → the new onboarding panel. The user can tap
+    # "📮 New ticket" to reach the project-picker.
+    from xtv_support.handlers.user.home import render_home
+
+    await render_home(client, user.id)
 
 
-async def _send_project_selection(client: Client, user_id: int) -> None:
+async def send_project_selection(
+    client: Client, user_id: int, *, edit_msg_id: int | None = None
+) -> None:
+    """Public entry for other handlers (e.g. the /home "New ticket" button).
+
+    If ``edit_msg_id`` is given, edits that card in place — keeps the DM tidy
+    because the home panel morphs into the project picker on the same message.
+    """
     ctx = get_context(client)
     await users_repo.clear_state(ctx.db, user_id)
     projects = await projects_repo.list_active(ctx.db)
     if not projects:
-        await send_card(client, user_id, user_messages.welcome_no_projects())
-        return
-    await send_card(client, user_id, user_messages.project_selection(projects))
+        card = user_messages.welcome_no_projects()
+    else:
+        card = user_messages.project_selection(projects)
+    if edit_msg_id is not None:
+        await edit_card(client, user_id, edit_msg_id, card)
+    else:
+        await send_card(client, user_id, card)
+
+
+# Internal alias kept for any existing imports.
+_send_project_selection = send_project_selection
 
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.USER_SELECT_PROJECT))

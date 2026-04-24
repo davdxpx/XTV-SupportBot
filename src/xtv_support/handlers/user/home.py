@@ -1,11 +1,14 @@
-"""User home / onboarding handlers — ``/home``, ``/faq``, ``/settings``.
+"""User home / onboarding handlers — ``/start``, ``/home``, ``/faq``, ``/settings``.
 
-The legacy ``/start`` handler in ``handlers/start.py`` stays
-functionally unchanged for now; when
-``FEATURE_NEW_ONBOARDING=true`` the ``/start`` command also opens the
-new home panel. ``/home``, ``/faq``, ``/settings`` are always
-available so users can get to the new UX even without flipping the
-flag on.
+The onboarding panel is now the default for ``/start`` (no feature
+flag). ``/home`` is an alias of ``/start``. Deep-link payloads on
+``/start`` (contact links, project-slug deep links) keep their legacy
+fast path in :mod:`xtv_support.handlers.start` — only the no-payload
+branch renders this panel.
+
+All four primary buttons — 📮 New ticket, 📚 Browse help, 🗂 My tickets,
+⚙️ Settings — are now real inline actions: tapping edits the same card
+in place rather than telling the user to run another command.
 """
 
 from __future__ import annotations
@@ -88,6 +91,35 @@ async def _render_home_panel(
     )
 
     await _send_or_edit(client, message, cq, panel)
+
+
+async def render_home(client: Client, user_id: int) -> None:
+    """Public entrypoint used by :mod:`xtv_support.handlers.start` (no-payload).
+
+    Sends a fresh home panel to ``user_id``. Stats and unread count are
+    pulled from Mongo so the user sees their real state.
+    """
+    ctx = get_context(client)
+    try:
+        tg_user = await client.get_users(user_id)
+        first_name = getattr(tg_user, "first_name", None)
+    except Exception:  # noqa: BLE001
+        first_name = None
+    stats = await _collect_stats(ctx.db, user_id)
+    unread = await _unread_count(ctx.db, user_id)
+    panel = onboarding_panel(
+        user_first_name=first_name,
+        unread_replies=unread,
+        stats=stats,
+    )
+    text, keyboard = panel.render()
+    await client.send_message(
+        user_id,
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=keyboard,
+        disable_web_page_preview=True,
+    )
 
 
 async def _send_or_edit(
@@ -188,16 +220,37 @@ async def home_callback(client: Client, cq: CallbackQuery) -> None:
     action = data[3] if len(data) >= 4 else ""
     if action == "open":
         await _render_home_panel(client, None, cq)
-    elif action == "faq":
+        return
+    if action == "faq":
         await _render_faq(client, None, cq, query=None)
-    elif action == "settings":
+        return
+    if action == "settings":
         await _render_settings(client, None, cq)
-    elif action == "new_ticket":
-        await cq.answer("Send your message here and we'll open a ticket. 📮", show_alert=False)
-    elif action == "my_tickets":
-        await cq.answer("Run /tickets to see your full list.", show_alert=False)
-    else:
+        return
+    if action == "new_ticket":
+        # Morph the home card into the project-selection card (same
+        # message). User picks a project → enters AWAITING_FEEDBACK
+        # state → types their message → ticket opens. No new messages.
+        from xtv_support.handlers.start import send_project_selection
+
+        await send_project_selection(
+            client, cq.from_user.id, edit_msg_id=cq.message.id if cq.message else None
+        )
         await cq.answer()
+        return
+    if action == "my_tickets":
+        from xtv_support.handlers.user.tickets import _render_list
+
+        await _render_list(
+            client,
+            cq.message.chat.id,
+            cq.from_user.id,
+            page=0,
+            edit_msg_id=cq.message.id,
+        )
+        await cq.answer()
+        return
+    await cq.answer()
 
 
 @Client.on_callback_query(filters.regex(r"^cb:v2:faq:"), group=HandlerGroup.COMMAND)
@@ -254,13 +307,7 @@ async def settings_callback(client: Client, cq: CallbackQuery) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Opt-in: when FEATURE_NEW_ONBOARDING is true, hijack /start too.
-# ---------------------------------------------------------------------------
-@Client.on_message(filters.command("start") & is_private, group=-1)
-async def new_onboarding_start(client: Client, message: Message) -> None:
-    ctx = get_context(client)
-    if not ctx.flags or not getattr(ctx.flags, "NEW_ONBOARDING", False):
-        return  # legacy /start handler will run
-    await _render_home_panel(client, message, None)
-    # Tell the legacy handler group 0 not to fire for this update.
-    message.stop_propagation()
+# /home is an alias of /start (without payload). The real /start handler
+# lives in ``handlers/start.py`` and calls :func:`render_home` when no
+# deep-link payload was provided. The ``FEATURE_NEW_ONBOARDING`` flag is
+# retired — the panel is the default, period.

@@ -1,58 +1,41 @@
+"""Legacy ``/admin`` dashboard — now a thin bridge.
+
+The actual ``/admin`` command lives in
+:mod:`xtv_support.handlers.admin.panel` (tabbed control panel). This
+module only keeps the two legacy callback handlers that existing cards
+still send:
+
+- ``ADMIN_HOME``  → re-render the Overview tab of the new panel
+- ``ADMIN_CLOSE`` → delete the current admin card
+
+The old ``admin_dashboard`` text template is gone; any code that used
+it is rewired to go through the new panel renderer.
+"""
+
 from __future__ import annotations
 
-from pyrogram import Client, filters
-from pyrogram.types import CallbackQuery, Message
+from pyrogram import Client
+from pyrogram.types import CallbackQuery
 
-from xtv_support.core.constants import CallbackPrefix, HandlerGroup
+from xtv_support.core.constants import CallbackPrefix
 from xtv_support.core.context import get_context
-from xtv_support.core.filters import cb_prefix, is_admin_user, is_private
+from xtv_support.core.filters import cb_prefix
 from xtv_support.core.logger import get_logger
-from xtv_support.infrastructure.db import projects as projects_repo
-from xtv_support.infrastructure.db import users as users_repo
 from xtv_support.middlewares.admin_guard import require_admin
-from xtv_support.ui.primitives.card import edit_card, send_card
-from xtv_support.ui.templates import admin_dashboard
 
 log = get_logger("admin.dashboard")
-
-
-async def _stats(db) -> tuple[int, int, int, int]:
-    total_projects = len(await projects_repo.list_all(db))
-    total_users = await users_repo.count(db)
-    total_tickets = await db.tickets.count_documents({})
-    open_tickets = await db.tickets.count_documents({"status": "open"})
-    return total_projects, total_users, total_tickets, open_tickets
-
-
-@Client.on_message(
-    filters.command("admin") & is_admin_user & is_private, group=HandlerGroup.COMMAND
-)
-async def admin_entry(client: Client, message: Message) -> None:
-    ctx = get_context(client)
-    projects, users, tickets, open_t = await _stats(ctx.db)
-    await send_card(
-        client,
-        message.chat.id,
-        admin_dashboard.dashboard(
-            projects=projects, users=users, tickets=tickets, open_tickets=open_t
-        ),
-    )
 
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.ADMIN_HOME))
 async def back_home(client: Client, callback: CallbackQuery) -> None:
     await require_admin(callback)
+    # Import here to avoid a circular import (panel imports from here too
+    # via the handler registry).
+    from xtv_support.handlers.admin.panel import _render_tab, _send_or_edit
+
     ctx = get_context(client)
-    projects, users, tickets, open_t = await _stats(ctx.db)
-    await edit_card(
-        client,
-        callback.message.chat.id,
-        callback.message.id,
-        admin_dashboard.dashboard(
-            projects=projects, users=users, tickets=tickets, open_tickets=open_t
-        ),
-    )
-    await callback.answer()
+    panel = await _render_tab(ctx, "overview")
+    await _send_or_edit(client, None, callback, panel)
 
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.ADMIN_CLOSE))

@@ -14,13 +14,13 @@ or drive the admin SPA that ships in `web/`.
 
 The API binds to `0.0.0.0:$PORT` when `API_ENABLED=true`. On Railway the
 public URL is the service's auto-generated domain, e.g.
-`https://xtvsupport.up.railway.app`. Self-hosted it's whatever reverse proxy
+`https://your-bot.up.railway.app`. Self-hosted it's whatever reverse proxy
 fronts the container.
 
 All examples below use `$BASE` as shorthand:
 
 ```bash
-export BASE=https://xtvsupport.up.railway.app
+export BASE=https://your-bot.up.railway.app
 ```
 
 ## Enabling the API
