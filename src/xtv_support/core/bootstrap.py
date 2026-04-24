@@ -35,12 +35,25 @@ _plugin_loader: PluginLoader | None = None
 
 def build_client() -> Client:
     configure_logging()
+    # Persist the pyrofork session file so we don't re-auth every deploy
+    # (Telegram rate-limits ``auth.ImportBotAuthorization`` aggressively).
+    # If ``SESSION_DIR`` points at a missing path we create it; bad paths
+    # fall back to the cwd so the bot still boots.
+    import os
+
+    session_dir = (settings.SESSION_DIR or ".").strip()
+    try:
+        os.makedirs(session_dir, exist_ok=True)
+    except OSError:
+        session_dir = "."
+
     app = Client(
         "xtvfeedback_bot",
         api_id=settings.API_ID,
         api_hash=settings.API_HASH.get_secret_value(),
         bot_token=settings.BOT_TOKEN.get_secret_value(),
         parse_mode=ParseMode.HTML,
+        workdir=session_dir,
         # Handlers are registered explicitly from xtv_support.core.router.register_all
         # after the client is created and the HandlerContext is bound.
     )
