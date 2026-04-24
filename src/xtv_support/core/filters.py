@@ -89,6 +89,33 @@ async def _has_any_state(_, client, m: Message) -> bool:
 has_any_state = filters.create(_has_any_state, name="HasAnyState")
 
 
+def has_state_prefix(prefix: str) -> Filter:
+    """Match messages whose sender's FSM state starts with ``prefix``.
+
+    Used by the AskAndConfirm router to grab any ``akc:*`` state so a
+    single dispatcher can route every message-surgery reply without
+    needing a new filter per context.
+    """
+
+    async def _check(_, client, m: Message) -> bool:
+        if not m.from_user:
+            return False
+        from xtv_support.core.context import get_context
+
+        try:
+            ctx = get_context(client)
+        except RuntimeError:
+            return False
+        state_doc = await ctx.db.users.find_one(
+            {"user_id": m.from_user.id},
+            projection={"state": 1},
+        )
+        state = (state_doc or {}).get("state") or ""
+        return state.startswith(prefix)
+
+    return filters.create(_check, name=f"HasStatePrefix({prefix})")
+
+
 async def _not_command(_, __, m: Message) -> bool:
     text = m.text or m.caption or ""
     return not text.startswith("/")
@@ -131,6 +158,7 @@ __all__ = [
     "cb_prefix",
     "has_any_state",
     "has_state",
+    "has_state_prefix",
     "is_admin_callback",
     "is_admin_channel",
     "is_admin_forum_topic",

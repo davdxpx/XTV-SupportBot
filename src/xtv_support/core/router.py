@@ -56,7 +56,9 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.topic.ai_draft",
     "xtv_support.handlers.topic.notes",
     "xtv_support.handlers.agent.inbox",
-    # State machine (group 1)
+    # State machine (group 1) — ask_confirm_router sits one group tighter
+    # so it grabs any ``akc:*`` state before the legacy input_router runs.
+    "xtv_support.handlers.admin.ask_confirm_router",
     "xtv_support.handlers.admin.input_router",
     # Catch-all
     "xtv_support.handlers.errors",
