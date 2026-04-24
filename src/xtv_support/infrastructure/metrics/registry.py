@@ -45,9 +45,15 @@ def counter(name: str, description: str, labels: list[str] | None = None) -> Any
     else:
         import prometheus_client  # type: ignore[import-untyped]
 
-        metric = prometheus_client.Counter(
+        prom_metric = prometheus_client.Counter(
             name, description, labelnames=list(labels or ()), registry=get_registry()
         )
+        # Wrap when there are no labels so callers can still invoke
+        # ``.labels(...)`` harmlessly — the raw ``prometheus_client.Counter``
+        # raises ``ValueError: No label names were set`` otherwise, which
+        # broke with downstream tests and any ad-hoc call-site that doesn't
+        # know whether a metric is labelled.
+        metric = prom_metric if labels else _LabellessMetric(prom_metric)
     _counters[name] = metric
     return metric
 
@@ -60,9 +66,10 @@ def histogram(name: str, description: str, labels: list[str] | None = None) -> A
     else:
         import prometheus_client  # type: ignore[import-untyped]
 
-        metric = prometheus_client.Histogram(
+        prom_metric = prometheus_client.Histogram(
             name, description, labelnames=list(labels or ()), registry=get_registry()
         )
+        metric = prom_metric if labels else _LabellessMetric(prom_metric)
     _histograms[name] = metric
     return metric
 
@@ -79,7 +86,7 @@ def render_text() -> bytes:
 class _NoopMetric:
     """Silently-accepts-everything metric used when prometheus_client is absent."""
 
-    def labels(self, **_kw):
+    def labels(self, *_a, **_kw):
         return self
 
     def inc(self, *_a, **_k):
@@ -87,3 +94,24 @@ class _NoopMetric:
 
     def observe(self, *_a, **_k):
         pass
+
+
+class _LabellessMetric:
+    """Wrapper around a label-less ``prometheus_client`` metric.
+
+    Without this wrapper, ``.labels(...)`` on a ``Counter(labelnames=[])``
+    raises ``ValueError: No label names were set``. The wrapper forwards
+    ``inc`` / ``observe`` to the real metric and no-ops ``labels`` so call
+    sites that don't know whether a metric is labelled stay safe.
+    """
+
+    __slots__ = ("_m",)
+
+    def __init__(self, inner: Any) -> None:
+        self._m = inner
+
+    def labels(self, *_a, **_kw):  # noqa: D401 — trivial
+        return self
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._m, name)
