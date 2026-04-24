@@ -44,6 +44,11 @@ class PanelButton:
     label: str
     callback: str | None = None
     url: str | None = None
+    # When set, the button opens the bundled admin / user Mini-App at
+    # ``webapp_url`` inside Telegram. Mutually exclusive with
+    # ``callback`` and ``url`` — the first non-empty field wins at
+    # render time in this order: webapp_url > url > callback.
+    webapp_url: str | None = None
 
 
 # Horizontal rule drawn between sections. Telegram renders ``━`` as a
@@ -185,7 +190,9 @@ class Panel:
                 continue
             row: list[dict[str, str]] = []
             for btn in action_row:
-                if btn.url is not None:
+                if btn.webapp_url is not None:
+                    row.append({"label": btn.label, "webapp_url": btn.webapp_url})
+                elif btn.url is not None:
                     row.append({"label": btn.label, "url": btn.url})
                 elif btn.callback is not None:
                     row.append({"label": btn.label, "callback": btn.callback})
@@ -208,13 +215,19 @@ class Panel:
         specs = self._row_specs()
         if not specs:
             return None
-        from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+        from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
         pyrogram_rows: list[list[Any]] = []
         for row in specs:
             built: list[Any] = []
             for cell in row:
-                if "url" in cell:
+                if "webapp_url" in cell:
+                    built.append(
+                        InlineKeyboardButton(
+                            cell["label"], web_app=WebAppInfo(url=cell["webapp_url"])
+                        )
+                    )
+                elif "url" in cell:
                     built.append(InlineKeyboardButton(cell["label"], url=cell["url"]))
                 else:
                     built.append(

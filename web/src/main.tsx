@@ -7,7 +7,12 @@ import { Layout } from '@/components/Layout';
 import { Login } from '@/pages/Login';
 import { Dashboard } from '@/pages/Dashboard';
 import { Tickets } from '@/pages/Tickets';
-import { getApiKey } from '@/lib/api';
+import { hasCredentials } from '@/lib/api';
+import { bootTelegram } from '@/lib/telegram';
+
+// Announce readiness to Telegram + expand the viewport so the SPA
+// renders full-height inside the Mini-App. No-op in a regular browser.
+bootTelegram();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,7 +24,7 @@ const queryClient = new QueryClient({
 });
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  return getApiKey() ? <>{children}</> : <Navigate to="/login" replace />;
+  return hasCredentials() ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -89,3 +89,36 @@ def test_panel_action_rows_and_pagination() -> None:
     assert len(rows) == 2
     assert rows[0][0]["label"] == "Close all"
     assert rows[1][0]["label"] == "Next ▶"
+
+
+def test_panel_button_webapp_url_wins() -> None:
+    """webapp_url takes precedence over url and callback."""
+    p = Panel(
+        title="Home",
+        action_rows=(
+            (
+                PanelButton(
+                    label="Open App",
+                    webapp_url="https://xtvsupport.up.railway.app/",
+                    callback="cb:legacy",
+                    url="https://example.com/",
+                ),
+            ),
+        ),
+    )
+    rows = p._row_specs()
+    cell = rows[0][0]
+    assert cell["label"] == "Open App"
+    assert cell["webapp_url"] == "https://xtvsupport.up.railway.app/"
+    assert "callback" not in cell
+    assert "url" not in cell
+
+
+def test_panel_button_url_still_works_when_webapp_absent() -> None:
+    p = Panel(
+        title="Home",
+        action_rows=((PanelButton(label="Link", url="https://t.me/xtvbots"),),),
+    )
+    cell = p._row_specs()[0][0]
+    assert cell["url"] == "https://t.me/xtvbots"
+    assert "webapp_url" not in cell
