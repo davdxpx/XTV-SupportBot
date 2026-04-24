@@ -23,11 +23,35 @@ from xtv_support.core.filters import is_private
 from xtv_support.core.logger import get_logger
 from xtv_support.ui.primitives.panel import Panel
 from xtv_support.ui.templates.onboarding_panel import (
+    BrandConfig,
     HomeStats,
     faq_browse_panel,
+    language_picker_panel,
     onboarding_panel,
+    project_picker_panel,
     settings_panel,
 )
+
+
+def _brand_from_settings(settings) -> BrandConfig:
+    """Pull the BRAND_* fields off the settings object into a tidy dataclass."""
+    links: list[tuple[str, str]] = []
+    for label_attr, url_attr in (
+        ("BRAND_MAIN_CHANNEL_LABEL", "BRAND_MAIN_CHANNEL_URL"),
+        ("BRAND_SUPPORT_CHANNEL_LABEL", "BRAND_SUPPORT_CHANNEL_URL"),
+        ("BRAND_BACKUP_CHANNEL_LABEL", "BRAND_BACKUP_CHANNEL_URL"),
+    ):
+        url = str(getattr(settings, url_attr, "") or "")
+        if not url:
+            continue
+        label = str(getattr(settings, label_attr, "") or "Link")
+        links.append((label, url))
+    return BrandConfig(
+        name=str(getattr(settings, "BRAND_NAME", "") or "Support"),
+        tagline=str(getattr(settings, "BRAND_TAGLINE", "") or "We're here to help."),
+        links=tuple(links),
+    )
+
 
 log = get_logger("user.home")
 
@@ -84,10 +108,12 @@ async def _render_home_panel(
 
     stats = await _collect_stats(ctx.db, user.id)
     unread = await _unread_count(ctx.db, user.id)
+    brand = _brand_from_settings(ctx.settings)
     panel = onboarding_panel(
         user_first_name=user.first_name,
         unread_replies=unread,
         stats=stats,
+        brand=brand,
     )
 
     await _send_or_edit(client, message, cq, panel)
@@ -107,10 +133,12 @@ async def render_home(client: Client, user_id: int) -> None:
         first_name = None
     stats = await _collect_stats(ctx.db, user_id)
     unread = await _unread_count(ctx.db, user_id)
+    brand = _brand_from_settings(ctx.settings)
     panel = onboarding_panel(
         user_first_name=first_name,
         unread_replies=unread,
         stats=stats,
+        brand=brand,
     )
     text, keyboard = panel.render()
     await client.send_message(
@@ -228,15 +256,22 @@ async def home_callback(client: Client, cq: CallbackQuery) -> None:
         await _render_settings(client, None, cq)
         return
     if action == "new_ticket":
-        # Morph the home card into the project-selection card (same
-        # message). User picks a project → enters AWAITING_FEEDBACK
-        # state → types their message → ticket opens. No new messages.
-        from xtv_support.handlers.start import send_project_selection
+        # Render the new-styled project-picker card directly (edits the
+        # home card in place). We bypass the legacy plain-text flow and
+        # use ``project_picker_panel`` from onboarding_panel so the
+        # intake screen matches the rest of the UI.
+        from xtv_support.infrastructure.db import projects as projects_repo
 
-        await send_project_selection(
-            client, cq.from_user.id, edit_msg_id=cq.message.id if cq.message else None
-        )
-        await cq.answer()
+        ctx = get_context(client)
+        projects = await projects_repo.list_active(ctx.db)
+        brand = _brand_from_settings(ctx.settings)
+        # The legacy ``u:sp|<id>`` callback in project_picker_panel lands
+        # in ``handlers/start.project_selected`` — it already sets
+        # ``AWAITING_FEEDBACK`` and renders the intake card. We just
+        # replace the intake card with our new ``ticket_intake_panel``
+        # via a patch on ``user_messages.project_intro`` below.
+        panel = project_picker_panel(projects=projects, brand=brand)
+        await _send_or_edit(client, None, cq, panel)
         return
     if action == "my_tickets":
         from xtv_support.handlers.user.tickets import _render_list
@@ -290,7 +325,32 @@ async def settings_callback(client: Client, cq: CallbackQuery) -> None:
         return
 
     if action == "lang":
-        await cq.answer("Run /lang to change your language.", show_alert=False)
+        # Render the inline language picker over the settings card. The
+        # language list is intersected with what i18n actually has, so
+        # we never show a dead button.
+        udoc = await ctx.db.users.find_one({"user_id": user.id}) or {}
+        current = str(udoc.get("lang") or ctx.settings.DEFAULT_LANG)
+        supported: tuple[str, ...] = ()
+        if ctx.i18n is not None:
+            try:
+                supported = tuple(ctx.i18n.supported())
+            except Exception:  # noqa: BLE001
+                supported = ()
+        if not supported:
+            supported = ("en", "de", "es", "ru", "hi", "bn", "ta", "te", "mr", "pa", "gu", "ur")
+        panel = language_picker_panel(current_lang=current, supported=supported)
+        await _send_or_edit(client, None, cq, panel)
+        return
+
+    if action == "lang_pick":
+        code = sub
+        if not code:
+            await cq.answer()
+            return
+        await ctx.db.users.update_one({"user_id": user.id}, {"$set": {"lang": code}}, upsert=True)
+        # Re-render the settings card so the user sees the change.
+        await _render_settings(client, None, cq)
+        await cq.answer(f"Language set to {code}.", show_alert=False)
         return
 
     if action == "gdpr_export":

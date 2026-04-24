@@ -98,6 +98,12 @@ _send_project_selection = send_project_selection
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.USER_SELECT_PROJECT))
 async def project_selected(client: Client, callback: CallbackQuery) -> None:
+    from pyrogram.enums import ParseMode
+    from pyrogram.errors import MessageNotModified
+
+    from xtv_support.handlers.user.home import _brand_from_settings
+    from xtv_support.ui.templates.onboarding_panel import ticket_intake_panel
+
     ctx = get_context(client)
     _, project_id = callback.data.split("|", 1)
     project = await projects_repo.get(ctx.db, project_id)
@@ -110,12 +116,24 @@ async def project_selected(client: Client, callback: CallbackQuery) -> None:
         UserState.AWAITING_FEEDBACK,
         {"project_id": str(project["_id"])},
     )
-    await edit_card(
-        client,
-        callback.message.chat.id,
-        callback.message.id,
-        user_messages.project_intro(project),
+
+    panel = ticket_intake_panel(
+        project_name=str(project.get("name") or project.get("slug") or "Project"),
+        project_description=str(project.get("description") or "") or None,
+        brand=_brand_from_settings(ctx.settings),
     )
+    text, kb = panel.render()
+    try:
+        await client.edit_message_text(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            text=text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=kb,
+            disable_web_page_preview=True,
+        )
+    except MessageNotModified:
+        pass
     await callback.answer()
 
 

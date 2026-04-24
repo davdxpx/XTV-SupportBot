@@ -28,8 +28,11 @@ def test_onboarding_panel_without_user_name() -> None:
 def test_onboarding_panel_stats_rendered() -> None:
     panel = onboarding_panel(stats=HomeStats(open_tickets=2, closed_this_month=7))
     text = panel.render_text()
-    assert "2 open" in text
-    assert "7 closed" in text
+    # The stat line now wraps the numbers in <b>…</b> and the phrase
+    # "open" / "closed this month" — match both pieces without being
+    # sensitive to inner HTML.
+    assert "<b>2</b> open" in text
+    assert "<b>7</b>" in text and "closed this month" in text
 
 
 def test_onboarding_panel_announcement_strip() -> None:
