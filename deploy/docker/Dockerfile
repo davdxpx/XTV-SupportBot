@@ -8,9 +8,9 @@
 # ---------------------------------------------------------------------------
 FROM node:20-slim AS web-builder
 WORKDIR /web
-COPY web/package.json web/tsconfig.json web/vite.config.ts web/index.html ./
+COPY web/package.json web/package-lock.json web/tsconfig.json web/vite.config.ts web/index.html ./
 COPY web/src ./src
-RUN --mount=type=cache,target=/root/.npm npm install --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 RUN npm run build
 
 # ---------------------------------------------------------------------------
@@ -42,7 +42,9 @@ WORKDIR /app
 COPY --from=python-builder /install /usr/local
 COPY --from=python-builder /app/src /app/src
 COPY --from=python-builder /app/main.py /app/main.py
-COPY --from=web-builder /web/dist /app/web_dist
+# Match the path the FastAPI app looks for at boot
+# (settings.WEB_DIST_DIR default = "web/dist" relative to /app).
+COPY --from=web-builder /web/dist /app/web/dist
 
 RUN useradd --create-home --uid 10001 bot && chown -R bot:bot /app
 USER bot
