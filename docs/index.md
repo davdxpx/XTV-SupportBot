@@ -22,7 +22,8 @@ collaborate on one conversation.
 | **Project templates** | Seven built-in templates (support, feedback, contact, billing, dev_github, vip, community) seeding macros, KB, routing, SLA + CSAT |
 | **Agent cockpit** | `/inbox` with saved views, bulk actions, internal notes (`/note`), customer-history pin |
 | **Automation rules** | If/then/then pipelines triggered by 8 ticket-lifecycle events, dry-run, cooldowns, versioned audit |
-| **API & Web** | FastAPI REST (read + write, API keys + scopes), minimal React + Vite admin SPA |
+| **API & Web** | FastAPI REST (read + write, API keys + scopes), React + Vite admin SPA served at `/` |
+| **Telegram Mini-App** | Same SPA opened inside Telegram via signed `initData`; dual-mode switch (`chat` / `webapp` / `hybrid`) with per-user override + graceful fallback for old clients |
 | **Compliance** | GDPR export/delete, link scanner, start CAPTCHA, secret rotation |
 | **Observability** | Prometheus metrics, OpenTelemetry tracing, /health + /ready |
 | **i18n** | English + 10 languages (Russian, Spanish, Hindi, Bengali, Tamil, Telugu, Marathi, Punjabi, Gujarati, Urdu) |
