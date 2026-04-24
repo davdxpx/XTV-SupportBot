@@ -106,6 +106,8 @@ export interface MeResponse {
   language_code?: string | null;
   is_admin: boolean;
   ui_mode: 'chat' | 'webapp' | 'hybrid';
+  brand_name?: string;
+  brand_tagline?: string;
 }
 
 export const getMe = () => api<MeResponse>('/api/v1/me');
