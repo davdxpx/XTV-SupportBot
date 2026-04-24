@@ -20,7 +20,7 @@ def build_router() -> APIRouter:
     from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 
-    from xtv_support.api.deps import current_api_key, get_db, require_scope
+    from xtv_support.api.deps import get_db, require_scope
     from xtv_support.core.events import EventBus
     from xtv_support.services.templates import default_registry, install_template
     from xtv_support.utils.time import utcnow

@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING, Any
 from xtv_support.utils.time import utcnow
 
 if TYPE_CHECKING:  # pragma: no cover
-    from bson import ObjectId
     from motor.motor_asyncio import AsyncIOMotorDatabase
 
 

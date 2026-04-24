@@ -81,16 +81,10 @@ async def install_from_template(client: Client, message: Message) -> None:
     )
 
     if not result.ok:
-        await message.reply(
-            f"❌ Install failed: <code>{result.detail or 'unknown'}</code>"
-        )
+        await message.reply(f"❌ Install failed: <code>{result.detail or 'unknown'}</code>")
         return
 
-    hint = (
-        f"\n<i>{template.post_install_hint}</i>"
-        if template.post_install_hint
-        else ""
-    )
+    hint = f"\n<i>{template.post_install_hint}</i>" if template.post_install_hint else ""
     await message.reply(
         f"✅ Installed <b>{template.name}</b> as project "
         f"<code>{project_slug}</code>\n"

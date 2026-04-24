@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from xtv_support.ui.templates.agent_inbox import (
+    SAVED_VIEWS,
     CustomerHistorySummary,
     InboxRow,
-    SAVED_VIEWS,
     render_customer_history,
     render_inbox,
 )

@@ -18,7 +18,6 @@ from xtv_support.core.constants import HandlerGroup
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import is_private
 from xtv_support.core.logger import get_logger
-from xtv_support.ui.primitives.card import edit_card, send_card
 from xtv_support.ui.primitives.panel import Panel
 from xtv_support.ui.templates.onboarding_panel import (
     HomeStats,
@@ -39,9 +38,7 @@ async def _collect_stats(db, user_id: int) -> HomeStats:
     from xtv_support.utils.time import utcnow
 
     month_ago = utcnow() - timedelta(days=30)
-    open_tickets = await db.tickets.count_documents(
-        {"user_id": user_id, "status": "open"}
-    )
+    open_tickets = await db.tickets.count_documents({"user_id": user_id, "status": "open"})
     closed_month = await db.tickets.count_documents(
         {"user_id": user_id, "status": "closed", "closed_at": {"$gte": month_ago}}
     )
@@ -74,7 +71,9 @@ async def _unread_count(db, user_id: int) -> int:
     )
 
 
-async def _render_home_panel(client: Client, message: Message | None, cq: CallbackQuery | None) -> None:
+async def _render_home_panel(
+    client: Client, message: Message | None, cq: CallbackQuery | None
+) -> None:
     ctx = get_context(client)
     user = (message.from_user if message else cq.from_user) if (message or cq) else None
     if user is None:
@@ -194,9 +193,7 @@ async def home_callback(client: Client, cq: CallbackQuery) -> None:
     elif action == "settings":
         await _render_settings(client, None, cq)
     elif action == "new_ticket":
-        await cq.answer(
-            "Send your message here and we'll open a ticket. 📮", show_alert=False
-        )
+        await cq.answer("Send your message here and we'll open a ticket. 📮", show_alert=False)
     elif action == "my_tickets":
         await cq.answer("Run /tickets to see your full list.", show_alert=False)
     else:
@@ -213,9 +210,7 @@ async def faq_callback(client: Client, cq: CallbackQuery) -> None:
         await cq.answer()
 
 
-@Client.on_callback_query(
-    filters.regex(r"^cb:v2:settings:"), group=HandlerGroup.COMMAND
-)
+@Client.on_callback_query(filters.regex(r"^cb:v2:settings:"), group=HandlerGroup.COMMAND)
 async def settings_callback(client: Client, cq: CallbackQuery) -> None:
     ctx = get_context(client)
     data = (cq.data or "").split(":")
@@ -246,9 +241,7 @@ async def settings_callback(client: Client, cq: CallbackQuery) -> None:
         return
 
     if action == "gdpr_export":
-        await cq.answer(
-            "Export requested — we'll DM you the archive shortly.", show_alert=True
-        )
+        await cq.answer("Export requested — we'll DM you the archive shortly.", show_alert=True)
         return
     if action == "gdpr_delete":
         await cq.answer(

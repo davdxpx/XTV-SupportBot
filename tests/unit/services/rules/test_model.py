@@ -30,20 +30,14 @@ def test_eq_and_ne_conditions() -> None:
 
 def test_in_and_not_in_conditions() -> None:
     ticket = {"priority": "high"}
-    assert condition_matches(
-        Condition(field="priority", op="in", value=["high", "urgent"]), ticket
-    )
-    assert condition_matches(
-        Condition(field="priority", op="not_in", value=["low"]), ticket
-    )
+    assert condition_matches(Condition(field="priority", op="in", value=["high", "urgent"]), ticket)
+    assert condition_matches(Condition(field="priority", op="not_in", value=["low"]), ticket)
 
 
 def test_contains_list_field() -> None:
     ticket = {"tags": ["billing", "vip"]}
     assert condition_matches(Condition(field="tags", op="contains", value="vip"), ticket)
-    assert not condition_matches(
-        Condition(field="tags", op="contains", value="unrelated"), ticket
-    )
+    assert not condition_matches(Condition(field="tags", op="contains", value="unrelated"), ticket)
 
 
 def test_walk_nested_field() -> None:

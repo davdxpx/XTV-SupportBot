@@ -53,6 +53,7 @@ def _notes_repo():
 
     return nr
 
+
 log = get_logger("actions.executor")
 
 
@@ -154,9 +155,7 @@ class _CloseAction:
         if ticket is None:
             return ActionResult(ok=False, detail="ticket_required")
         reason = str(params.get("reason") or "manual")
-        await _tickets_repo().close(
-            ctx.db, ticket["_id"], closed_by=ctx.actor_id, reason=reason
-        )
+        await _tickets_repo().close(ctx.db, ticket["_id"], closed_by=ctx.actor_id, reason=reason)
         return ActionResult(ok=True, data={"reason": reason})
 
 

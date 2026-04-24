@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from xtv_support.ui.templates.admin_panel import (
-    OverviewStats,
     TABS,
+    OverviewStats,
     render_analytics_tab,
     render_broadcasts_tab,
     render_overview,

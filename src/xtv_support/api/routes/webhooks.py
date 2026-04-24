@@ -59,10 +59,14 @@ def build_router() -> APIRouter:
         db=Depends(get_db),
         _key=Depends(require_scope("webhooks:write")),
     ) -> dict:
-        cursor = db.webhook_subscriptions.find(
-            {},
-            projection={"secret_hash": 0},
-        ).sort("created_at", -1).limit(200)
+        cursor = (
+            db.webhook_subscriptions.find(
+                {},
+                projection={"secret_hash": 0},
+            )
+            .sort("created_at", -1)
+            .limit(200)
+        )
         items: list[dict] = []
         async for doc in cursor:
             doc["_id"] = str(doc.get("_id"))

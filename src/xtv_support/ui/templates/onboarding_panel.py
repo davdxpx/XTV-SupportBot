@@ -33,9 +33,7 @@ def onboarding_panel(
     announcement: str | None = None,
     channel_url: str | None = None,
 ) -> Panel:
-    greeting = (
-        f"Hey {user_first_name}, welcome back! 👋" if user_first_name else "Welcome 👋"
-    )
+    greeting = f"Hey {user_first_name}, welcome back! 👋" if user_first_name else "Welcome 👋"
 
     body: list[str] = [greeting]
     if stats is not None and (stats.open_tickets or stats.closed_this_month):
@@ -63,9 +61,7 @@ def onboarding_panel(
 
     extra_rows = ()
     if channel_url:
-        extra_rows = (
-            (PanelButton(label="XTV Network", url=channel_url),),
-        )
+        extra_rows = ((PanelButton(label="XTV Network", url=channel_url),),)
 
     return Panel(
         title="XTV Support",

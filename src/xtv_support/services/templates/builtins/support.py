@@ -7,7 +7,6 @@ from xtv_support.services.templates.model import (
     MacroSeed,
     ProjectTemplate,
     RoutingSeed,
-    SlaOverrides,
 )
 
 SUPPORT = ProjectTemplate(
@@ -79,7 +78,5 @@ SUPPORT = ProjectTemplate(
     sla_overrides=None,  # uses the global defaults
     default_priority="normal",
     default_tags=("support",),
-    post_install_hint=(
-        "Tip: run /macro list to see the pre-seeded macros you can use in topics."
-    ),
+    post_install_hint=("Tip: run /macro list to see the pre-seeded macros you can use in topics."),
 )

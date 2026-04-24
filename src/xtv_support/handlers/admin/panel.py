@@ -43,9 +43,7 @@ async def _overview(ctx) -> OverviewStats:
     db = ctx.db
     open_tickets = await db.tickets.count_documents({"status": "open"})
     unassigned = await db.tickets.count_documents({"status": "open", "assignee_id": None})
-    sla_at_risk = await db.tickets.count_documents(
-        {"status": "open", "sla_warned": True}
-    )
+    sla_at_risk = await db.tickets.count_documents({"status": "open", "sla_warned": True})
     try:
         active = await presence.count_active(db)
     except Exception:  # noqa: BLE001

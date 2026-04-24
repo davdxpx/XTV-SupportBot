@@ -117,7 +117,11 @@ def render_projects_tab(num_projects: int) -> Panel:
         tabs=_tabs("projects"),
         stats=(StatTile(label="Active projects", value=str(num_projects)),),
         action_rows=(
-            (PanelButton(label="📁 Create from template", callback="cb:v2:admin:projects:from_template"),),
+            (
+                PanelButton(
+                    label="📁 Create from template", callback="cb:v2:admin:projects:from_template"
+                ),
+            ),
             (PanelButton(label="📜 List projects", callback="cb:v2:admin:projects:list"),),
             (PanelButton(label="📄 Blank project", callback="cb:v2:admin:projects:blank"),),
         ),

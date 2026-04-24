@@ -9,7 +9,7 @@ import pytest
 
 from xtv_support.services.templates import default_registry, install_template
 from xtv_support.services.templates.builtins import ALL as BUILTINS
-from xtv_support.services.templates.model import ProjectTemplate, MacroSeed
+from xtv_support.services.templates.model import MacroSeed, ProjectTemplate
 
 
 def _run(coro):
