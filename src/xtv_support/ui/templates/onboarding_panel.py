@@ -58,6 +58,8 @@ def onboarding_panel(
     stats: HomeStats | None = None,
     announcement: str | None = None,
     brand: BrandConfig | None = None,
+    webapp_url: str | None = None,
+    webapp_only: bool = False,
 ) -> Panel:
     brand = brand or BrandConfig()
     greeting = (
@@ -82,16 +84,27 @@ def onboarding_panel(
         f"🗂 My tickets ({unread_replies} new)" if unread_replies > 0 else "🗂 My tickets"
     )
 
-    action_rows: tuple[tuple[PanelButton, ...], ...] = (
-        (
-            PanelButton(label="📮 New ticket", callback="cb:v2:home:new_ticket"),
-            PanelButton(label="📚 Browse help", callback="cb:v2:home:faq"),
-        ),
-        (
-            PanelButton(label=my_tickets_label, callback="cb:v2:home:my_tickets"),
-            PanelButton(label="⚙️ Settings", callback="cb:v2:home:settings"),
-        ),
-    )
+    webapp_row: tuple[tuple[PanelButton, ...], ...] = ()
+    if webapp_url and webapp_url.startswith("https://"):
+        webapp_row = ((PanelButton(label="🚀 Open in app", webapp_url=webapp_url),),)
+
+    # webapp_only = pure-WebApp mode: hide every callback and show only
+    # the Open-App tile + brand links. Hybrid mode keeps both.
+    if webapp_only and webapp_row:
+        action_rows: tuple[tuple[PanelButton, ...], ...] = webapp_row
+    else:
+        action_rows = (
+            (
+                PanelButton(label="📮 New ticket", callback="cb:v2:home:new_ticket"),
+                PanelButton(label="📚 Browse help", callback="cb:v2:home:faq"),
+            ),
+            (
+                PanelButton(label=my_tickets_label, callback="cb:v2:home:my_tickets"),
+                PanelButton(label="⚙️ Settings", callback="cb:v2:home:settings"),
+            ),
+        )
+        if webapp_row:
+            action_rows = action_rows + webapp_row
     action_rows = action_rows + _brand_links_rows(brand)
 
     return Panel(

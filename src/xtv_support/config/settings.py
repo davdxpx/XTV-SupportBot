@@ -107,6 +107,20 @@ class Settings(BaseSettings):
     # default ``web/dist`` layout doesn't apply — e.g. a custom build in CI.
     WEB_DIST_DIR: str = "web/dist"
 
+    # --- Dual-mode UI (Chat vs Telegram WebApp) ---
+    # ``chat`` (default) renders classic inline-keyboard buttons; ``webapp``
+    # replaces every panel with a single Open-App tile that launches the
+    # bundled SPA as a Telegram Mini-App; ``hybrid`` keeps both so the user
+    # can pick per tap.
+    UI_MODE: str = "chat"
+    # Public HTTPS URL of the Mini-App — must be served over TLS and must
+    # match the bot's WebApp domain configured via @BotFather.
+    WEBAPP_URL: str = ""
+    # When true, the bot calls ``setChatMenuButton`` at boot so every user
+    # sees a persistent "Open App" button next to the message composer.
+    WEBAPP_SET_MENU_BUTTON: bool = False
+    WEBAPP_MENU_BUTTON_TEXT: str = "Open App"
+
     @field_validator("LOG_LEVEL")
     @classmethod
     def _upper_log_level(cls, value: str) -> str:
@@ -121,6 +135,17 @@ class Settings(BaseSettings):
         custom config.
         """
         return int(self.PORT) if self.PORT else int(self.API_PORT)
+
+    @property
+    def ui_mode(self):
+        """Parsed :class:`~xtv_support.core.ui_mode.UIMode` (tolerant).
+
+        Kept as a method so the import stays lazy — the ``ui_mode``
+        module doesn't need pydantic loaded to import cleanly in tests.
+        """
+        from xtv_support.core.ui_mode import UIMode
+
+        return UIMode.parse(self.UI_MODE)
 
     @property
     def cors_origins(self) -> list[str]:

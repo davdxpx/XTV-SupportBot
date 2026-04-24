@@ -21,6 +21,7 @@ from xtv_support.core.constants import HandlerGroup
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import is_private
 from xtv_support.core.logger import get_logger
+from xtv_support.core.ui_mode import UIMode, resolve_mode_for_user
 from xtv_support.ui.primitives.panel import Panel
 from xtv_support.ui.templates.onboarding_panel import (
     BrandConfig,
@@ -31,6 +32,28 @@ from xtv_support.ui.templates.onboarding_panel import (
     project_picker_panel,
     settings_panel,
 )
+
+
+async def _resolve_webapp_for(
+    ctx, user_id: int, client_version: str | None = None
+) -> tuple[str | None, bool]:
+    """Return (webapp_url, webapp_only) given the resolved UI mode for this user.
+
+    ``webapp_url`` is None when the user's mode is chat (or falls back
+    due to missing WEBAPP_URL / old client). ``webapp_only=True`` means
+    ``UIMode.WEBAPP`` — hide all legacy callbacks.
+    """
+    configured_url = (getattr(ctx.settings, "WEBAPP_URL", "") or "").strip()
+    mode = await resolve_mode_for_user(
+        ctx.db,
+        user_id=user_id,
+        global_mode=getattr(ctx.settings, "UI_MODE", "chat"),
+        webapp_url=configured_url,
+        client_version=client_version,
+    )
+    if mode is UIMode.CHAT:
+        return None, False
+    return configured_url or None, mode is UIMode.WEBAPP
 
 
 def _brand_from_settings(settings) -> BrandConfig:
@@ -109,11 +132,15 @@ async def _render_home_panel(
     stats = await _collect_stats(ctx.db, user.id)
     unread = await _unread_count(ctx.db, user.id)
     brand = _brand_from_settings(ctx.settings)
+    client_ver = getattr(user, "client_version", None) or None
+    webapp_url, webapp_only = await _resolve_webapp_for(ctx, user.id, client_ver)
     panel = onboarding_panel(
         user_first_name=user.first_name,
         unread_replies=unread,
         stats=stats,
         brand=brand,
+        webapp_url=webapp_url,
+        webapp_only=webapp_only,
     )
 
     await _send_or_edit(client, message, cq, panel)
@@ -134,11 +161,14 @@ async def render_home(client: Client, user_id: int) -> None:
     stats = await _collect_stats(ctx.db, user_id)
     unread = await _unread_count(ctx.db, user_id)
     brand = _brand_from_settings(ctx.settings)
+    webapp_url, webapp_only = await _resolve_webapp_for(ctx, user_id)
     panel = onboarding_panel(
         user_first_name=first_name,
         unread_replies=unread,
         stats=stats,
         brand=brand,
+        webapp_url=webapp_url,
+        webapp_only=webapp_only,
     )
     text, keyboard = panel.render()
     await client.send_message(
