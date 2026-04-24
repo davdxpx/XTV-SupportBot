@@ -135,9 +135,9 @@ same asyncio loop in one process. Don't add a `worker:` process.
 ## 10. Rollback
 
 Railway → **Deployments** → pick the previous successful one → **Redeploy**.
-Every phase commit on the v1.0 branch is reverse-compatible at the DB
-level (migrations are idempotent `$set` + `$setOnInsert`), so
-rollbacks are safe.
+Every phase commit in the current v0.9 pre-release is reverse-compatible
+at the DB level (migrations are idempotent `$set` + `$setOnInsert`),
+so rollbacks are safe.
 
 ## 11. Railway CLI cheat-sheet
 

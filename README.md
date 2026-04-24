@@ -1,179 +1,364 @@
+<div align="center">
+
 # XTV-SupportBot
 
-<p align="center">
-  <b>Enterprise-grade Telegram support, feedback and direct-contact bot.</b><br>
-  Forum-topic tickets · RBAC &amp; teams · macros &amp; knowledge base · AI assistance ·
-  analytics · broadcasts · plugins · REST API &amp; web admin.
-</p>
+**An enterprise-grade Telegram support, feedback and contact bot.**
+*Forum-topic tickets · RBAC & teams · macros & knowledge base · AI assistance ·
+analytics · broadcasts · plugins · REST API & web admin.*
 
-<p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.9.0-blue">
-  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white">
-  <img alt="License" src="https://img.shields.io/badge/license-XTV%20Public%20License-lightgrey">
-  <img alt="Status" src="https://img.shields.io/badge/status-pre--release-orange">
-</p>
+[![Version](https://img.shields.io/badge/version-0.9.0-blue)](https://github.com/davdxpx/XTV-SupportBot/releases)
+[![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3120/)
+[![License](https://img.shields.io/badge/license-%F0%9D%95%8FTV%20Public%20License-lightgrey)](LICENSE)
+[![Status](https://img.shields.io/badge/status-pre--release-orange)](CHANGELOG.md)
+[![Docs](https://img.shields.io/badge/docs-MkDocs%20Material-526cfe?logo=materialformkdocs&logoColor=white)](https://davdxpx.github.io/XTV-SupportBot/)
+[![Telegram](https://img.shields.io/badge/Telegram-%40XTVbots-229ED9?logo=telegram&logoColor=white)](https://t.me/XTVbots)
 
-> **v0.9.0 is a public pre-release** on the way to a stable v1.0. Interfaces may
-> still change between minor versions. Bug reports and PRs are welcome — see
-> `CONTRIBUTING.md`.
+[**Documentation**](https://davdxpx.github.io/XTV-SupportBot/) ·
+[Setup](SETUP.md) ·
+[Changelog](CHANGELOG.md) ·
+[Contributing](CONTRIBUTING.md) ·
+[Security](SECURITY.md) ·
+[Telegram](https://t.me/davdxpx)
+
+</div>
 
 ---
 
-## What it does
+> **v0.9.0 is a public pre-release** on the way to a stable v1.0.
+> Interfaces may still change between minor versions. Bug reports and pull
+> requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-XTV-SupportBot turns a single Telegram forum supergroup into a full-featured
-helpdesk. Every conversation with an end-user is a **forum topic**; the whole
-team can collaborate inside it with live-updated header cards, assignment,
-tags, priority, SLA timers and canned replies.
+## Table of contents
+
+- [Why XTV-SupportBot](#why-xtv-supportbot)
+- [Quick start](#quick-start)
+- [Feature matrix](#feature-matrix)
+- [Tech stack](#tech-stack)
+- [Install](#install)
+- [Configuration](#configuration)
+- [Commands](#commands)
+- [Architecture](#architecture)
+- [Documentation](#documentation)
+- [Roadmap](#roadmap)
+- [Security](#security)
+- [Contributing](#contributing)
+- [Community & support](#community--support)
+- [License & credits](#license--credits)
+
+## Why XTV-SupportBot
+
+XTV-SupportBot turns a single Telegram forum supergroup into a **full helpdesk**:
+
+- **Every user conversation is a forum topic** in your admin group. The whole
+  team collaborates inside it with a live-updating header card, assignment,
+  tags, priority, SLA timers and canned replies.
+- **RBAC + teams + routing.** Owner / admin / supervisor / agent / viewer
+  roles; declarative queue routing by tag, project, priority.
+- **Productivity out of the box.** Macros with placeholders, a searchable
+  knowledge base, pre-ticket FAQ gate that deflects common questions before
+  a ticket is even opened.
+- **AI when you need it.** Reply drafts, summaries, sentiment, smart routing,
+  translation, voice/image OCR — all opt-in, provider-agnostic via
+  [LiteLLM](https://docs.litellm.ai/) (Claude, GPT, Gemini, local Ollama…).
+- **Ops-friendly from day one.** Prometheus `/metrics`, OpenTelemetry traces,
+  `/health` + `/ready` probes, HMAC-signed outbound webhooks, GDPR
+  export/delete, audit log with TTL.
+- **Deploy however you want.** Single Python process; ships with a multi-stage
+  Docker image, `docker-compose`, Helm chart, raw k8s manifests and a
+  Railway/Nixpacks config.
+
+Full feature tour: **[davdxpx.github.io/XTV-SupportBot](https://davdxpx.github.io/XTV-SupportBot/)**.
+
+## Quick start
+
+```bash
+# 1. Clone and set up the environment
+git clone https://github.com/davdxpx/XTV-SupportBot.git
+cd XTV-SupportBot
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -e '.[dev]'
+
+# 2. Configure
+cp .env.example .env
+# fill in API_ID, API_HASH, BOT_TOKEN, MONGO_URI,
+#         ADMIN_IDS, ADMIN_CHANNEL_ID
+#   — see the Getting-Started guide for how to obtain each value:
+#     https://davdxpx.github.io/XTV-SupportBot/getting-started/install/
+
+# 3. Run
+python main.py
+```
+
+On first boot you should see `boot.ready` in the log. Send `/start` to your
+bot in a private chat to test the user flow.
+
+> Need the end-to-end walkthrough (BotFather, forum supergroup, MongoDB Atlas,
+> Railway/Docker, smoke-test checklist)? Follow **[SETUP.md](SETUP.md)** — the
+> step-by-step guide from zero to a running bot.
 
 ## Feature matrix
 
-| Area | Features |
-|---|---|
-| **Tickets** | forum-topic per ticket, live header card, assignment, tags, priority, SLA + breach alerts, auto-close |
-| **Teams &amp; roles** | RBAC (`owner`/`admin`/`supervisor`/`agent`/`viewer`), queue routing by tag/project/priority |
-| **Productivity** | macros / canned responses, knowledge base with FTS &amp; pre-ticket FAQ gate, inline autocompletion |
-| **AI** (opt-in) | reply drafts, ticket summaries, sentiment, smart routing, translation, voice/image OCR — via **LiteLLM** (Claude, GPT, Gemini, Ollama, …) |
-| **Escalation &amp; CSAT** | escalation rules, business hours &amp; holidays, 1–5★ CSAT after close |
-| **Analytics** | FRT/resolution/SLA metrics, agent leaderboard, weekly digest, CSV/JSON exports |
-| **Integrations** | outgoing HMAC-signed webhooks, Discord/Slack bridge, optional email ingestion |
-| **Anti-spam** | sliding-window cooldown + mute, CAPTCHA plugin, link/phishing scanner |
-| **Broadcast** | pausable/cancellable with live progress card |
-| **Compliance** | GDPR export/delete, audit log with TTL, PII-redaction filter |
-| **API &amp; web** | FastAPI REST (API-keys &amp; scopes), React/Vite SPA admin under `/web/` |
-| **Observability** | Prometheus `/metrics`, OpenTelemetry traces, `/health` &amp; `/ready` |
-| **i18n** | English + Spanish, Russian, Hindi, Bengali, Tamil, Telugu, Marathi, Punjabi, Gujarati, Urdu |
-| **Ops** | multi-stage Docker image, docker-compose, Helm chart, raw k8s manifests, Railway/Nixpacks |
+| Area | Highlights | Deep-dive |
+|---|---|---|
+| **Tickets** | forum-topic per ticket, live header card, assignment, tags, priority, SLA + breach alerts, auto-close | [Architecture overview](https://davdxpx.github.io/XTV-SupportBot/architecture/overview/) |
+| **Teams & RBAC** | owner / admin / supervisor / agent / viewer; declarative queue routing | [RBAC & teams](https://davdxpx.github.io/XTV-SupportBot/features/rbac-and-teams/) |
+| **Macros & KB** | parameterised macros, knowledge base with full-text search, pre-ticket FAQ gate | [Macros & KB](https://davdxpx.github.io/XTV-SupportBot/features/macros-and-kb/) |
+| **AI assistance** | reply drafts, summaries, sentiment, smart routing, translation, voice/image OCR (opt-in, via LiteLLM) | [AI features](https://davdxpx.github.io/XTV-SupportBot/features/ai/) |
+| **Escalation & CSAT** | escalation rules, business hours & holidays, 1–5★ CSAT after close | [Features index](https://davdxpx.github.io/XTV-SupportBot/#feature-tour) |
+| **Analytics** | FRT / resolution / SLA metrics, agent leaderboard, weekly digest, CSV/JSON exports | [Analytics](https://davdxpx.github.io/XTV-SupportBot/features/analytics/) |
+| **Integrations** | outgoing HMAC-signed webhooks, Discord / Slack bridges, email ingestion scaffolding | [Integrations](https://davdxpx.github.io/XTV-SupportBot/features/integrations/) |
+| **Anti-spam** | sliding-window cooldown + mute, CAPTCHA plugin, link/phishing scanner | — |
+| **Broadcast** | pausable / cancellable with a live progress card | — |
+| **Compliance** | GDPR export / delete, audit log with TTL, PII-redaction filter | [GDPR](https://davdxpx.github.io/XTV-SupportBot/ops/gdpr/) |
+| **REST API & Web** | FastAPI REST (API-keys + scopes), React + Vite admin SPA | [API reference](https://davdxpx.github.io/XTV-SupportBot/reference/api/) |
+| **Observability** | Prometheus `/metrics`, OpenTelemetry traces, `/health` + `/ready` | [Observability](https://davdxpx.github.io/XTV-SupportBot/ops/observability/) |
+| **i18n** | English + 10 languages (Russian, Spanish, Hindi, Bengali, Tamil, Telugu, Marathi, Punjabi, Gujarati, Urdu) | — |
+| **Ops & deploy** | multi-stage Docker, docker-compose, Helm chart, raw k8s manifests, Railway / Nixpacks | [Deployment](https://davdxpx.github.io/XTV-SupportBot/ops/deployment/) |
+| **Plugins** | declarative plugin loader; 13 built-in plugins; register custom templates, actions, bridges | [Plugin authoring](https://davdxpx.github.io/XTV-SupportBot/architecture/plugins/) |
 
 ## Tech stack
 
-- Python **3.12**, async everywhere
-- `pyrofork` (Telegram MTProto) + `tgcrypto`
-- `motor` (MongoDB async) — primary datastore
-- Optional `redis` for distributed cache / cooldown / rate-limits
-- `pydantic-settings`, `structlog`
-- `LiteLLM` for provider-agnostic AI
-- `FastAPI` for the REST/admin API, React + Vite for the SPA
-- `Prometheus` + `OpenTelemetry` for observability
+- **Python 3.12**, async everywhere
+- [`pyrofork`](https://github.com/Mayuri-Chan/pyrofork) (Telegram MTProto) + [`tgcrypto`](https://github.com/pyrogram/tgcrypto)
+- [`motor`](https://motor.readthedocs.io/) (MongoDB async) — primary datastore
+- Optional [`redis`](https://redis.io/) for distributed cache / cooldown / rate-limits
+- [`pydantic-settings`](https://docs.pydantic.dev/latest/concepts/pydantic_settings/), [`structlog`](https://www.structlog.org/)
+- [`LiteLLM`](https://docs.litellm.ai/) for provider-agnostic AI
+- [`FastAPI`](https://fastapi.tiangolo.com/) for the REST API, React + Vite for the admin SPA
+- [`Prometheus`](https://prometheus.io/) + [`OpenTelemetry`](https://opentelemetry.io/) for observability
 
 ## Install
 
-### pip extras
+Pick the flavour that matches your deployment target:
+
+<details open>
+<summary><b>pip (local development)</b></summary>
 
 ```bash
-pip install -e '.[dev]'            # minimum
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -e '.[dev]'            # minimal dev setup (lint/format/tests)
 pip install -e '.[ai,api,redis]'   # enable AI, REST API, Redis cache
-pip install -e '.[all]'            # everything including docs & observability
+pip install -e '.[all]'            # everything incl. docs & observability
 ```
 
-### Docker (single image, SPA baked in)
+</details>
+
+<details>
+<summary><b>Docker (single image, SPA baked in)</b></summary>
 
 ```bash
 docker build -f deploy/docker/Dockerfile -t xtv-support:0.9.0 .
 docker run --rm --env-file .env xtv-support:0.9.0
 ```
 
-### docker-compose (bot + mongo + redis + prometheus)
+</details>
+
+<details>
+<summary><b>docker-compose (bot + Mongo + Redis + Prometheus)</b></summary>
 
 ```bash
 docker compose -f deploy/compose/docker-compose.yml up
 ```
 
-### Helm (Kubernetes)
+</details>
+
+<details>
+<summary><b>Helm (Kubernetes)</b></summary>
 
 ```bash
-helm install xtv-support deploy/helm/xtv-support \
-  --set-file env.env=./.env \
-  --set image.tag=0.9.0
+kubectl create secret generic xtv-support-secrets --from-env-file=.env
+helm install xtv-support deploy/helm/xtv-support --set image.tag=0.9.0
 ```
 
-### Railway / Nixpacks / VPS
+</details>
 
-`Procfile` &amp; `nixpacks.toml` remain unchanged — `python main.py` is the entry
-point. See `SETUP.md` for the end-to-end walkthrough.
+<details>
+<summary><b>Railway / Nixpacks / VPS</b></summary>
 
-## Quick start (local)
+Repo root ships a thin `Dockerfile`, a `Procfile` and a `nixpacks.toml`.
+Push to Railway (or any Nixpacks-aware host), set the env vars from
+`.env.example`, and the platform will build + run `python main.py` for you.
+See the [Install guide](https://davdxpx.github.io/XTV-SupportBot/getting-started/install/)
+for the full walkthrough.
+
+</details>
+
+### Optional extras
 
 ```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev]'
-
-cp .env.example .env           # fill in API_ID/API_HASH/BOT_TOKEN/MONGO_URI/ADMIN_IDS/ADMIN_CHANNEL_ID
-
-python main.py
+pip install -e '.[redis]'           # Redis cache + distributed cooldown
+pip install -e '.[ai]'              # LiteLLM-powered AI features
+pip install -e '.[api]'             # FastAPI REST + admin SPA
+pip install -e '.[observability]'   # Prometheus + OpenTelemetry
+pip install -e '.[all]'             # everything above + docs extras
 ```
-
-See **`SETUP.md`** for the fully-annotated walkthrough (BotFather, forum
-supergroup, MongoDB Atlas, Railway/Docker, smoke-test checklist).
 
 ## Configuration
 
-Every setting is read from environment variables or `.env`. See
-`.env.example` for the complete, commented list. Feature modules that are
-shipped as opt-in plugins are **off by default** — flip them on by setting
-their `FEATURE_*` flag to `true`.
+Every setting is read from environment variables or a local `.env`. The
+canonical, fully-commented list lives in
+[`.env.example`](.env.example). Optional feature modules are **off by
+default** — flip them on by setting the matching `FEATURE_*` flag to
+`true`.
 
-## Commands (excerpt)
+| Group | Purpose |
+|---|---|
+| **Required** | `API_ID`, `API_HASH`, `BOT_TOKEN`, `MONGO_URI`, `ADMIN_IDS`, `ADMIN_CHANNEL_ID` |
+| **SLA / auto-close** | `SLA_WARN_MINUTES`, `SLA_BREACH_MINUTES`, `AUTO_CLOSE_DAYS`, `AUTO_CLOSE_SWEEP_MINUTES` |
+| **Anti-spam** | `COOLDOWN_RATE`, `COOLDOWN_WINDOW`, `COOLDOWN_MUTE_SECONDS` |
+| **Feature flags** | `FEATURE_AI_DRAFTS`, `FEATURE_CSAT`, `FEATURE_KB_GATE`, `FEATURE_WEBHOOKS_OUT`, … |
+| **Observability** | `METRICS_ENABLED`, `OTEL_EXPORTER_OTLP_ENDPOINT`, … |
+
+See the full reference: **[Environment variables](https://davdxpx.github.io/XTV-SupportBot/reference/env/)**.
+
+## Commands
 
 ### User DM
-- `/start` · `/close` · `/lang` · `/tickets` · `/gdpr export|delete`
+
+| Command | What it does |
+|---|---|
+| `/start` | Welcome flow — pick a project or open the KB gate |
+| `/tickets` | Paginated list of your tickets with unread-reply badges |
+| `/close` | Close your currently-open ticket |
+| `/lang` | Change UI language |
+| `/gdpr export` / `/gdpr delete` | GDPR data export or erase (audit-logged) |
 
 ### Admin DM
-- `/admin` (dashboard) · `/history <user_id>` · `/team create` · `/apikey create <scope>`
+
+| Command | What it does |
+|---|---|
+| `/admin` | Stats dashboard (projects, users, open tickets) |
+| `/project create` / `list` / `view` / `delete` | Multi-step project wizard |
+| `/team list\|create\|rename\|delete` | Team CRUD + membership + timezone |
+| `/role list\|grant\|revoke` | RBAC assignments |
+| `/kb list\|add\|edit\|del\|search` | Knowledge-base article CRUD with FTS |
+| `/broadcast` | Draft → preview → send with live progress |
+| `/apikey create <scope>` / `list` / `revoke` | REST-API key lifecycle |
+| `/history <user_id>` | Last 10 tickets for a given user |
 
 ### Inside a ticket topic
-- Any non-command text → forwarded to user
-- `/close` · `/assign <user_id|me|none>` · `/tag add|rm <name>`
-- `/macro save|use|list` · header buttons: *Assign*, *Tag*, *Priority*, *AI Draft*, *Close*
+
+| Command / button | What it does |
+|---|---|
+| *any non-command text* | Forwarded to the user as an admin reply |
+| `/close` | Close the ticket, notify the user, optional CSAT prompt |
+| `/assign <user_id \| me \| none>` | Assign / unassign an agent |
+| `/tag add\|rm <name>` | Mutate ticket tags in-place |
+| `/macro save\|use\|list\|show\|del` | Macro library (global + team-scoped) |
+| `/draft` | Generate an AI reply draft (gated on `FEATURE_AI_DRAFTS`) |
+| Header buttons | *Assign*, *Tag*, *Priority*, *AI Draft*, *Close* |
+
+A longer command walk-through lives in the
+[Getting-Started guide](https://davdxpx.github.io/XTV-SupportBot/getting-started/first-run/).
 
 ## Architecture
 
 ```
 src/xtv_support/
-  config/          settings, feature flags, i18n config
-  core/            DI container, event bus, router, filters, logger, FSM
-  domain/          pure models &amp; events
-  infrastructure/  db, cache, storage, telegram, ai (LiteLLM), metrics, tracing
-  services/        tickets, projects, users, sla, cooldown, broadcasts, macros,
-                   kb, ai, analytics, escalation, csat, teams, business_hours, gdpr
-  handlers/        user/ admin/ topic/ system/
-  middlewares/     logging, admin_guard, blocked, cooldown, i18n, rbac, rate_limit, tracing
-  ui/              primitives (card/progress/blockquote), templates, themes, keyboards
-  plugins/         loader + registry + builtin/*
-  tasks/           scheduler + periodic jobs
-  api/             FastAPI app (routes, deps, security)
-  utils/           text, time, ids, retry, crypto, phone, validation
-  locales/         en.yaml, ru.yaml, …
+├─ config/          settings, feature flags, i18n config
+├─ core/            DI container, event bus, router, filters, logger, FSM
+├─ domain/          pure models & events
+├─ infrastructure/  db, cache, storage, telegram, ai (LiteLLM), metrics, tracing
+├─ services/        tickets, projects, users, sla, cooldown, broadcasts, macros,
+│                   kb, ai, analytics, escalation, csat, teams, business_hours, gdpr
+├─ handlers/        user/ · admin/ · topic/ · system/
+├─ middlewares/     logging, admin_guard, blocked, cooldown, i18n, rbac,
+│                   rate_limit, tracing
+├─ ui/              primitives (card / progress / blockquote), templates,
+│                   themes, keyboards
+├─ plugins/         loader + registry + builtin/*
+├─ tasks/           scheduler + periodic jobs
+├─ api/             FastAPI app (routes, deps, security)
+├─ utils/           text, time, ids, retry, crypto, phone, validation
+└─ locales/         en.yaml, ru.yaml, es.yaml, …
 ```
 
-The full layered diagram lives in `docs/architecture.md`.
+- **Architecture overview** → [docs/architecture/overview](https://davdxpx.github.io/XTV-SupportBot/architecture/overview/)
+- **Event bus** → [docs/architecture/events](https://davdxpx.github.io/XTV-SupportBot/architecture/events/)
+- **Plugin authoring** → [docs/architecture/plugins](https://davdxpx.github.io/XTV-SupportBot/architecture/plugins/)
 
 ## Documentation
 
-- **`SETUP.md`** — step-by-step first-run guide
-- **`docs/`** (MkDocs-Material) — full reference, plugin authoring, API, deployment
-- **`CHANGELOG.md`** · **`SECURITY.md`** · **`CONTRIBUTING.md`** · **`CODE_OF_CONDUCT.md`**
+The full reference lives at **[davdxpx.github.io/XTV-SupportBot](https://davdxpx.github.io/XTV-SupportBot/)**
+(MkDocs Material, searchable, dark/light mode).
+
+| Section | Pages |
+|---|---|
+| **Getting started** | [Install](https://davdxpx.github.io/XTV-SupportBot/getting-started/install/) · [First run](https://davdxpx.github.io/XTV-SupportBot/getting-started/first-run/) · [Configuration](https://davdxpx.github.io/XTV-SupportBot/getting-started/configuration/) |
+| **Architecture** | [Overview](https://davdxpx.github.io/XTV-SupportBot/architecture/overview/) · [Plugins](https://davdxpx.github.io/XTV-SupportBot/architecture/plugins/) · [Events](https://davdxpx.github.io/XTV-SupportBot/architecture/events/) |
+| **Features** | [RBAC & teams](https://davdxpx.github.io/XTV-SupportBot/features/rbac-and-teams/) · [Macros & KB](https://davdxpx.github.io/XTV-SupportBot/features/macros-and-kb/) · [AI](https://davdxpx.github.io/XTV-SupportBot/features/ai/) · [Analytics](https://davdxpx.github.io/XTV-SupportBot/features/analytics/) · [Integrations](https://davdxpx.github.io/XTV-SupportBot/features/integrations/) |
+| **Operations** | [Deployment](https://davdxpx.github.io/XTV-SupportBot/ops/deployment/) · [Observability](https://davdxpx.github.io/XTV-SupportBot/ops/observability/) · [GDPR](https://davdxpx.github.io/XTV-SupportBot/ops/gdpr/) |
+| **Reference** | [Environment](https://davdxpx.github.io/XTV-SupportBot/reference/env/) · [REST API](https://davdxpx.github.io/XTV-SupportBot/reference/api/) |
+
+Root-level documents:
+
+- [SETUP.md](SETUP.md) — step-by-step first-run walkthrough
+- [CHANGELOG.md](CHANGELOG.md) — release notes in *Keep a Changelog* format
+- [CONTRIBUTING.md](CONTRIBUTING.md) — PR, branch and commit conventions
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community expectations
+- [SECURITY.md](SECURITY.md) — responsible-disclosure process
+
+## Roadmap
+
+v0.9 is stabilising the public-pre-release surface. Several subsystems
+already ship behind feature flags and will stabilise toward **v1.0**:
+
+- Agent cockpit (`/inbox` with saved filters + bulk actions) — `FEATURE_AGENT_INBOX`
+- Automation rules engine (if-this-then-that over ticket events)
+- Project templates (seed a new project with macros / KB / routing / SLA)
+- Onboarding panel rework (`/home`, `/faq`, `/settings`) — `FEATURE_NEW_ONBOARDING`
+- REST API write endpoints (reply / close / assign via HTTP)
+
+See the [CHANGELOG](CHANGELOG.md) for what already shipped, and
+[GitHub Issues](https://github.com/davdxpx/XTV-SupportBot/issues) for
+what's being discussed next.
 
 ## Security
 
 - Every admin action is written to an audit log with configurable TTL
-- Inbound link/phishing scanner is on by default; abusers are auto-muted
-- API keys are SHA-256-hashed at rest; full key is shown exactly once
-- Webhook deliveries are HMAC-SHA-256 signed
-- Secret-rotation helper: `python scripts/rotate_secrets.py`
+- Inbound link / phishing scanner is on by default; abusers are auto-muted
+- API keys are SHA-256-hashed at rest — the plaintext is shown exactly once
+- Outbound webhook deliveries are HMAC-SHA-256 signed
+- Secret rotation helper: `python scripts/rotate_secrets.py`
 
-Report vulnerabilities privately — see `SECURITY.md`.
+Report vulnerabilities privately — see **[SECURITY.md](SECURITY.md)**.
 
-## License
+## Contributing
 
-Source-available under the **XTV Public License** — see `LICENSE`. For
-licensing inquiries reach out on Telegram [@davdxpx](https://t.me/davdxpx).
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for
+the branch / commit / PR conventions and
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations.
 
-## Credits
+Common local tasks:
+
+```bash
+ruff check .         # lint
+ruff format .        # auto-format
+pytest               # run tests
+mkdocs serve         # preview the docs site locally
+```
+
+CI on every push runs `lint`, `test`, `test-web` and `docker-build` — see
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+## Community & support
+
+- **Docs site** — [davdxpx.github.io/XTV-SupportBot](https://davdxpx.github.io/XTV-SupportBot/)
+- **Bot channel** — [@XTVbots](https://t.me/XTVbots)
+- **XTV Network** — [@XTVglobal](https://t.me/XTVglobal)
+- **Backup channel** — [@XTVhome](https://t.me/XTVhome)
+- **Maintainer** — [@davdxpx](https://t.me/davdxpx) on Telegram
+- **Issues** — [github.com/davdxpx/XTV-SupportBot/issues](https://github.com/davdxpx/XTV-SupportBot/issues)
+
+## License & credits
+
+Source-available under the **𝕏TV Public License** — see [LICENSE](LICENSE).
+For licensing inquiries, reach out on Telegram
+[@davdxpx](https://t.me/davdxpx).
 
 Developed by **𝕏0L0™** ([@davdxpx](https://t.me/davdxpx)) for the
-[𝕏TV Network](https://t.me/XTVglobal) · bots channel:
-[@XTVbots](https://t.me/XTVbots) · backup: [@XTVhome](https://t.me/XTVhome).
+[𝕏TV Network](https://t.me/XTVglobal).
 
-Developed by @davdxpx
+<div align="center">
+<sub>© 2026 XTV Network Global · <a href="https://t.me/XTVglobal">@XTVglobal</a></sub>
+</div>
