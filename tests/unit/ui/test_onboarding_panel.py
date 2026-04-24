@@ -57,6 +57,34 @@ def test_faq_browse_panel_empty_state() -> None:
     assert "No matching" in text
 
 
+def test_onboarding_panel_hybrid_keeps_callbacks_and_adds_webapp_row() -> None:
+    panel = onboarding_panel(webapp_url="https://xtvsupport.up.railway.app/")
+    rows = panel._row_specs()
+    labels = [c["label"] for r in rows for c in r]
+    assert any("New ticket" in lbl for lbl in labels)
+    assert any("Open in app" in lbl for lbl in labels)
+    webapp_cells = [c for r in rows for c in r if c.get("webapp_url")]
+    assert webapp_cells and webapp_cells[0]["webapp_url"].startswith("https://")
+
+
+def test_onboarding_panel_webapp_only_hides_callbacks() -> None:
+    panel = onboarding_panel(
+        webapp_url="https://xtvsupport.up.railway.app/",
+        webapp_only=True,
+    )
+    rows = panel._row_specs()
+    callbacks = [c for r in rows for c in r if c.get("callback")]
+    assert not callbacks
+    webapp_cells = [c for r in rows for c in r if c.get("webapp_url")]
+    assert len(webapp_cells) == 1
+
+
+def test_onboarding_panel_ignores_non_https_webapp_url() -> None:
+    panel = onboarding_panel(webapp_url="http://insecure.example/")
+    rows = panel._row_specs()
+    assert not [c for r in rows for c in r if c.get("webapp_url")]
+
+
 def test_settings_panel_reflects_toggles() -> None:
     panel = settings_panel(
         language="de",
