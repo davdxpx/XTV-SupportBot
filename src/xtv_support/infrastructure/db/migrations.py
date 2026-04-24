@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 6
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -128,11 +128,6 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
         "sla_warned": False,
         "topic_fallback": False,
         "header_msg_id": None,
-        # Phase 4.1 — internal notes + schema version marker on the ticket
-        # for future forward-migrations. Both are idempotent: $exists is
-        # False only the first time a given document is touched.
-        "internal_notes": [],
-        "history_version": 1,
     }
     for field, default in defaults.items():
         await db.tickets.update_many({field: {"$exists": False}}, {"$set": {field: default}})
@@ -151,25 +146,9 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
         "flood_score": 0,
         "lang": settings.DEFAULT_LANG,
         "notified_on_assign": False,
-        # Phase 4.3 — onboarding-panel related fields, idempotent.
-        "notification_prefs": {
-            "notify_reply": True,
-            "notify_csat": True,
-            "notify_announcements": True,
-        },
-        "onboarding_shown_at": None,
     }
     for field, default in user_defaults.items():
         await db.users.update_many({field: {"$exists": False}}, {"$set": {field: default}})
-
-    # --- Phase 4.2: project-template marker on legacy projects -------
-    # Every existing project gets ``template_slug: "legacy"`` so analytics
-    # and the admin UI can distinguish projects created before the
-    # template system existed. Idempotent: $exists gate runs once per doc.
-    await db.projects.update_many(
-        {"template_slug": {"$exists": False}},
-        {"$set": {"template_slug": "legacy"}},
-    )
 
     # --- Seed RBAC from ADMIN_IDS (Phase 5) --------------------------
     # Every legacy admin is bootstrapped as Role.ADMIN unless a roles/

@@ -2,16 +2,7 @@
 
 See [Install](../getting-started/install.md) for the four supported
 paths (pip / Docker / compose / Helm). This page covers ops concerns
-specific to each. For a Railway-specific walkthrough see the dedicated
-[Railway deployment guide](railway.md).
-
-## Railway / Render / Fly / Heroku
-
-The repo ships with `Procfile` (`web: python main.py`) + `nixpacks.toml`
-+ `requirements.txt` — every PaaS that speaks one of these picks the
-app up without extra config. Set `API_ENABLED=true` and the platform's
-injected `$PORT` routes to the FastAPI app. For Railway specifically,
-start with [the dedicated guide](railway.md).
+specific to each.
 
 ## Single-holder pyrofork session
 

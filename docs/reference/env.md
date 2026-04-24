@@ -49,9 +49,7 @@ This page groups variables by purpose.
 `FEATURE_ANALYTICS_DIGEST`, `FEATURE_KB_GATE`,
 `FEATURE_LINK_SCANNER`, `FEATURE_START_CAPTCHA`,
 `FEATURE_WEBHOOKS_OUT`, `FEATURE_DISCORD_BRIDGE`,
-`FEATURE_SLACK_BRIDGE`, `FEATURE_EMAIL_INGRESS`,
-`FEATURE_NEW_ONBOARDING`, `FEATURE_CUSTOMER_HISTORY_PIN`,
-`FEATURE_AGENT_INBOX`.
+`FEATURE_SLACK_BRIDGE`, `FEATURE_EMAIL_INGRESS`.
 
 ## Integrations
 
@@ -60,17 +58,8 @@ This page groups variables by purpose.
 
 ## REST API
 
-| Variable | Default | Notes |
-|---|---|---|
-| `API_ENABLED` | `false` | Set `true` to serve the FastAPI app alongside pyrofork |
-| `API_HOST` | `0.0.0.0` | Bind address |
-| `API_PORT` | `8000` | Local bind port; `$PORT` (Railway / Render / Fly / Heroku) takes precedence via `settings.effective_api_port` |
-| `API_CORS_ORIGINS` | `""` | Comma-separated allow-list; `*` allows everything |
-| `API_RATE_LIMIT_PER_MINUTE` | `120` | Per-key token bucket; needs Redis for multi-replica |
-
-See also [API quickstart](api-quickstart.md),
-[API authentication](api-auth.md), and the dedicated
-[Railway guide](../ops/railway.md).
+`API_ENABLED`, `API_HOST`, `API_PORT`, `API_CORS_ORIGINS`,
+`API_RATE_LIMIT_PER_MINUTE`.
 
 ## Observability
 

@@ -19,10 +19,7 @@ collaborate on one conversation.
 | **Escalation & CSAT** | rules engine, business hours, holiday calendar, 1–5★ surveys |
 | **Analytics** | nightly rollups, SLA compliance, agent leaderboard, CSV/JSON export, weekly digest |
 | **Integrations** | HMAC-signed outbound webhooks, Discord + Slack bridges, email ingestion (scaffolding) |
-| **Project templates** | Seven built-in templates (support, feedback, contact, billing, dev_github, vip, community) seeding macros, KB, routing, SLA + CSAT |
-| **Agent cockpit** | `/inbox` with saved views, bulk actions, internal notes (`/note`), customer-history pin |
-| **Automation rules** | If/then/then pipelines triggered by 8 ticket-lifecycle events, dry-run, cooldowns, versioned audit |
-| **API & Web** | FastAPI REST (read + write, API keys + scopes), minimal React + Vite admin SPA |
+| **API & Web** | FastAPI REST (API keys + scopes), minimal React + Vite admin SPA |
 | **Compliance** | GDPR export/delete, link scanner, start CAPTCHA, secret rotation |
 | **Observability** | Prometheus metrics, OpenTelemetry tracing, /health + /ready |
 | **i18n** | English + 10 languages (Russian, Spanish, Hindi, Bengali, Tamil, Telugu, Marathi, Punjabi, Gujarati, Urdu) |

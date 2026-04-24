@@ -39,29 +39,19 @@ nav:
       - architecture/overview.md
       - architecture/plugins.md
       - architecture/events.md
-      - architecture/action-executor.md
   - Features:
       - features/rbac-and-teams.md
       - features/macros-and-kb.md
-      - features/project-templates.md
-      - features/user-experience.md
-      - features/agent-cockpit.md
-      - features/automation-rules.md
       - features/ai.md
       - features/analytics.md
       - features/integrations.md
   - Operations:
       - ops/deployment.md
-      - ops/railway.md
       - ops/observability.md
       - ops/gdpr.md
   - Reference:
       - reference/env.md
       - reference/api.md
-      - reference/api-quickstart.md
-      - reference/api-auth.md
-      - reference/api-write.md
-      - reference/webhooks.md
 
 markdown_extensions:
   - admonition
