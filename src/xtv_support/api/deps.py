@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fastapi import Request
+
 if TYPE_CHECKING:  # pragma: no cover
-    from fastapi import Request
     from motor.motor_asyncio import AsyncIOMotorDatabase
 
     from xtv_support.api.security import ApiKey

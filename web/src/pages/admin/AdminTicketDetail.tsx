@@ -76,7 +76,7 @@ export function AdminTicketDetail() {
   const isOpen = data.status === 'open';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28 }}>
+    <div className="admin-detail-grid">
       <div className="stack">
         <Link to="/admin/inbox" className="muted">← Inbox</Link>
         <h1 className="heading">

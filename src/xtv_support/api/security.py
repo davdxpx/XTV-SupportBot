@@ -42,6 +42,7 @@ SCOPES: tuple[str, ...] = (
     "analytics:read",
     "webhooks:write",
     "rules:read",
+    "rules:write",
     "admin:full",
 )
 
