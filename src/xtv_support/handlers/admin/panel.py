@@ -183,7 +183,7 @@ async def _send_or_edit(
 # Command + callback handlers
 # ---------------------------------------------------------------------------
 @Client.on_message(
-    filters.command("panel") & is_admin_user & is_private,
+    filters.command(["admin", "panel"]) & is_admin_user & is_private,
     group=HandlerGroup.COMMAND,
 )
 async def panel_cmd(client: Client, message: Message) -> None:

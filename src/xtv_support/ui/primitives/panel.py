@@ -66,6 +66,10 @@ class Panel:
     title: str
     subtitle: str | None = None
     tabs: Sequence[Tab] = field(default_factory=tuple)
+    # Max tabs per inline-keyboard row. Telegram displays 3–4 buttons per
+    # line before they become uncomfortably narrow on mobile, so we wrap
+    # automatically at 4 by default. ``render_text`` also respects this.
+    tabs_per_row: int = 4
     stats: Sequence[StatTile] = field(default_factory=tuple)
     body: Sequence[str] = field(default_factory=tuple)
     action_rows: Sequence[Sequence[PanelButton]] = field(default_factory=tuple)
@@ -79,12 +83,21 @@ class Panel:
     # Rendering
     # ------------------------------------------------------------------
     def _tab_strip(self) -> str:
+        """Render the tab row as text, wrapped to ``tabs_per_row`` per line."""
         if not self.tabs:
             return ""
-        chips: list[str] = []
+        per_row = max(1, self.tabs_per_row)
+        lines: list[str] = []
+        row: list[str] = []
         for tab in self.tabs:
-            chips.append(f"<b>· {tab.label} ·</b>" if tab.active else tab.label)
-        return "  ".join(chips)
+            chip = f"<b>· {tab.label} ·</b>" if tab.active else tab.label
+            row.append(chip)
+            if len(row) == per_row:
+                lines.append("  ".join(row))
+                row = []
+        if row:
+            lines.append("  ".join(row))
+        return "\n".join(lines)
 
     def _stat_block(self) -> str:
         if not self.stats:
@@ -129,12 +142,22 @@ class Panel:
         rows: list[list[dict[str, str]]] = []
 
         if self.tabs:
-            rows.append(
-                [
-                    {"label": (f"· {t.label} ·" if t.active else t.label), "callback": t.callback}
-                    for t in self.tabs
-                ]
-            )
+            # Chunk tabs into rows of ``tabs_per_row`` so the keyboard stays
+            # readable on mobile instead of a single line of 8 cramped buttons.
+            per_row = max(1, self.tabs_per_row)
+            chunk: list[dict[str, str]] = []
+            for t in self.tabs:
+                chunk.append(
+                    {
+                        "label": (f"· {t.label} ·" if t.active else t.label),
+                        "callback": t.callback,
+                    }
+                )
+                if len(chunk) == per_row:
+                    rows.append(chunk)
+                    chunk = []
+            if chunk:
+                rows.append(chunk)
 
         for action_row in self.action_rows:
             if not action_row:
