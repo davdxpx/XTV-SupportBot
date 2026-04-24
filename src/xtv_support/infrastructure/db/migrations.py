@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -154,6 +154,15 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
     }
     for field, default in user_defaults.items():
         await db.users.update_many({field: {"$exists": False}}, {"$set": {field: default}})
+
+    # --- Phase 4.2: project-template marker on legacy projects -------
+    # Every existing project gets ``template_slug: "legacy"`` so analytics
+    # and the admin UI can distinguish projects created before the
+    # template system existed. Idempotent: $exists gate runs once per doc.
+    await db.projects.update_many(
+        {"template_slug": {"$exists": False}},
+        {"$set": {"template_slug": "legacy"}},
+    )
 
     # --- Seed RBAC from ADMIN_IDS (Phase 5) --------------------------
     # Every legacy admin is bootstrapped as Role.ADMIN unless a roles/

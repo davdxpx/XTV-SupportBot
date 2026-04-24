@@ -36,6 +36,10 @@ from xtv_support.domain.events.messaging import MessageReceived, MessageSent
 from xtv_support.domain.events.plugins import PluginFailed, PluginLoaded, PluginUnloaded
 from xtv_support.domain.events.projects import ProjectCreated, ProjectDeleted
 from xtv_support.domain.events.sla import SlaBreached, SlaWarned
+from xtv_support.domain.events.templates import (
+    ProjectTemplateFailed,
+    ProjectTemplateInstalled,
+)
 from xtv_support.domain.events.tickets import (
     TicketAssigned,
     TicketClosed,
@@ -93,6 +97,9 @@ __all__ = [
     # Projects
     "ProjectCreated",
     "ProjectDeleted",
+    # Project templates (Phase 4.2)
+    "ProjectTemplateInstalled",
+    "ProjectTemplateFailed",
     # Plugins
     "PluginLoaded",
     "PluginUnloaded",
