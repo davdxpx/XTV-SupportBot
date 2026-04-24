@@ -46,38 +46,52 @@ class PanelButton:
     url: str | None = None
 
 
+# Horizontal rule drawn between sections. Telegram renders ``━`` as a
+# solid, uniform line on every platform, so we use it instead of a
+# dashed / Unicode-box alternative that some clients collapse.
+HR_RULE = "━" * 20
+
+
 @dataclass
 class Panel:
     """Dashboard-style message.
 
-    Rendering order:
+    Rendering order (all sections optional except ``title``)::
 
-        <b>{title}</b>              ← always present
-        {subtitle}                  ← optional (one line, muted)
-                                    ← blank line
-        {tab strip as text}         ← only if multiple tabs
-                                    ← blank line
-        {stat tiles, 2-col grid}    ← optional
-                                    ← blank line
-        {body lines}                ← optional free-form content
-        {footer}                    ← optional
+        <b>{title}</b>
+        ━━━━━━━━━━━━━━━━━━━━          ← HR (suppressed via ``hr=False``)
+        <i>{subtitle}</i>
+        {tab strip}                   ← only if tabs were passed
+        {stat tiles}
+        {body lines}
+        <blockquote>{hint[0]}</blockquote>
+        <blockquote>{hint[1]}</blockquote>
+        ━━━━━━━━━━━━━━━━━━━━          ← HR (omitted if no body/stats/hints)
+        {footer}                      ← rendered outside the HR envelope
     """
 
     title: str
     subtitle: str | None = None
     tabs: Sequence[Tab] = field(default_factory=tuple)
-    # Max tabs per inline-keyboard row. Telegram displays 3–4 buttons per
-    # line before they become uncomfortably narrow on mobile, so we wrap
-    # automatically at 4 by default. ``render_text`` also respects this.
+    # Tabs per inline-keyboard row — 4 by default for legacy tab-strip usage.
+    # The new drill-down admin UX sets ``tabs=()`` and uses ``action_rows``
+    # directly for the 2-column landing grid.
     tabs_per_row: int = 4
     stats: Sequence[StatTile] = field(default_factory=tuple)
     body: Sequence[str] = field(default_factory=tuple)
+    # One-liner blockquoted hints rendered between body and closing HR. Use
+    # for status messages / tips / footer-style text. Multiple hints stack.
+    hints: Sequence[str] = field(default_factory=tuple)
     action_rows: Sequence[Sequence[PanelButton]] = field(default_factory=tuple)
     footer: str | None = None
     page: int | None = None
     total_pages: int | None = None
     page_prev_cb: str | None = None
     page_next_cb: str | None = None
+    # Wrap the message in ``━━━…`` horizontal rules so it visually stands out
+    # from plain chat messages around it. Default on; turn off for cards that
+    # don't need the framing (e.g. short confirmation toasts).
+    hr: bool = True
 
     # ------------------------------------------------------------------
     # Rendering
@@ -114,28 +128,35 @@ class Panel:
         return f"Page {self.page}/{self.total_pages}"
 
     def render_text(self) -> str:
-        sections: list[str] = [f"<b>{self.title}</b>"]
+        lines: list[str] = [f"<b>{self.title}</b>"]
+        if self.hr:
+            lines.append(HR_RULE)
         if self.subtitle:
-            sections.append(f"<i>{self.subtitle}</i>")
+            lines.append(f"<i>{self.subtitle}</i>")
         tabs = self._tab_strip()
         if tabs:
-            sections.append("")
-            sections.append(tabs)
+            if lines[-1] != HR_RULE:
+                lines.append("")
+            lines.append(tabs)
         stats = self._stat_block()
         if stats:
-            sections.append("")
-            sections.append(stats)
+            lines.append("")
+            lines.append(stats)
         if self.body:
-            sections.append("")
-            sections.extend(line.rstrip() for line in self.body)
+            lines.append("")
+            lines.extend(line.rstrip() for line in self.body)
+        for hint in self.hints:
+            lines.append("")
+            lines.append(f"<blockquote>{hint}</blockquote>")
         pag = self._pagination_text()
         if pag:
-            sections.append("")
-            sections.append(pag)
+            lines.append("")
+            lines.append(pag)
+        if self.hr:
+            lines.append(HR_RULE)
         if self.footer:
-            sections.append("")
-            sections.append(self.footer)
-        return "\n".join(sections)
+            lines.append(self.footer)
+        return "\n".join(lines)
 
     def _row_specs(self) -> list[list[dict[str, str]]]:
         """Pyrogram-free representation of the keyboard (for tests)."""

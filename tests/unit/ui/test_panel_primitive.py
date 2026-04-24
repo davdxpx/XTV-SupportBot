@@ -1,13 +1,21 @@
 from __future__ import annotations
 
-from xtv_support.ui.primitives.panel import Panel, PanelButton, StatTile, Tab
+from xtv_support.ui.primitives.panel import HR_RULE, Panel, PanelButton, StatTile, Tab
 
 
-def test_panel_renders_title_only() -> None:
+def test_panel_renders_title_with_hr_by_default() -> None:
     p = Panel(title="Hello")
     text = p.render_text()
-    assert text == "<b>Hello</b>"
+    assert text.startswith("<b>Hello</b>")
+    # Default ``hr=True`` wraps the card with HR rules.
+    assert HR_RULE in text
     assert p._row_specs() == []
+
+
+def test_panel_hr_can_be_disabled() -> None:
+    p = Panel(title="Hello", hr=False)
+    text = p.render_text()
+    assert text == "<b>Hello</b>"
 
 
 def test_panel_renders_tabs_and_stats() -> None:
@@ -33,13 +41,8 @@ def test_panel_tabs_wrap_at_tabs_per_row() -> None:
         ),
     )
     rows = p._row_specs()
-    # First two rows are tab rows
     assert len(rows[0]) == 4
     assert len(rows[1]) == 4
-    # Text strip also wraps
-    text = p.render_text()
-    tab_lines = [ln for ln in text.splitlines() if "T0" in ln or "T4" in ln]
-    assert len(tab_lines) == 2  # split across two lines
 
 
 def test_panel_tabs_respect_custom_per_row() -> None:
@@ -51,8 +54,25 @@ def test_panel_tabs_respect_custom_per_row() -> None:
         ),
     )
     rows = p._row_specs()
-    # 7 tabs @ 3 per row → rows of [3, 3, 1]
     assert [len(r) for r in rows[:3]] == [3, 3, 1]
+
+
+def test_panel_hints_render_as_blockquote() -> None:
+    p = Panel(
+        title="Admin",
+        hints=("💡 This is a one-line tip.",),
+    )
+    text = p.render_text()
+    assert "<blockquote>💡 This is a one-line tip.</blockquote>" in text
+
+
+def test_panel_multiple_hints_stack() -> None:
+    p = Panel(
+        title="Admin",
+        hints=("first hint", "second hint"),
+    )
+    text = p.render_text()
+    assert text.count("<blockquote>") == 2
 
 
 def test_panel_action_rows_and_pagination() -> None:
@@ -66,7 +86,6 @@ def test_panel_action_rows_and_pagination() -> None:
     text = p.render_text()
     assert "Page 1/3" in text
     rows = p._row_specs()
-    # One action row + one pagination nav row
     assert len(rows) == 2
     assert rows[0][0]["label"] == "Close all"
     assert rows[1][0]["label"] == "Next ▶"

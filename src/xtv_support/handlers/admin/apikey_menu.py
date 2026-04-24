@@ -39,7 +39,8 @@ from xtv_support.ui.primitives import ask_and_confirm as akc
 
 log = get_logger("admin.apikey_menu")
 
-BACK_TO_SETTINGS = "cb:v2:admin:tab:settings"
+HR = "━" * 20
+BACK_TO_SETTINGS = "cb:v2:admin:section:settings"
 
 
 # ---------------------------------------------------------------------------
@@ -112,10 +113,11 @@ def _scope_hint() -> str:
 
 def _api_disabled_text() -> str:
     return (
-        "<b>🔑 API keys</b>\n\n"
+        f"<b>🔑 API keys</b>\n{HR}\n"
         "The REST API is currently <b>disabled</b>.\n\n"
-        "Set <code>API_ENABLED=true</code> in your environment and redeploy "
-        "to enable API access, then come back here to mint keys."
+        "<blockquote>⚙️ Set <code>API_ENABLED=true</code> in your environment "
+        "and redeploy — then reopen this menu to mint keys.</blockquote>\n"
+        f"{HR}"
     )
 
 
@@ -143,10 +145,16 @@ async def _render_list(client: Client, cq: CallbackQuery | None, message: Messag
             await cq.answer()
         return
     keys = await api_sec.list_keys(ctx.db, include_revoked=False)
+    header = f"<b>🔑 API keys</b>\n{HR}"
     if not keys:
-        body = "<b>🔑 API keys</b>\n\n<i>No active keys.</i>\nTap <b>➕ Create key</b> to mint one."
+        body = (
+            f"{header}\n"
+            "<i>No active keys.</i>\n\n"
+            "<blockquote>➕ Tap <b>Create key</b> to mint one.</blockquote>\n"
+            f"{HR}"
+        )
     else:
-        lines = [f"<b>🔑 API keys</b>  ·  {len(keys)} active", ""]
+        lines = [header, f"<i>{len(keys)} active</i>", ""]
         for k in keys:
             lines.append(
                 f"• <b>{k.label or '(no label)'}</b>  "
@@ -154,6 +162,9 @@ async def _render_list(client: Client, cq: CallbackQuery | None, message: Messag
                 f"  <i>scopes</i>: {_fmt_scopes(k.scopes)}\n"
                 f"  <i>last used</i>: {_fmt_ts(k.last_used_at)}"
             )
+        lines.append("")
+        lines.append("<blockquote>🗑 Tap the trash next to a key to revoke it.</blockquote>")
+        lines.append(HR)
         body = "\n".join(lines)
     await _send_or_edit(client, cq, message, body, _kb_key_list(keys))
     if cq is not None:
@@ -289,13 +300,14 @@ async def apikey_cmd(client: Client, message: Message) -> None:
 
 def _fmt_new_key_card(created: api_sec.NewApiKey) -> str:
     return (
-        "<b>🔑 API key created</b>\n\n"
+        f"<b>🔑 API key created</b>\n{HR}\n"
         f"<i>label</i>: <b>{created.meta.label}</b>\n"
         f"<i>scopes</i>: {_fmt_scopes(created.meta.scopes)}\n"
         f"<i>id</i>: <code>{created.meta.key_id}</code>\n\n"
-        "<b>⚠️ Save this now — it won't be shown again:</b>\n"
+        "<blockquote>⚠️ Save this now — it won't be shown again:</blockquote>\n"
         f"<code>{created.plaintext}</code>\n\n"
-        "<i>Use</i>  <code>Authorization: Bearer &lt;key&gt;</code>  <i>in API requests.</i>"
+        "<blockquote>🔗 Use <code>Authorization: Bearer &lt;key&gt;</code> in requests.</blockquote>\n"
+        f"{HR}"
     )
 
 
@@ -353,10 +365,12 @@ async def apikey_menu_callback(client: Client, cq: CallbackQuery) -> None:
         # Show confirmation card
         await cq.message.edit_text(
             (
-                "<b>🗑 Revoke key?</b>\n\n"
+                f"<b>🗑 Revoke key?</b>\n{HR}\n"
                 f"Key id <code>{key_id}</code> will be invalidated "
                 "immediately. Any client using it will start getting "
-                "401 <code>invalid_key</code> on the next request."
+                "401 <code>invalid_key</code> on the next request.\n\n"
+                "<blockquote>⚠️ This cannot be undone.</blockquote>\n"
+                f"{HR}"
             ),
             parse_mode=ParseMode.HTML,
             reply_markup=_kb_revoke_confirm(key_id),

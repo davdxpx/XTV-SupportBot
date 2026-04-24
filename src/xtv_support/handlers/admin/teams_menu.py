@@ -39,7 +39,8 @@ from xtv_support.ui.primitives import ask_and_confirm as akc
 
 log = get_logger("admin.teams_menu")
 
-BACK_TO_TEAMS = "cb:v2:admin:tab:teams"
+HR = "━" * 20
+BACK_TO_TEAMS = "cb:v2:admin:section:teams"
 
 
 # ---------------------------------------------------------------------------
@@ -158,19 +159,24 @@ async def _edit(cq: CallbackQuery, text: str, keyboard: InlineKeyboardMarkup | N
 async def _render_team_list(client: Client, cq: CallbackQuery) -> None:
     ctx = get_context(client)
     teams = await teams_repo.list_all(ctx.db)
+    header = f"<b>👥 Teams</b>\n{HR}"
     if not teams:
         body = (
-            "<b>👥 Teams</b>\n\n"
-            "<i>No teams configured yet.</i>\n"
-            "Tap <b>➕ New team</b> to create one."
+            f"{header}\n"
+            "<i>No teams configured yet.</i>\n\n"
+            "<blockquote>➕ Tap <b>New team</b> below to create one.</blockquote>\n"
+            f"{HR}"
         )
     else:
-        lines = ["<b>👥 Teams</b>", ""]
+        lines = [header, ""]
         for t in teams:
             lines.append(
                 f"• <code>{t.id}</code> — {t.name}  "
                 f"<i>({len(t.member_ids)} member(s), tz {t.timezone})</i>"
             )
+        lines.append("")
+        lines.append("<blockquote>✏️ Tap a team to drill into it.</blockquote>")
+        lines.append(HR)
         body = "\n".join(lines)
     await _edit(cq, body, _kb_team_list(teams))
     await cq.answer()
@@ -182,7 +188,7 @@ async def _render_team_detail(client: Client, cq: CallbackQuery, slug: str) -> N
     if team is None:
         await _edit(
             cq,
-            f"<b>👥 Teams</b>\n\n<i>Team <code>{slug}</code> not found.</i>",
+            f"<b>👥 Teams</b>\n{HR}\n<i>Team <code>{slug}</code> not found.</i>\n{HR}",
             InlineKeyboardMarkup(
                 [[InlineKeyboardButton("◀ Back", callback_data="cb:v2:admin:teams:list")]]
             ),
@@ -191,10 +197,13 @@ async def _render_team_detail(client: Client, cq: CallbackQuery, slug: str) -> N
         return
     text = (
         f"<b>👥 {team.name}</b>\n"
+        f"{HR}\n"
         f"<i>slug</i> <code>{team.id}</code>\n"
         f"<i>timezone</i> <code>{team.timezone}</code>\n"
         f"<i>members</i> {len(team.member_ids)}\n"
-        f"<i>queue rules</i> {len(team.queue_rules)}"
+        f"<i>queue rules</i> {len(team.queue_rules)}\n\n"
+        "<blockquote>✏️ Rename · 🌐 Timezone · 👤 Members · 🗑 Delete</blockquote>\n"
+        f"{HR}"
     )
     await _edit(cq, text, _kb_team_detail(slug))
     await cq.answer()
@@ -206,11 +215,17 @@ async def _render_members(client: Client, cq: CallbackQuery, slug: str) -> None:
     if team is None:
         await cq.answer("Team not found.", show_alert=True)
         return
+    header = f"<b>👤 {team.name} — members</b>\n{HR}"
     if not team.member_ids:
-        body = f"<b>👤 {team.name} — members</b>\n\n<i>No members yet.</i>"
+        body = f"{header}\n<i>No members yet.</i>\n\n<blockquote>➕ Tap <b>Add member</b> to invite someone.</blockquote>\n{HR}"
     else:
-        body = f"<b>👤 {team.name} — members</b>\n\n"
-        body += "\n".join(f"• <code>{m}</code>" for m in team.member_ids)
+        listing = "\n".join(f"• <code>{m}</code>" for m in team.member_ids)
+        body = (
+            f"{header}\n"
+            f"{listing}\n\n"
+            "<blockquote>🗑 Tap the trash next to a member to remove them.</blockquote>\n"
+            f"{HR}"
+        )
     await _edit(cq, body, _kb_members(slug, list(team.member_ids)))
     await cq.answer()
 
@@ -222,10 +237,13 @@ async def _render_delete_confirm(client: Client, cq: CallbackQuery, slug: str) -
         await cq.answer("Team not found.", show_alert=True)
         return
     body = (
-        f"<b>🗑 Delete team?</b>\n\n"
+        f"<b>🗑 Delete team?</b>\n"
+        f"{HR}\n"
         f"This will permanently delete <b>{team.name}</b> "
         f"(<code>{team.id}</code>) and its {len(team.queue_rules)} routing rule(s).\n\n"
-        f"Members ({len(team.member_ids)}) keep their user accounts."
+        f"Members ({len(team.member_ids)}) keep their user accounts.\n\n"
+        "<blockquote>⚠️ This cannot be undone.</blockquote>\n"
+        f"{HR}"
     )
     await _edit(cq, body, _kb_delete_confirm(slug))
     await cq.answer()
