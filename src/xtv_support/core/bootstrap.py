@@ -22,6 +22,7 @@ from xtv_support.plugins.registry import PluginRegistry
 from xtv_support.services.actions.executor import ActionExecutor
 from xtv_support.services.broadcasts.service import BroadcastManager
 from xtv_support.services.cooldown.service import CooldownService
+from xtv_support.services.rules.evaluator import RuleEvaluator
 from xtv_support.services.sla.service import SlaService
 from xtv_support.tasks.scheduler import TaskManager
 
@@ -52,16 +53,19 @@ async def build_context(client: Client) -> HandlerContext:
     db = get_db()
     await db_migrations.run(db)
 
+    # --- Kernel (Phase 3) -------------------------------------------
+    container = Container()
+    bus = EventBus()
+
     # --- Classic services (unchanged) -------------------------------
     tasks = TaskManager()
     cooldown = CooldownService()
     sla = SlaService(client, db)
     broadcasts = BroadcastManager(client, db)
     actions = ActionExecutor()  # shared by bot UI, rules, API (phase 4.1)
+    rules = RuleEvaluator(db=db, bus=bus, actions=actions, client=client)
+    rules.attach()
 
-    # --- Kernel (Phase 3) -------------------------------------------
-    container = Container()
-    bus = EventBus()
     flags = get_flags()
     state_store: StateStore = MemoryStateStore()
     state_machine = StateMachine(state_store)
