@@ -13,3 +13,6 @@ structlog>=24.1.0
 # extra install flags; the app itself only starts when API_ENABLED=true.
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
+# Async HTTP client — used for Bot-API side calls like setChatMenuButton
+# that don't go through pyrofork's MTProto stack.
+httpx>=0.27.0
