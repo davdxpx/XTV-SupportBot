@@ -354,5 +354,6 @@ are considered operational and may evolve only additively.
 
 - [Quickstart](api-quickstart.md) — first request in under 5 minutes
 - [Authentication](api-auth.md) — key lifecycle, scopes, rotation
+- [Write endpoints](api-write.md) — POST routes in Phase 4.7
+- [Outgoing webhooks](webhooks.md) — event catalogue + HMAC verification
 - [Railway deployment](../ops/railway.md) — public URL walkthrough
-- [Outgoing webhooks](../features/integrations.md) — HMAC-signed events
