@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 
 interface ProjectsResponse {
@@ -35,6 +35,7 @@ export function NewTicket() {
         }),
       }),
     onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['my-tickets-home'] });
       qc.invalidateQueries({ queryKey: ['my-tickets'] });
       navigate(`/tickets/${res.id}`);
     },
@@ -54,22 +55,14 @@ export function NewTicket() {
   const canSubmit = message.trim().length > 0 && !submit.isPending;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <h2 style={{ margin: 0 }}>📮 New ticket</h2>
+    <div className="stack stack-lg">
+      <h2 className="heading">📮 New ticket</h2>
 
-      {projects.isLoading && <p>Loading projects…</p>}
+      {projects.isLoading && <p className="muted">Loading projects…</p>}
       {projects.data && projects.data.items.length > 0 && (
         <section>
-          <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 6 }}>
-            Pick the area your question is about:
-          </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 8,
-            }}
-          >
+          <p className="section-title">Pick an area</p>
+          <div className="tiles">
             {projects.data.items.map((p) => {
               const active = p.id === projectId;
               return (
@@ -77,28 +70,11 @@ export function NewTicket() {
                   key={p.id}
                   type="button"
                   onClick={() => setProjectId(active ? null : p.id)}
-                  style={{
-                    padding: '12px 10px',
-                    border: active
-                      ? '2px solid #2563eb'
-                      : '1px solid #e5e7eb',
-                    background: active ? '#eff6ff' : 'transparent',
-                    borderRadius: 10,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                  }}
+                  className={`tile${active ? ' tile-active' : ''}`}
                 >
-                  <div style={{ fontWeight: 600 }}>📂 {p.name}</div>
+                  <div className="tile-title">📂 {p.name}</div>
                   {p.description && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        opacity: 0.7,
-                        marginTop: 2,
-                      }}
-                    >
-                      {p.description.slice(0, 80)}
-                    </div>
+                    <div className="tile-desc">{p.description.slice(0, 80)}</div>
                   )}
                 </button>
               );
@@ -108,41 +84,22 @@ export function NewTicket() {
       )}
 
       <section>
-        <label
-          style={{ display: 'block', fontSize: 13, marginBottom: 6, opacity: 0.7 }}
-        >
-          Your message
-        </label>
+        <label className="label" htmlFor="new-msg">Your message</label>
         <textarea
+          id="new-msg"
+          className="textarea"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
-          placeholder="Describe your issue — we'll usually reply within 30 minutes during business hours."
-          style={{
-            width: '100%',
-            padding: 10,
-            border: '1px solid #e5e7eb',
-            borderRadius: 10,
-            fontFamily: 'inherit',
-            fontSize: 15,
-            resize: 'vertical',
-          }}
+          placeholder="Describe your issue — photo, voice note, or document works too."
         />
-        <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4 }}>
+        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
           {message.length} / 4000
         </div>
       </section>
 
       {error && (
-        <div
-          style={{
-            padding: 10,
-            background: '#fee2e2',
-            color: '#991b1b',
-            borderRadius: 8,
-            fontSize: 13,
-          }}
-        >
+        <div className="pill pill-danger" style={{ padding: 10 }}>
           {error}
         </div>
       )}
@@ -151,16 +108,7 @@ export function NewTicket() {
         type="button"
         onClick={() => submit.mutate()}
         disabled={!canSubmit}
-        style={{
-          padding: '14px 18px',
-          background: canSubmit ? '#2563eb' : '#cbd5e1',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: 12,
-          fontSize: 16,
-          fontWeight: 600,
-          cursor: canSubmit ? 'pointer' : 'not-allowed',
-        }}
+        className="btn btn-primary"
       >
         {submit.isPending ? 'Sending…' : 'Send ticket'}
       </button>

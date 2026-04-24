@@ -4,17 +4,11 @@ import { setApiKey } from '@/lib/api';
 import { isInsideTelegram } from '@/lib/telegram';
 
 /**
- * Login screen.
+ * Login screen — admin-only.
  *
- * Two modes, picked automatically:
- *
- *  1. Inside Telegram Mini-App — we already have ``initData``; skip
- *     the form entirely and bounce to ``/`` so the SPA shows the
- *     user home / admin dashboard (RequireAuth + ``/api/v1/me``
- *     handle the rest).
- *
- *  2. Regular browser — ask the admin for their API key, persist
- *     it in localStorage, then bounce to ``/``.
+ * Auto-bounces to ``/`` when opened inside Telegram, since ``initData``
+ * already covers auth. Only desktop browser admins without a stored
+ * API key should ever see this form.
  */
 export function Login() {
   const [value, setValue] = useState('');
@@ -24,62 +18,51 @@ export function Login() {
     if (isInsideTelegram()) navigate('/', { replace: true });
   }, [navigate]);
 
+  if (isInsideTelegram()) {
+    return (
+      <div className="login-shell">
+        <div className="login-card">
+          <div className="login-brand">Signing you in…</div>
+        </div>
+      </div>
+    );
+  }
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!value.trim()) return;
-    setApiKey(value.trim());
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setApiKey(trimmed);
     navigate('/', { replace: true });
   };
 
-  if (isInsideTelegram()) {
-    return <p style={{ padding: 24 }}>Signing you in…</p>;
-  }
-
   return (
-    <div
-      style={{
-        maxWidth: 420,
-        margin: '10vh auto',
-        padding: 20,
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <h1 style={{ marginTop: 0 }}>XTV-SupportBot</h1>
-      <p>Paste your API key to continue.</p>
-      <form onSubmit={onSubmit}>
+    <div className="login-shell">
+      <form className="login-card stack" onSubmit={onSubmit}>
+        <div className="login-brand">XTV-SupportBot</div>
+        <div className="login-sub">Admin console</div>
+
+        <label className="label" htmlFor="api-key-input">
+          API key
+        </label>
         <input
+          id="api-key-input"
           type="password"
+          className="input"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="xtv_…"
-          style={{
-            width: '100%',
-            padding: 10,
-            fontSize: 15,
-            borderRadius: 8,
-            border: '1px solid #cbd5e1',
-          }}
           autoFocus
+          autoComplete="off"
         />
-        <button
-          type="submit"
-          disabled={!value.trim()}
-          style={{
-            marginTop: 12,
-            padding: '10px 18px',
-            borderRadius: 8,
-            border: 'none',
-            background: value.trim() ? '#2563eb' : '#cbd5e1',
-            color: '#fff',
-            cursor: value.trim() ? 'pointer' : 'not-allowed',
-          }}
-        >
+        <button type="submit" disabled={!value.trim()} className="btn btn-primary">
           Sign in
         </button>
+
+        <p className="muted" style={{ fontSize: 13, textAlign: 'center', margin: 0 }}>
+          Generate a key in the bot with <code>/apikey create admin:full</code>.
+        </p>
       </form>
-      <p style={{ marginTop: 16, color: '#6b7280', fontSize: 13 }}>
-        Generate a key in the bot with <code>/apikey create admin:full</code>.
-      </p>
     </div>
   );
 }
