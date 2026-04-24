@@ -76,7 +76,8 @@ def build_router() -> APIRouter:
     from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
     from xtv_support.api.auth_webapp import TelegramUser, current_tg_user
-    from xtv_support.api.deps import get_db
+    from xtv_support.api.deps import current_tg_user_or_apikey, get_db
+    from xtv_support.api.security import ApiKey
     from xtv_support.config.settings import settings
     from xtv_support.infrastructure.db import projects as projects_repo
     from xtv_support.infrastructure.db import tickets as tickets_repo
@@ -89,7 +90,24 @@ def build_router() -> APIRouter:
     # Profile
     # ------------------------------------------------------------------
     @router.get("")
-    async def get_me(user: Annotated[TelegramUser, Depends(current_tg_user)]) -> dict:
+    async def get_me(
+        principal=Depends(current_tg_user_or_apikey),
+    ) -> dict:
+        # Admin-SPA path: API key → synthetic admin profile so the SPA
+        # can render the AdminLayout without needing an initData pair.
+        if isinstance(principal, ApiKey):
+            return {
+                "id": principal.created_by or 0,
+                "first_name": principal.label or "Admin",
+                "last_name": None,
+                "username": None,
+                "language_code": None,
+                "is_admin": True,
+                "ui_mode": settings.ui_mode.value,
+                "brand_name": settings.BRAND_NAME,
+                "brand_tagline": settings.BRAND_TAGLINE,
+            }
+        user = principal  # TelegramUser
         admin = user.id in set(settings.ADMIN_IDS)
         return {
             "id": user.id,
