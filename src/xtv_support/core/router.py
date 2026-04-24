@@ -31,6 +31,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.start",
     "xtv_support.handlers.user.lang",
     "xtv_support.handlers.user.kb_gate",
+    "xtv_support.handlers.user.home",
     "xtv_support.handlers.admin.dashboard",
     "xtv_support.handlers.admin.projects",
     "xtv_support.handlers.admin.contact_links",

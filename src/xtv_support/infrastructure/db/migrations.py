@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -151,6 +151,13 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
         "flood_score": 0,
         "lang": settings.DEFAULT_LANG,
         "notified_on_assign": False,
+        # Phase 4.3 — onboarding-panel related fields, idempotent.
+        "notification_prefs": {
+            "notify_reply": True,
+            "notify_csat": True,
+            "notify_announcements": True,
+        },
+        "onboarding_shown_at": None,
     }
     for field, default in user_defaults.items():
         await db.users.update_many({field: {"$exists": False}}, {"$set": {field: default}})
