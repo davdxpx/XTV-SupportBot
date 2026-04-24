@@ -294,13 +294,16 @@ async def settings_callback(client: Client, cq: CallbackQuery) -> None:
         return
 
     if action == "gdpr_export":
-        await cq.answer("Export requested — we'll DM you the archive shortly.", show_alert=True)
+        from xtv_support.handlers.user.gdpr import gdpr_export_cmd
+
+        await gdpr_export_cmd(client, cq.message)
+        await cq.answer("Export sent.", show_alert=False)
         return
     if action == "gdpr_delete":
-        await cq.answer(
-            "To confirm deletion, run /gdpr_delete. This is irreversible.",
-            show_alert=True,
-        )
+        from xtv_support.handlers.user.gdpr import gdpr_delete_cmd
+
+        await gdpr_delete_cmd(client, cq.message)
+        await cq.answer()
         return
 
     await cq.answer()
