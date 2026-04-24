@@ -52,16 +52,28 @@ export function NewTicket() {
     },
   });
 
-  const canSubmit = message.trim().length > 0 && !submit.isPending;
+  const canSubmit = !!projectId && message.trim().length > 0 && !submit.isPending;
 
   return (
     <div className="stack stack-lg">
       <h2 className="heading">📮 New ticket</h2>
 
-      {projects.isLoading && <p className="muted">Loading projects…</p>}
+      {projects.isLoading && (
+        <div className="tiles">
+          <div className="skeleton skeleton-block" />
+          <div className="skeleton skeleton-block" />
+        </div>
+      )}
+      {projects.data && projects.data.items.length === 0 && (
+        <div className="card muted" style={{ textAlign: 'center' }}>
+          No intake areas available yet. Ask an admin to create one.
+        </div>
+      )}
       {projects.data && projects.data.items.length > 0 && (
         <section>
-          <p className="section-title">Pick an area</p>
+          <p className="section-title">
+            Pick an area <span style={{ color: 'var(--tg-danger)' }}>*</span>
+          </p>
           <div className="tiles">
             {projects.data.items.map((p) => {
               const active = p.id === projectId;
@@ -111,7 +123,11 @@ export function NewTicket() {
         className="btn btn-primary"
       >
         {submit.isPending && <span className="spinner" />}
-        {submit.isPending ? 'Sending…' : 'Send ticket'}
+        {submit.isPending
+          ? 'Sending…'
+          : !projectId
+            ? 'Pick an area first'
+            : 'Send ticket'}
       </button>
     </div>
   );
