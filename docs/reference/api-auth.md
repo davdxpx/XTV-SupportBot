@@ -56,6 +56,7 @@ need; the dependency resolver raises 401 / 403 with a structured
 | `users:read` | `GET /api/v1/users…` (reserved — lands in a later release) |
 | `analytics:read` | `GET /api/v1/analytics/summary` |
 | `rules:read` | `GET /api/v1/rules` / `/api/v1/rules/{id}` |
+| `rules:write` | `POST /api/v1/rules`, `PATCH /api/v1/rules/{id}/enabled`, `DELETE /api/v1/rules/{id}` |
 | `webhooks:write` | `GET / POST / DELETE /api/v1/webhooks` |
 | `admin:full` | Every scope above — reserve for human admins or trusted services |
 

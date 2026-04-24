@@ -130,7 +130,7 @@ refresh.
 - `/admin/inbox` — Saved-view chips + ticket table
 - `/admin/tickets/:id` — Thread + tag editor + reply / close / reopen
 - `/admin/projects` — List + create-from-template dialog
-- `/admin/rules` — Read-only rule list
+- `/admin/rules` — Full rule builder (create / edit / toggle / delete)
 
 ## Enabling the Mini-App
 

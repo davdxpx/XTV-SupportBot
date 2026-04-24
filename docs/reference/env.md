@@ -74,6 +74,10 @@ This page groups variables by purpose.
 | `API_CORS_ORIGINS` | `""` | Comma-separated allow-list; `*` allows everything |
 | `API_RATE_LIMIT_PER_MINUTE` | `120` | Per-key token bucket; needs Redis for multi-replica |
 
+Scopes recognised by `/apikey create`: `tickets:read`, `tickets:write`,
+`projects:read`, `projects:write`, `users:read`, `analytics:read`,
+`webhooks:write`, `rules:read`, `rules:write`, `admin:full`.
+
 See also [API quickstart](api-quickstart.md),
 [API authentication](api-auth.md), and the dedicated
 [Railway guide](../ops/railway.md).

@@ -171,6 +171,46 @@ Pass an empty `events` array to receive **every** event.
 **Scope:** `webhooks:write`. Marks the subscription `revoked_at=now`;
 future deliveries are skipped.
 
+## Automation rules
+
+Full CRUD via the web admin (`/admin/rules` in the SPA) and the API.
+
+### `POST /api/v1/rules`
+
+**Scope:** `rules:write`. Create a new rule.
+
+```json
+{
+  "name": "Escalate billing tickets",
+  "trigger": "TicketCreated",
+  "conditions": [
+    {"field": "tags", "op": "contains", "value": "billing"},
+    {"field": "priority", "op": "eq", "value": "high"}
+  ],
+  "actions": [
+    {"name": "assign", "params": {"team": "billing"}},
+    {"name": "emoji_react", "params": {"emoji": "🔥"}}
+  ],
+  "cooldown_s": 0,
+  "enabled": true
+}
+```
+
+Returns the rule with its `id` and `version=1`.
+
+### `PATCH /api/v1/rules/{id}/enabled`
+
+**Scope:** `rules:write`. Toggle enabled-state without a full update.
+
+```json
+{"enabled": false}
+```
+
+### `DELETE /api/v1/rules/{id}`
+
+**Scope:** `rules:write`. Hard-delete. Running evaluations finish, new
+events stop firing the rule immediately.
+
 ## One execution path
 
 All the ticket routes above go through
