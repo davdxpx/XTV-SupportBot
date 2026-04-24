@@ -49,7 +49,7 @@ async def _amain() -> None:
 
     client = build_client()
     log.info("boot.client_starting")
-    await client.start()
+    await _start_client_with_floodwait(client, log)
 
     try:
         me = await client.get_me()
@@ -272,6 +272,40 @@ async def _maybe_set_menu_button(client, log) -> None:
             )
     except Exception as exc:  # noqa: BLE001 — informational; never fatal
         log.warning("boot.webapp_menu_failed", error=str(exc))
+
+
+async def _start_client_with_floodwait(client, log, max_attempts: int = 3) -> None:
+    """Start pyrofork, waiting out FLOOD_WAIT_X instead of crashing.
+
+    When Telegram throws ``FloodWait`` the caller is asked to pause for
+    N seconds before retrying. Crashing and letting the platform
+    restart us just extends the ban. Instead we idle in-process so the
+    container stays "running" from Railway's point of view.
+    """
+    from pyrogram.errors import FloodWait
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            await client.start()
+            return
+        except FloodWait as exc:
+            wait = int(getattr(exc, "value", 0) or 0)
+            if attempt >= max_attempts:
+                log.error(
+                    "boot.floodwait_giving_up",
+                    wait_seconds=wait,
+                    attempt=attempt,
+                )
+                raise
+            pad = 5
+            log.warning(
+                "boot.floodwait",
+                wait_seconds=wait,
+                retry_in_s=wait + pad,
+                attempt=attempt,
+                max_attempts=max_attempts,
+            )
+            await asyncio.sleep(wait + pad)
 
 
 def entrypoint() -> None:

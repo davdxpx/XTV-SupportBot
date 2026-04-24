@@ -15,6 +15,12 @@ This page groups variables by purpose.
 | `ADMIN_IDS` | Comma-separated Telegram user ids |
 | `ADMIN_CHANNEL_ID` | Forum supergroup id (`-100…`) |
 
+## Telegram session
+
+| Variable | Default | Notes |
+|---|---|---|
+| `SESSION_DIR` | `"."` | Directory pyrofork writes `*.session` to. On ephemeral hosts (Railway, Render, Fly, Heroku) point this at a persistent volume (e.g. `/data`) or every deploy re-runs `auth.ImportBotAuthorization` and Telegram rate-limits the bot with `FLOOD_WAIT_X`. |
+
 ## Logging
 
 `LOG_LEVEL`, `LOG_JSON`, `DEBUG_MODE`, `ERROR_LOG_TOPIC_ID`.
