@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     API_ID: int
     API_HASH: SecretStr
     BOT_TOKEN: SecretStr
+    # Directory pyrofork writes the ``*.session`` file to. Default is
+    # the current working directory, which on Railway/Render/Fly/Heroku
+    # is ephemeral — every deploy wipes the session and forces a fresh
+    # ``auth.ImportBotAuthorization`` call, which triggers Telegram's
+    # aggressive ``FLOOD_WAIT_X`` rate limit on rapid redeploys. Mount
+    # a persistent volume and point this at it (e.g. ``/data``) to keep
+    # the session across deploys and avoid the re-auth entirely.
+    SESSION_DIR: str = "."
 
     # --- Mongo ---
     MONGO_URI: SecretStr
