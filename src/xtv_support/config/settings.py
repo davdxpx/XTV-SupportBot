@@ -97,6 +97,16 @@ class Settings(BaseSettings):
     API_CORS_ORIGINS: str = ""
     API_RATE_LIMIT_PER_MINUTE: int = 120
 
+    # --- Admin SPA ---
+    # When ``WEB_ENABLED=true`` and ``web/dist/`` exists, the FastAPI app
+    # mounts the React admin SPA at ``/`` with an ``index.html`` fallback
+    # so React-Router paths survive a refresh. Set to ``false`` to serve
+    # only the API (e.g. if you expose the SPA via a separate service).
+    WEB_ENABLED: bool = True
+    # Relative path (from repo root) to the built SPA. Only used when the
+    # default ``web/dist`` layout doesn't apply — e.g. a custom build in CI.
+    WEB_DIST_DIR: str = "web/dist"
+
     @field_validator("LOG_LEVEL")
     @classmethod
     def _upper_log_level(cls, value: str) -> str:

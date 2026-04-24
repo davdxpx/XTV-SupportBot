@@ -1,11 +1,16 @@
 [phases.setup]
-nixPkgs = ["python312", "gcc"]
+nixPkgs = ["python312", "gcc", "nodejs_20"]
 
 [phases.install]
 cmds = [
   "python -m venv /opt/venv",
   ". /opt/venv/bin/activate && pip install --upgrade pip",
   ". /opt/venv/bin/activate && pip install -r requirements.txt",
+]
+
+[phases.build]
+cmds = [
+  "cd web && npm ci && npm run build",
 ]
 
 [start]
