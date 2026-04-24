@@ -3,16 +3,19 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
-import { Layout } from '@/components/Layout';
+import { AdminLayout } from '@/components/AdminLayout';
 import { UserLayout } from '@/components/UserLayout';
 import { Login } from '@/pages/Login';
-import { Dashboard } from '@/pages/Dashboard';
-import { Tickets } from '@/pages/Tickets';
 import { UserHome } from '@/pages/user/Home';
 import { NewTicket } from '@/pages/user/NewTicket';
 import { MyTickets } from '@/pages/user/MyTickets';
 import { TicketDetail } from '@/pages/user/TicketDetail';
 import { UserSettings } from '@/pages/user/Settings';
+import { Overview } from '@/pages/admin/Overview';
+import { Inbox } from '@/pages/admin/Inbox';
+import { AdminTicketDetail } from '@/pages/admin/AdminTicketDetail';
+import { Projects } from '@/pages/admin/Projects';
+import { Rules } from '@/pages/admin/Rules';
 import { getMe, hasCredentials } from '@/lib/api';
 import { bootTelegram, isInsideTelegram } from '@/lib/telegram';
 
@@ -34,20 +37,16 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Root switcher — the /api/v1/me probe tells us whether to render
- * the admin console (API-key login or Telegram admin) or the
- * end-user Mini-App (any Telegram user). The old admin Layout
- * stays reachable at /admin/* so an admin inside Telegram can
- * jump to the full dashboard.
+ * Root switcher — asks /api/v1/me once, then picks the right shell:
+ *  - Desktop browser + admin key → AdminLayout (full dashboard)
+ *  - Every Telegram user (admin or not) → UserLayout (Mini-App UX)
+ *  - Telegram admins who want the power UI go to /admin/* explicitly
  */
 function Root() {
   const { data: me, isLoading } = useQuery({ queryKey: ['me'], queryFn: getMe });
   if (isLoading) return <div style={{ padding: 40 }}>Loading…</div>;
-
-  // Admins on desktop browser get the power-user layout; Telegram
-  // users (admin or not) default to the touch-friendly Mini-App UX.
   if (me?.is_admin && !isInsideTelegram()) {
-    return <Layout />;
+    return <AdminLayout />;
   }
   return <UserLayout />;
 }
@@ -63,12 +62,15 @@ createRoot(document.getElementById('root')!).render(
             path="/admin"
             element={
               <RequireAuth>
-                <Layout />
+                <AdminLayout />
               </RequireAuth>
             }
           >
-            <Route index element={<Dashboard />} />
-            <Route path="tickets" element={<Tickets />} />
+            <Route index element={<Overview />} />
+            <Route path="inbox" element={<Inbox />} />
+            <Route path="tickets/:ticketId" element={<AdminTicketDetail />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="rules" element={<Rules />} />
           </Route>
 
           <Route
