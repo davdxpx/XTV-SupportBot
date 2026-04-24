@@ -56,7 +56,18 @@ export function MyTickets() {
         ))}
       </div>
 
-      {isLoading && <p className="muted">Loading…</p>}
+      {isLoading && (
+        <ul className="ticket-list">
+          {[0, 1, 2, 3].map((i) => (
+            <li key={i}>
+              <div className="ticket-item">
+                <span className="skeleton skeleton-line" style={{ width: '40%' }} />
+                <span className="skeleton skeleton-line" style={{ width: '70%' }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {data && data.items.length === 0 && (
         <div className="muted" style={{ padding: 24, textAlign: 'center' }}>

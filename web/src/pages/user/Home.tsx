@@ -15,7 +15,7 @@ interface MyTicketsResponse {
 
 export function UserHome() {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const { data: tickets } = useQuery({
+  const { data: tickets, isLoading: ticketsLoading } = useQuery({
     queryKey: ['my-tickets-home'],
     queryFn: () => api<MyTicketsResponse>('/api/v1/me/tickets?limit=100'),
   });
@@ -41,9 +41,19 @@ export function UserHome() {
       </section>
 
       <section className="stats-grid">
-        <Stat label="Open" value={open} />
-        <Stat label="Waiting for you" value={waiting} highlight={waiting > 0} />
-        <Stat label="Closed this month" value={closedThisMonth} />
+        {ticketsLoading ? (
+          <>
+            <div className="skeleton skeleton-block" />
+            <div className="skeleton skeleton-block" />
+            <div className="skeleton skeleton-block" />
+          </>
+        ) : (
+          <>
+            <Stat label="Open" value={open} />
+            <Stat label="Waiting for you" value={waiting} highlight={waiting > 0} />
+            <Stat label="Closed this month" value={closedThisMonth} />
+          </>
+        )}
       </section>
 
       <section className="stack" style={{ gap: 10 }}>

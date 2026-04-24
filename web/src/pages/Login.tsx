@@ -12,6 +12,7 @@ import { isInsideTelegram } from '@/lib/telegram';
  */
 export function Login() {
   const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,9 +21,10 @@ export function Login() {
 
   if (isInsideTelegram()) {
     return (
-      <div className="login-shell">
-        <div className="login-card">
-          <div className="login-brand">Signing you in…</div>
+      <div className="loading-screen">
+        <div className="loading-screen-inner">
+          <span className="spinner spinner-lg spinner-color" />
+          <div className="loading-screen-msg">Signing you in…</div>
         </div>
       </div>
     );
@@ -31,9 +33,12 @@ export function Login() {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();
-    if (!trimmed) return;
+    if (!trimmed || busy) return;
+    setBusy(true);
     setApiKey(trimmed);
-    navigate('/', { replace: true });
+    // Tiny delay so the spinner is perceptible — pure UX,
+    // localStorage write is sync.
+    setTimeout(() => navigate('/', { replace: true }), 80);
   };
 
   return (
@@ -55,8 +60,13 @@ export function Login() {
           autoFocus
           autoComplete="off"
         />
-        <button type="submit" disabled={!value.trim()} className="btn btn-primary">
-          Sign in
+        <button
+          type="submit"
+          disabled={!value.trim() || busy}
+          className="btn btn-primary"
+        >
+          {busy && <span className="spinner" />}
+          {busy ? 'Signing in…' : 'Sign in'}
         </button>
 
         <p className="muted" style={{ fontSize: 13, textAlign: 'center', margin: 0 }}>
