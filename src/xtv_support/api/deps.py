@@ -65,3 +65,19 @@ def require_scope(scope: str):
         return key
 
     return _dep
+
+
+async def current_tg_user_or_apikey(request: Request):
+    """Unified auth — WebApp ``initData`` takes precedence over API keys.
+
+    Routes that are meant for both the bundled SPA (admins with API
+    keys) and the Mini-App (end users with ``initData``) depend on
+    this. The returned object is either a
+    :class:`~xtv_support.api.auth_webapp.TelegramUser` or an
+    :class:`~xtv_support.api.security.ApiKey`.
+    """
+    from xtv_support.api.auth_webapp import INIT_DATA_HEADER, current_tg_user
+
+    if request.headers.get(INIT_DATA_HEADER):
+        return await current_tg_user(request)
+    return await current_api_key(request)

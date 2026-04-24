@@ -90,6 +90,8 @@ async def _amain() -> None:
             hint="Make sure the bot is a member of the supergroup with Manage Topics.",
         )
 
+    await _maybe_set_menu_button(client, log)
+
     api_server: _UvicornRunner | None = None
     try:
         ctx = await build_context(client)
@@ -215,6 +217,40 @@ async def _start_api(db) -> _UvicornRunner:
     runner = _UvicornRunner(server)
     await runner.start()
     return runner
+
+
+async def _maybe_set_menu_button(client, log) -> None:
+    """Wire the global Mini-App "Open App" button into every chat.
+
+    No-op unless ``WEBAPP_SET_MENU_BUTTON=true`` and ``WEBAPP_URL`` is
+    a non-empty ``https://`` URL. Failure is logged but never fatal —
+    the bot still boots in chat-only mode if Telegram rejects the
+    call (e.g. because the WebApp domain isn't configured on BotFather).
+    """
+    if not settings.WEBAPP_SET_MENU_BUTTON:
+        return
+    url = (settings.WEBAPP_URL or "").strip()
+    if not url.startswith("https://"):
+        log.warning(
+            "boot.webapp_menu_skipped",
+            reason="WEBAPP_URL missing or not https",
+            url=url or "<empty>",
+        )
+        return
+    try:
+        from pyrogram.raw.functions.bots import SetBotMenuButton
+        from pyrogram.raw.types import BotMenuButtonWebApp, InputUserEmpty
+
+        button = BotMenuButtonWebApp(
+            text=settings.WEBAPP_MENU_BUTTON_TEXT or "Open App",
+            url=url,
+        )
+        # ``InputUserEmpty`` targets every chat the bot is in — per-user
+        # overrides would use ``InputUser(user_id=…)``.
+        await client.invoke(SetBotMenuButton(user_id=InputUserEmpty(), button=button))
+        log.info("boot.webapp_menu_set", url=url, text=button.text)
+    except Exception as exc:  # noqa: BLE001 — informational; never fatal
+        log.warning("boot.webapp_menu_failed", error=str(exc))
 
 
 def entrypoint() -> None:
