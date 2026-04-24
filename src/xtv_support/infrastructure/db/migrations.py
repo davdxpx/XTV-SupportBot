@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -128,6 +128,11 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
         "sla_warned": False,
         "topic_fallback": False,
         "header_msg_id": None,
+        # Phase 4.1 — internal notes + schema version marker on the ticket
+        # for future forward-migrations. Both are idempotent: $exists is
+        # False only the first time a given document is touched.
+        "internal_notes": [],
+        "history_version": 1,
     }
     for field, default in defaults.items():
         await db.tickets.update_many({field: {"$exists": False}}, {"$set": {field: default}})

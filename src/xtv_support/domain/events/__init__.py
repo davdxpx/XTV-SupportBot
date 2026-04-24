@@ -7,6 +7,12 @@ or :meth:`~xtv_support.core.events.EventBus.subscribe`.
 
 from __future__ import annotations
 
+from xtv_support.domain.events.actions import (
+    ActionExecuted,
+    ActionFailed,
+    BulkActionCompleted,
+    BulkActionStarted,
+)
 from xtv_support.domain.events.base import DomainEvent
 from xtv_support.domain.events.broadcasts import (
     BroadcastCancelled,
@@ -48,6 +54,11 @@ from xtv_support.domain.events.users import (
 
 __all__ = [
     "DomainEvent",
+    # Actions (Phase 4.1 foundations)
+    "ActionExecuted",
+    "ActionFailed",
+    "BulkActionStarted",
+    "BulkActionCompleted",
     # Tickets
     "TicketCreated",
     "TicketAssigned",

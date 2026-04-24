@@ -19,6 +19,7 @@ from xtv_support.infrastructure.db.client import close as close_db
 from xtv_support.infrastructure.db.client import get_db
 from xtv_support.plugins.loader import PluginLoader
 from xtv_support.plugins.registry import PluginRegistry
+from xtv_support.services.actions.executor import ActionExecutor
 from xtv_support.services.broadcasts.service import BroadcastManager
 from xtv_support.services.cooldown.service import CooldownService
 from xtv_support.services.sla.service import SlaService
@@ -56,6 +57,7 @@ async def build_context(client: Client) -> HandlerContext:
     cooldown = CooldownService()
     sla = SlaService(client, db)
     broadcasts = BroadcastManager(client, db)
+    actions = ActionExecutor()  # shared by bot UI, rules, API (phase 4.1)
 
     # --- Kernel (Phase 3) -------------------------------------------
     container = Container()
@@ -96,6 +98,7 @@ async def build_context(client: Client) -> HandlerContext:
     container.register_instance(CooldownService, cooldown)
     container.register_instance(SlaService, sla)
     container.register_instance(BroadcastManager, broadcasts)
+    container.register_instance(ActionExecutor, actions)
     try:
         from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -129,6 +132,7 @@ async def build_context(client: Client) -> HandlerContext:
         plugin_loader=loader,
         plugin_registry=registry,
         i18n=i18n,
+        actions=actions,
     )
     log.info(
         "bootstrap.ready",

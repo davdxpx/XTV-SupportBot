@@ -15,6 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle avoidance
     from xtv_support.core.state import StateMachine
     from xtv_support.plugins.loader import PluginLoader
     from xtv_support.plugins.registry import PluginRegistry
+    from xtv_support.services.actions.executor import ActionExecutor
     from xtv_support.services.broadcasts.service import BroadcastManager
     from xtv_support.services.cooldown.service import CooldownService
     from xtv_support.services.sla.service import SlaService
@@ -54,6 +55,9 @@ class HandlerContext:
 
     # --- Phase 4: i18n ----------------------------------------------
     i18n: I18n | None = None
+
+    # --- Phase 4.1 foundations --------------------------------------
+    actions: ActionExecutor | None = None
 
 
 def bind_context(client: Client, ctx: HandlerContext) -> None:
