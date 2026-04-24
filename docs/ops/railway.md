@@ -1,6 +1,6 @@
 # Railway deployment guide
 
-End-to-end: from a fresh Railway account to `xtvsupport.up.railway.app`
+End-to-end: from a fresh Railway account to `your-bot.up.railway.app`
 serving the API and the bot.
 
 ## 0. Pre-flight
@@ -91,7 +91,7 @@ Railway assigns a domain like `<service>.up.railway.app`. Find it in
 the **Networking → Public URL** section.
 
 ```bash
-export BASE=https://xtvsupport.up.railway.app   # your actual URL
+export BASE=https://your-bot.up.railway.app   # your actual URL
 curl -sS $BASE/health | jq .
 curl -sS $BASE/ready  | jq .
 curl -sS $BASE/api/v1/version | jq .

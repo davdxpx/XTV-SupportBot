@@ -4,7 +4,7 @@ Phase 4.7 opens up the bot to programmatic mutation. Every write route
 is dispatched through the same `ActionExecutor` as bot-UI and rule-engine
 writes, so one audit trail / event surface covers all origins.
 
-`$BASE` is your public URL — `https://xtvsupport.up.railway.app` on
+`$BASE` is your public URL — `https://your-bot.up.railway.app` on
 Railway.
 
 ## Tickets

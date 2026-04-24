@@ -14,7 +14,7 @@ in under five minutes.
 Throughout this page we use the public Railway URL as `$BASE`:
 
 ```bash
-export BASE=https://xtvsupport.up.railway.app
+export BASE=https://your-bot.up.railway.app
 ```
 
 ## 1. Verify the API is live
@@ -123,7 +123,7 @@ deliveries (see [webhooks](webhooks.md)).
 ## 6. JavaScript fetch example
 
 ```javascript
-const BASE = "https://xtvsupport.up.railway.app";
+const BASE = "https://your-bot.up.railway.app";
 const KEY = localStorage.getItem("xtv_key");
 
 async function recentTickets() {
