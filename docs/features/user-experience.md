@@ -1,6 +1,6 @@
 # User experience
 
-The v1.0 overhaul adds a proper home screen for end users, a pure
+The v0.9 pre-release adds a proper home screen for end users, a pure
 browse-only help center, and per-user notification preferences.
 
 !!! info "Feature flag"

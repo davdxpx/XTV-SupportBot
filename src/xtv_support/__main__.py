@@ -90,7 +90,7 @@ async def _amain() -> None:
             hint="Make sure the bot is a member of the supergroup with Manage Topics.",
         )
 
-    api_server: "_UvicornRunner | None" = None
+    api_server: _UvicornRunner | None = None
     try:
         ctx = await build_context(client)
         register_all(client, ctx)
@@ -150,7 +150,7 @@ class _UvicornRunner:
     so both share one process, one loop, and one Mongo client.
     """
 
-    def __init__(self, server: "uvicorn.Server") -> None:  # type: ignore[name-defined] # noqa: F821
+    def __init__(self, server: uvicorn.Server) -> None:  # type: ignore[name-defined] # noqa: F821
         self._server = server
         self._task: asyncio.Task | None = None
 

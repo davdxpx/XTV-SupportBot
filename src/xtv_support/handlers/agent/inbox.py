@@ -78,9 +78,8 @@ async def _load_rows(ctx, view: str, actor_id: int, *, page: int) -> tuple[list[
                 priority=str(doc.get("priority") or "normal"),
                 tags=tuple(doc.get("tags") or ()),
                 unassigned=doc.get("assignee_id") is None,
-                sla_at_risk=bool(doc.get("sla_warned")) or (
-                    bool(doc.get("sla_deadline")) and doc.get("sla_deadline") <= soon
-                ),
+                sla_at_risk=bool(doc.get("sla_warned"))
+                or (bool(doc.get("sla_deadline")) and doc.get("sla_deadline") <= soon),
                 selected=tid in selection,
             )
         )
@@ -230,9 +229,7 @@ async def inbox_callback(client: Client, cq: CallbackQuery) -> None:
     await cq.answer()
 
 
-async def _run_bulk(
-    client: Client, cq: CallbackQuery, ctx, actor_id: int, action: str
-) -> None:
+async def _run_bulk(client: Client, cq: CallbackQuery, ctx, actor_id: int, action: str) -> None:
     sel = await _load_selection(ctx, actor_id)
     if not sel:
         await cq.answer("Select tickets first.", show_alert=False)

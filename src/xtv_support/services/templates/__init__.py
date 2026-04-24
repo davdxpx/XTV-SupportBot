@@ -12,6 +12,8 @@ Plugins can register their own via
 ``default_registry.register(ProjectTemplate(...))``.
 """
 
+# Register built-ins on import so callers don't have to remember to.
+from xtv_support.services.templates.builtins import register_all as _register_builtins
 from xtv_support.services.templates.model import (
     KbSeed,
     MacroSeed,
@@ -21,9 +23,6 @@ from xtv_support.services.templates.model import (
 )
 from xtv_support.services.templates.registry import TemplateRegistry, default_registry
 from xtv_support.services.templates.runner import InstallResult, install_template
-
-# Register built-ins on import so callers don't have to remember to.
-from xtv_support.services.templates.builtins import register_all as _register_builtins
 
 _register_builtins(default_registry)
 

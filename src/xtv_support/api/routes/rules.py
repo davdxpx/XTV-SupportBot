@@ -28,9 +28,7 @@ def build_router() -> APIRouter:
         trigger: str | None = Query(None),
         limit: int = Query(100, ge=1, le=500),
     ) -> dict:
-        rules = await list_rules(
-            db, enabled_only=enabled_only, trigger=trigger, limit=limit
-        )
+        rules = await list_rules(db, enabled_only=enabled_only, trigger=trigger, limit=limit)
         items = [
             {
                 "id": r.id,
@@ -39,8 +37,7 @@ def build_router() -> APIRouter:
                 "trigger": r.trigger,
                 "cooldown_s": r.cooldown_s,
                 "conditions": [
-                    {"field": c.field, "op": c.op, "value": c.value}
-                    for c in r.conditions
+                    {"field": c.field, "op": c.op, "value": c.value} for c in r.conditions
                 ],
                 "actions": [{"name": a.name, "params": a.params} for a in r.actions],
                 "version": r.version,
@@ -65,8 +62,7 @@ def build_router() -> APIRouter:
             "trigger": rule.trigger,
             "cooldown_s": rule.cooldown_s,
             "conditions": [
-                {"field": c.field, "op": c.op, "value": c.value}
-                for c in rule.conditions
+                {"field": c.field, "op": c.op, "value": c.value} for c in rule.conditions
             ],
             "actions": [{"name": a.name, "params": a.params} for a in rule.actions],
             "version": rule.version,

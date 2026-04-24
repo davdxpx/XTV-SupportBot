@@ -155,9 +155,7 @@ async def install_template(
             routing_seeded = len(serialised)
 
         if template.feature_flag_overrides:
-            warnings.append(
-                "feature_flag_overrides stored on project; live-toggle arrives in 4.4"
-            )
+            warnings.append("feature_flag_overrides stored on project; live-toggle arrives in 4.4")
             await db.projects.update_one(
                 {"_id": project_id},
                 {"$set": {"feature_flag_overrides": dict(template.feature_flag_overrides)}},

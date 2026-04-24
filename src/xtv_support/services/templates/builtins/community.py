@@ -12,8 +12,7 @@ COMMUNITY = ProjectTemplate(
     slug="community",
     name="Community & Discussion",
     description=(
-        "Low-noise support for a public Telegram community. KB gate on, SLA off, "
-        "auto-close 7 days."
+        "Low-noise support for a public Telegram community. KB gate on, SLA off, auto-close 7 days."
     ),
     icon="👥",
     project_type="support",

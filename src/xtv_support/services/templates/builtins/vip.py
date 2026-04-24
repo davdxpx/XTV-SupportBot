@@ -27,8 +27,7 @@ VIP = ProjectTemplate(
         MacroSeed(
             name="vip_greet",
             body=(
-                "Hello {user_name} — I'm personally looking after this for you. "
-                "What's the context?"
+                "Hello {user_name} — I'm personally looking after this for you. What's the context?"
             ),
             tags=("greeting", "vip"),
         ),

@@ -59,7 +59,9 @@ async def rules_list(client: Client, message: Message) -> None:
     ctx = get_context(client)
     rules = await list_rules(ctx.db, limit=50)
     if not rules:
-        await message.reply("<i>No automation rules yet.</i>\nCreate one with <code>/rule_new</code>.")
+        await message.reply(
+            "<i>No automation rules yet.</i>\nCreate one with <code>/rule_new</code>."
+        )
         return
     body = "\n\n".join(_fmt_rule(r) for r in rules)
     await message.reply(f"<b>Automation rules</b>\n\n{body}", disable_web_page_preview=True)
@@ -79,7 +81,7 @@ async def rule_new(client: Client, message: Message) -> None:
         return
     if not rest:
         await message.reply(
-            "Usage: <code>/rule_new \"name\" TicketCreated "
+            'Usage: <code>/rule_new "name" TicketCreated '
             '{"conditions":[{"field":"priority","op":"eq","value":"high"}],'
             '"actions":[{"name":"assign","params":{"assignee_id":123}}]}</code>'
         )
@@ -115,7 +117,9 @@ async def rule_toggle(client: Client, message: Message) -> None:
     ctx = get_context(client)
     parts = (message.text or "").split()
     if len(parts) < 2:
-        await message.reply("Usage: <code>/rule_enable &lt;id&gt;</code> or <code>/rule_disable &lt;id&gt;</code>")
+        await message.reply(
+            "Usage: <code>/rule_enable &lt;id&gt;</code> or <code>/rule_disable &lt;id&gt;</code>"
+        )
         return
     cmd = parts[0].lstrip("/").split("@")[0]
     rule_id = parts[1]

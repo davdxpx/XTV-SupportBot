@@ -13,7 +13,8 @@ from pyrogram.types import Message
 from xtv_support.core.constants import HandlerGroup
 from xtv_support.core.context import get_context
 from xtv_support.core.logger import get_logger
-from xtv_support.infrastructure.db import notes_repo, tickets as tickets_repo
+from xtv_support.infrastructure.db import notes_repo
+from xtv_support.infrastructure.db import tickets as tickets_repo
 from xtv_support.services.actions import ActionContext
 
 log = get_logger("topic.notes")
@@ -38,9 +39,7 @@ async def add_note_cmd(client: Client, message: Message) -> None:
 
     note_text = parts[1].strip()
     topic_id = getattr(message, "message_thread_id", None) or (
-        message.reply_to_message.message_thread_id
-        if message.reply_to_message
-        else None
+        message.reply_to_message.message_thread_id if message.reply_to_message else None
     )
     ticket = await _find_ticket_by_topic(ctx, topic_id)
     if ticket is None:
