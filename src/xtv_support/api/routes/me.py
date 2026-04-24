@@ -73,11 +73,17 @@ def _ticket_detail(doc: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_router() -> APIRouter:
-    from fastapi import APIRouter, Body, Depends, HTTPException, Query
+    from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
-    from xtv_support.api.auth_webapp import TelegramUser, current_tg_user
-    from xtv_support.api.deps import current_tg_user_or_apikey, get_db
-    from xtv_support.api.security import ApiKey
+    from xtv_support.api.auth_webapp import (
+        INIT_DATA_HEADER,
+        InvalidInitData,
+        TelegramUser,
+        current_tg_user,
+        verify_init_data,
+    )
+    from xtv_support.api.deps import get_db
+    from xtv_support.api.security import lookup_by_key
     from xtv_support.config.settings import settings
     from xtv_support.infrastructure.db import projects as projects_repo
     from xtv_support.infrastructure.db import tickets as tickets_repo
@@ -86,36 +92,43 @@ def build_router() -> APIRouter:
 
     router = APIRouter(prefix="/api/v1/me", tags=["me"])
 
-    # ------------------------------------------------------------------
-    # Profile
-    # ------------------------------------------------------------------
     @router.get("")
-    async def get_me(
-        principal=Depends(current_tg_user_or_apikey),
-    ) -> dict:
-        # Admin-SPA path: API key → synthetic admin profile so the SPA
-        # can render the AdminLayout without needing an initData pair.
-        if isinstance(principal, ApiKey):
+    async def get_me(request: Request) -> dict:
+        init = request.headers.get(INIT_DATA_HEADER)
+        if init:
+            try:
+                user = verify_init_data(init, bot_token=settings.BOT_TOKEN.get_secret_value())
+            except InvalidInitData as exc:
+                raise HTTPException(401, f"invalid_init_data:{exc}") from exc
             return {
-                "id": principal.created_by or 0,
-                "first_name": principal.label or "Admin",
-                "last_name": None,
-                "username": None,
-                "language_code": None,
-                "is_admin": True,
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "username": user.username,
+                "language_code": user.language_code,
+                "is_admin": user.id in set(settings.ADMIN_IDS),
                 "ui_mode": settings.ui_mode.value,
                 "brand_name": settings.BRAND_NAME,
                 "brand_tagline": settings.BRAND_TAGLINE,
             }
-        user = principal  # TelegramUser
-        admin = user.id in set(settings.ADMIN_IDS)
+
+        auth = request.headers.get("Authorization") or ""
+        if not auth.lower().startswith("bearer "):
+            raise HTTPException(401, "missing_credentials")
+        token = auth.split(None, 1)[1].strip()
+        db = getattr(request.app.state, "db", None)
+        if db is None:
+            raise HTTPException(503, "database_unavailable")
+        key = await lookup_by_key(db, token)
+        if key is None:
+            raise HTTPException(401, "invalid_key")
         return {
-            "id": user.id,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "username": user.username,
-            "language_code": user.language_code,
-            "is_admin": admin,
+            "id": key.created_by or 0,
+            "first_name": key.label or "Admin",
+            "last_name": None,
+            "username": None,
+            "language_code": None,
+            "is_admin": True,
             "ui_mode": settings.ui_mode.value,
             "brand_name": settings.BRAND_NAME,
             "brand_tagline": settings.BRAND_TAGLINE,
