@@ -1,9 +1,11 @@
-"""Tabbed admin control panel — ``/panel``.
+"""Drill-down admin control panel — ``/admin`` (alias: ``/panel``).
 
-New entry point that doesn't touch the legacy ``/admin`` dashboard
-(lives alongside in handlers/admin/dashboard.py). Admins can opt in to
-the new UI by running ``/panel``; later releases will re-point ``/admin``
-at it once UX is stable.
+The admin UX is now **drill-down**, not tabbed. ``/admin`` opens a
+landing card with a 2×4 grid of big category tiles. Tapping a tile
+replaces the card with that section's dedicated view (its own
+buttons, its own back button). The legacy ``cb:v2:admin:tab:*``
+callbacks stay registered so existing keyboards (e.g. the teams menu's
+"◀ Back" button) still land where expected.
 """
 
 from __future__ import annotations
@@ -22,14 +24,15 @@ from xtv_support.services.admin import presence
 from xtv_support.ui.primitives.panel import Panel
 from xtv_support.ui.templates.admin_panel import (
     OverviewStats,
-    render_analytics_tab,
-    render_broadcasts_tab,
-    render_overview,
-    render_projects_tab,
-    render_rules_tab,
-    render_settings_tab,
-    render_teams_tab,
-    render_tickets_tab,
+    render_analytics_section,
+    render_broadcasts_section,
+    render_home,
+    render_overview_section,
+    render_projects_section,
+    render_rules_section,
+    render_settings_section,
+    render_teams_section,
+    render_tickets_section,
 )
 from xtv_support.utils.time import utcnow
 
@@ -37,7 +40,7 @@ log = get_logger("admin.panel")
 
 
 # ---------------------------------------------------------------------------
-# Tab data collectors
+# Data collectors (unchanged from the tabbed version)
 # ---------------------------------------------------------------------------
 async def _overview(ctx) -> OverviewStats:
     db = ctx.db
@@ -88,8 +91,6 @@ async def _projects_count(ctx) -> int:
 
 
 async def _rules_stats(ctx) -> tuple[int, int]:
-    # Placeholder until Phase 4.6 lands — automation_rules collection
-    # simply doesn't exist yet.
     try:
         total = await ctx.db.automation_rules.count_documents({})
         enabled = await ctx.db.automation_rules.count_documents({"enabled": True})
@@ -124,30 +125,34 @@ def _flags_snapshot(ctx) -> list[tuple[str, bool]]:
 
 
 # ---------------------------------------------------------------------------
-# Rendering + dispatch
+# Section router
 # ---------------------------------------------------------------------------
-async def _render_tab(ctx, tab: str) -> Panel:
-    if tab == "overview":
-        return render_overview(await _overview(ctx))
-    if tab == "tickets":
+async def _render_section(ctx, section: str) -> Panel:
+    """Dispatch ``cb:v2:admin:section:<key>`` to the right renderer."""
+    if section == "home":
+        return render_home(await _overview(ctx))
+    if section == "overview":
+        return render_overview_section(await _overview(ctx))
+    if section == "tickets":
         opened, closed = await _tickets_stats(ctx)
-        return render_tickets_tab(opened, closed)
-    if tab == "teams":
+        return render_tickets_section(opened, closed)
+    if section == "teams":
         num, members = await _teams_stats(ctx)
-        return render_teams_tab(num, members)
-    if tab == "projects":
-        return render_projects_tab(await _projects_count(ctx))
-    if tab == "rules":
+        return render_teams_section(num, members)
+    if section == "projects":
+        return render_projects_section(await _projects_count(ctx))
+    if section == "rules":
         total, enabled = await _rules_stats(ctx)
-        return render_rules_tab(total, enabled)
-    if tab == "broadcasts":
-        return render_broadcasts_tab()
-    if tab == "analytics":
+        return render_rules_section(total, enabled)
+    if section == "broadcasts":
+        return render_broadcasts_section()
+    if section == "analytics":
         days, total, ratio = await _analytics(ctx)
-        return render_analytics_tab(days, total, ratio)
-    if tab == "settings":
-        return render_settings_tab(_flags_snapshot(ctx))
-    return render_overview(await _overview(ctx))
+        return render_analytics_section(days, total, ratio)
+    if section == "settings":
+        return render_settings_section(_flags_snapshot(ctx))
+    # Unknown key → fall back to home.
+    return render_home(await _overview(ctx))
 
 
 async def _send_or_edit(
@@ -179,7 +184,7 @@ async def _send_or_edit(
 
 
 # ---------------------------------------------------------------------------
-# Command + callback handlers
+# Commands
 # ---------------------------------------------------------------------------
 @Client.on_message(
     filters.command(["admin", "panel"]) & is_admin_user & is_private,
@@ -192,43 +197,47 @@ async def panel_cmd(client: Client, message: Message) -> None:
             await presence.touch(ctx.db, message.from_user.id)
         except Exception:  # noqa: BLE001
             pass
-    panel = await _render_tab(ctx, "overview")
+    panel = await _render_section(ctx, "home")
     await _send_or_edit(client, message, None, panel)
 
 
-@Client.on_callback_query(filters.regex(r"^cb:v2:admin:tab:"), group=HandlerGroup.COMMAND)
-async def panel_tab_callback(client: Client, cq: CallbackQuery) -> None:
+# ---------------------------------------------------------------------------
+# Callbacks — new ``cb:v2:admin:section:<key>`` + legacy ``:tab:<key>``
+# ---------------------------------------------------------------------------
+@Client.on_callback_query(filters.regex(r"^cb:v2:admin:(section|tab):"), group=HandlerGroup.COMMAND)
+async def panel_section_callback(client: Client, cq: CallbackQuery) -> None:
+    """Route both the new ``section:*`` and legacy ``tab:*`` callbacks.
+
+    Keeping the ``tab:`` alias means keyboards produced by older code
+    paths (e.g. the teams menu's "◀ Back" button) still work — they
+    just land on the section page instead of a tabbed view.
+    """
     ctx = get_context(client)
     if cq.from_user:
         try:
             await presence.touch(ctx.db, cq.from_user.id)
         except Exception:  # noqa: BLE001
             pass
-    tab = (cq.data or "").split(":")[-1]
-    panel = await _render_tab(ctx, tab)
+    section = (cq.data or "").split(":")[-1]
+    panel = await _render_section(ctx, section)
     await _send_or_edit(client, None, cq, panel)
 
 
 @Client.on_callback_query(filters.regex(r"^cb:v2:admin:flag:"), group=HandlerGroup.COMMAND)
 async def panel_flag_toggle(client: Client, cq: CallbackQuery) -> None:
-    """Persist a live feature-flag override.
-
-    Flags live as env defaults; this collection overrides them per-deploy.
-    The get_flags() cache will still return env defaults — a later phase
-    plugs the override store into the flag accessor. For now the toggle
-    is recorded and surfaced in the Settings tab so ops can audit intent
-    before a re-deploy.
-    """
+    """Persist a live feature-flag override and re-render the settings section."""
     ctx = get_context(client)
     name = (cq.data or "").split(":")[-1]
     doc = await ctx.db.admin_overrides.find_one({"_id": "flags"}) or {"_id": "flags"}
     flips: dict = dict(doc.get("flags") or {})
     flips[name] = not bool(flips.get(name, getattr(ctx.flags, name, False)))
     await ctx.db.admin_overrides.update_one(
-        {"_id": "flags"}, {"$set": {"flags": flips, "updated_at": utcnow()}}, upsert=True
+        {"_id": "flags"},
+        {"$set": {"flags": flips, "updated_at": utcnow()}},
+        upsert=True,
     )
     await cq.answer(f"Flag {name} toggled (takes effect on next deploy).", show_alert=False)
-    panel = await _render_tab(ctx, "settings")
+    panel = await _render_section(ctx, "settings")
     await _send_or_edit(client, None, cq, panel)
 
 
@@ -239,8 +248,10 @@ async def panel_flag_toggle(client: Client, cq: CallbackQuery) -> None:
 async def panel_shortcuts(client: Client, cq: CallbackQuery) -> None:
     action = (cq.data or "").split(":")[-1]
     tips = {
-        "open_inbox": "Agent cockpit lands in Phase 4.5 — the button will jump there then. For now run /queue.",
-        "rotate_secrets": "Run scripts/rotate_secrets.py in the container to rotate. UI wire-up pending.",
+        "open_inbox": "Agent cockpit: run /inbox (gated on FEATURE_AGENT_INBOX).",
+        "rotate_secrets": (
+            "Run scripts/rotate_secrets.py in the container to rotate. UI wire-up pending."
+        ),
         "find_ticket": "Send the ticket ID as a message — /find <id> will work once the inbox is live.",
     }
     await cq.answer(tips.get(action, ""), show_alert=True)
