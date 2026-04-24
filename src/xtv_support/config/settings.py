@@ -66,6 +66,22 @@ class Settings(BaseSettings):
     # --- Localization ---
     DEFAULT_LANG: str = "en"
 
+    # --- Branding ---
+    # Customisable branding so every deploy can call itself whatever it
+    # wants. Every UI card that used to hardcode "XTV Support" now pulls
+    # from here. All optional — if empty, the defaults kick in.
+    BRAND_NAME: str = "Support"
+    BRAND_TAGLINE: str = "We're here to help."
+    # URL-like branding buttons shown on the onboarding card. Leave empty
+    # to hide. Telegram deep-links (``https://t.me/…``) render as
+    # tappable buttons; anything else is treated as a regular URL.
+    BRAND_MAIN_CHANNEL_URL: str = ""
+    BRAND_MAIN_CHANNEL_LABEL: str = "Main channel"
+    BRAND_SUPPORT_CHANNEL_URL: str = ""
+    BRAND_SUPPORT_CHANNEL_LABEL: str = "Updates"
+    BRAND_BACKUP_CHANNEL_URL: str = ""
+    BRAND_BACKUP_CHANNEL_LABEL: str = "Backup"
+
     # --- REST API (FastAPI) ---
     # When ``API_ENABLED=true`` the boot sequence starts uvicorn alongside
     # the Telegram client. On Railway / Render / Fly, ``PORT`` is injected
