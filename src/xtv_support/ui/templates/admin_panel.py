@@ -189,7 +189,10 @@ def render_settings_tab(flags_snapshot: list[tuple[str, bool]]) -> Panel:
             (PanelButton(label=f"{box} {name}", callback=f"cb:v2:admin:flag:{name}"),)
         )
     action_rows_list.append(
-        (PanelButton(label="🔑 Rotate secrets", callback="cb:v2:admin:rotate_secrets"),)
+        (
+            PanelButton(label="🔑 API keys", callback="cb:v2:admin:apikey:list"),
+            PanelButton(label="🔒 Rotate secrets", callback="cb:v2:admin:rotate_secrets"),
+        )
     )
     return Panel(
         title="⚙️ Admin Control Panel",
