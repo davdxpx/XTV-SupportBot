@@ -134,7 +134,14 @@ Every rule save bumps `version`; the previous payload is pushed to
 `history` on the document so ops can audit "who changed this, when,
 why" after the fact.
 
-## Admin commands reference
+## Web admin (primary UI)
+
+The **/admin/rules** page in the SPA has a full builder modal:
+name, trigger dropdown, add/remove conditions (field + op + value),
+add/remove actions (name + JSON params), cooldown seconds, enabled
+toggle. Each rule card has Enable / Disable / Delete buttons.
+
+## Admin commands reference (Telegram bot)
 
 | Command | Purpose |
 |---|---|
@@ -145,13 +152,18 @@ why" after the fact.
 | `/rule_delete <id>` | Delete |
 | `/rule_test <rule_id> <ticket_id>` | Dry-run |
 
-A graphical rule builder panel ships in a follow-up; the commands
-above cover every mutation the panel will wrap.
+## API
 
-## API read
+| Method | Path | Scope |
+|---|---|---|
+| `GET` | `/api/v1/rules` | `rules:read` |
+| `GET` | `/api/v1/rules/{id}` | `rules:read` |
+| `POST` | `/api/v1/rules` | `rules:write` |
+| `PATCH` | `/api/v1/rules/{id}/enabled` | `rules:write` |
+| `DELETE` | `/api/v1/rules/{id}` | `rules:write` |
 
-`GET /api/v1/rules` and `GET /api/v1/rules/{id}` (scope `rules:read`)
-return rule definitions for dashboards and external tooling.
+See [API write reference](../reference/api-write.md#automation-rules)
+for request/response schemas.
 
 ## Design notes
 
