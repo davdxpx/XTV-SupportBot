@@ -106,7 +106,7 @@ async def test_get_by_slug_parses(db) -> None:
     }
     a = await repo.get_by_slug(db, "hi")
     assert a and a.title == "T" and a.views == 3
-    assert a.helpfulness == 2 / 3
+    assert a.helpfulness == round(2 / 3, 3)
 
 
 async def test_list_all_filters_by_lang(db) -> None:

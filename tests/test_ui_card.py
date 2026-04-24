@@ -29,10 +29,17 @@ def test_percentage():
 def test_card_render_minimal():
     card = Card(title="Hello", body=["world"])
     text, keyboard = card.render()
-    assert text.startswith("<blockquote>")
-    assert "Hello" in text
+    # Title lands inside an HTML <b> tag and the body line follows below.
+    # blockquote wrapping only fires when ``quote`` is set; see test below.
+    assert "<b>Hello</b>" in text
     assert "world" in text
     assert keyboard is None
+
+
+def test_card_render_quote_uses_blockquote():
+    card = Card(title="Hello", body=["world"], quote="a user message")
+    text, _ = card.render()
+    assert "<blockquote>a user message</blockquote>" in text
 
 
 def test_card_steps_and_status():
