@@ -4,6 +4,7 @@ Events are immutable, keyword-only dataclasses. Subscribers live in
 services / plugins and attach via :meth:`xtv_support.core.events.EventBus.on`
 or :meth:`~xtv_support.core.events.EventBus.subscribe`.
 """
+
 from __future__ import annotations
 
 from xtv_support.domain.events.base import DomainEvent
@@ -13,6 +14,11 @@ from xtv_support.domain.events.broadcasts import (
     BroadcastPaused,
     BroadcastResumed,
     BroadcastStarted,
+)
+from xtv_support.domain.events.csat import (
+    CsatCommented,
+    CsatPrompted,
+    CsatReceived,
 )
 from xtv_support.domain.events.kb import (
     KbArticleDismissed,
@@ -80,4 +86,8 @@ __all__ = [
     "PluginLoaded",
     "PluginUnloaded",
     "PluginFailed",
+    # CSAT (Phase 8c)
+    "CsatPrompted",
+    "CsatReceived",
+    "CsatCommented",
 ]

@@ -18,6 +18,7 @@ The middleware runs in :attr:`HandlerGroup.MIDDLEWARE_GUARD` so it
 arrives after ``logging_mw`` but before ``blocked_mw`` / ``cooldown_mw``
 / command handlers — every subsequent handler sees the right locale.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client
@@ -85,6 +86,7 @@ async def set_locale_for_callback(client: Client, callback: CallbackQuery) -> No
         ctx, callback.from_user.id, getattr(callback.from_user, "language_code", None)
     )
     current_locale.set(locale)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

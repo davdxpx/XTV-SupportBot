@@ -4,6 +4,7 @@ Stored in ``kb_articles`` with a compound MongoDB text index on
 ``title / body / tags`` (weights 10 / 3 / 5) created by
 :mod:`xtv_support.infrastructure.db.migrations`.
 """
+
 from __future__ import annotations
 
 import re
@@ -24,9 +25,7 @@ class InvalidSlugError(ValueError):
 
 def validate_slug(slug: str) -> str:
     if not _SLUG_RE.match(slug or ""):
-        raise InvalidSlugError(
-            f"Slug must match [a-z0-9][a-z0-9_-]{{0,63}}, got {slug!r}"
-        )
+        raise InvalidSlugError(f"Slug must match [a-z0-9][a-z0-9_-]{{0,63}}, got {slug!r}")
     return slug
 
 
@@ -34,7 +33,7 @@ def validate_slug(slug: str) -> str:
 # CRUD
 # ----------------------------------------------------------------------
 async def create(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     slug: str,
     title: str,
@@ -66,16 +65,12 @@ async def create(
     return _from_doc(doc)
 
 
-async def get_by_slug(
-    db: "AsyncIOMotorDatabase", slug: str
-) -> KbArticle | None:
+async def get_by_slug(db: AsyncIOMotorDatabase, slug: str) -> KbArticle | None:
     doc = await db.kb_articles.find_one({"slug": slug})
     return _from_doc(doc) if doc else None
 
 
-async def get_by_id(
-    db: "AsyncIOMotorDatabase", article_id: str
-) -> KbArticle | None:
+async def get_by_id(db: AsyncIOMotorDatabase, article_id: str) -> KbArticle | None:
     from bson import ObjectId
 
     doc = await db.kb_articles.find_one({"_id": ObjectId(article_id)})
@@ -83,7 +78,7 @@ async def get_by_id(
 
 
 async def list_all(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     lang: str | None = None,
     project_id: str | None = None,
@@ -99,7 +94,7 @@ async def list_all(
 
 
 async def update(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     slug: str,
     *,
     title: str | None = None,
@@ -123,7 +118,7 @@ async def update(
     return result.matched_count == 1
 
 
-async def delete(db: "AsyncIOMotorDatabase", slug: str) -> bool:
+async def delete(db: AsyncIOMotorDatabase, slug: str) -> bool:
     result = await db.kb_articles.delete_one({"slug": slug})
     return result.deleted_count == 1
 
@@ -132,7 +127,7 @@ async def delete(db: "AsyncIOMotorDatabase", slug: str) -> bool:
 # Search + counters
 # ----------------------------------------------------------------------
 async def search(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     query: str,
     *,
     lang: str | None = None,
@@ -166,13 +161,11 @@ async def search(
     return [_from_doc(d) async for d in cursor]
 
 
-async def increment_views(db: "AsyncIOMotorDatabase", slug: str) -> None:
+async def increment_views(db: AsyncIOMotorDatabase, slug: str) -> None:
     await db.kb_articles.update_one({"slug": slug}, {"$inc": {"views": 1}})
 
 
-async def record_feedback(
-    db: "AsyncIOMotorDatabase", slug: str, *, helpful: bool
-) -> None:
+async def record_feedback(db: AsyncIOMotorDatabase, slug: str, *, helpful: bool) -> None:
     field = "helpful" if helpful else "not_helpful"
     await db.kb_articles.update_one({"slug": slug}, {"$inc": {field: 1}})
 

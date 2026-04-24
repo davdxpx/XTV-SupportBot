@@ -65,6 +65,7 @@ async def admin_close_cmd(client: Client, message: Message) -> None:
     except Exception:  # noqa: BLE001
         pass
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

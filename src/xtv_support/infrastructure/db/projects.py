@@ -77,6 +77,7 @@ async def set_active(
     result = await db.projects.update_one({"_id": oid}, {"$set": {"active": active}})
     return result.matched_count == 1
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

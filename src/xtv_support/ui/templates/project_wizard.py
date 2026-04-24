@@ -3,8 +3,8 @@ from __future__ import annotations
 from pyrogram.types import InlineKeyboardMarkup
 
 from xtv_support.core.constants import CallbackPrefix
-from xtv_support.ui.primitives.card import Card
 from xtv_support.ui.keyboards.base import btn, rows
+from xtv_support.ui.primitives.card import Card
 
 
 def _step(
@@ -25,17 +25,27 @@ def _step(
 
 
 def ask_name() -> Card:
-    return _step(1, 4, status="Name", body=[
-        "Send the project name.",
-        "<i>Send /cancel to abort.</i>",
-    ])
+    return _step(
+        1,
+        4,
+        status="Name",
+        body=[
+            "Send the project name.",
+            "<i>Send /cancel to abort.</i>",
+        ],
+    )
 
 
 def ask_description() -> Card:
-    return _step(2, 4, status="Description", body=[
-        "Send a short description.",
-        "<i>/cancel to abort.</i>",
-    ])
+    return _step(
+        2,
+        4,
+        status="Description",
+        body=[
+            "Send a short description.",
+            "<i>/cancel to abort.</i>",
+        ],
+    )
 
 
 def ask_type() -> Card:

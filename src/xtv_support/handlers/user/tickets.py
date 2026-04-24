@@ -18,7 +18,9 @@ from xtv_support.utils.ids import safe_objectid
 log = get_logger("user.tickets")
 
 
-async def _render_list(client: Client, chat_id: int, user_id: int, *, page: int, edit_msg_id: int | None = None) -> None:
+async def _render_list(
+    client: Client, chat_id: int, user_id: int, *, page: int, edit_msg_id: int | None = None
+) -> None:
     ctx = get_context(client)
     tickets = await tickets_repo.list_by_user(ctx.db, user_id, limit=50)
     last_seen = await users_repo.get_tickets_seen_at(ctx.db, user_id)
@@ -44,9 +46,7 @@ async def _render_list(client: Client, chat_id: int, user_id: int, *, page: int,
 
 @Client.on_message(filters.command("tickets") & is_private, group=HandlerGroup.COMMAND)
 async def cmd_tickets(client: Client, message: Message) -> None:
-    await _render_list(
-        client, message.chat.id, message.from_user.id, page=0, edit_msg_id=None
-    )
+    await _render_list(client, message.chat.id, message.from_user.id, page=0, edit_msg_id=None)
 
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.USER_TICKETS_LIST))

@@ -23,9 +23,7 @@ from xtv_support.ui.templates import project_wizard
 log = get_logger("admin.input_router")
 
 
-@Client.on_message(
-    is_admin_user & is_private & has_any_state, group=HandlerGroup.ADMIN_STATE
-)
+@Client.on_message(is_admin_user & is_private & has_any_state, group=HandlerGroup.ADMIN_STATE)
 async def dispatch(client: Client, message: Message) -> None:
     ctx = get_context(client)
     user_id = message.from_user.id
@@ -37,7 +35,9 @@ async def dispatch(client: Client, message: Message) -> None:
 
     if text == "/cancel":
         await users_repo.clear_state(ctx.db, user_id)
-        await send_card(client, message.chat.id, Card(title="Cancelled", body=["The action was cancelled."]))
+        await send_card(
+            client, message.chat.id, Card(title="Cancelled", body=["The action was cancelled."])
+        )
         message.stop_propagation()
         return
 
@@ -55,9 +55,7 @@ async def dispatch(client: Client, message: Message) -> None:
 
     elif state == UserState.AWAITING_PROJECT_DESC:
         if len(text) == 0 or len(text) > MAX_PROJECT_DESC_LEN:
-            await message.reply_text(
-                f"Description must be 1..{MAX_PROJECT_DESC_LEN} characters."
-            )
+            await message.reply_text(f"Description must be 1..{MAX_PROJECT_DESC_LEN} characters.")
         else:
             data["desc"] = text
             await users_repo.set_state(ctx.db, user_id, UserState.AWAITING_PROJECT_TYPE, data)
@@ -82,12 +80,8 @@ async def dispatch(client: Client, message: Message) -> None:
             has_text=bool(data.get("has_text", True)),
         )
         await users_repo.clear_state(ctx.db, user_id)
-        await audit_repo.log(
-            ctx.db, actor_id=user_id, action="project.create", target_id=str(pid)
-        )
-        await send_card(
-            client, message.chat.id, project_wizard.done_feedback(data["name"])
-        )
+        await audit_repo.log(ctx.db, actor_id=user_id, action="project.create", target_id=str(pid))
+        await send_card(client, message.chat.id, project_wizard.done_feedback(data["name"]))
         handled = True
 
     elif state == UserState.AWAITING_CONTACT_NAME:
@@ -105,9 +99,7 @@ async def dispatch(client: Client, message: Message) -> None:
         me = await client.get_me()
         url = f"https://t.me/{me.username}?start=contact_{link}"
         await users_repo.clear_state(ctx.db, user_id)
-        await audit_repo.log(
-            ctx.db, actor_id=user_id, action="contact_link.create", target_id=link
-        )
+        await audit_repo.log(ctx.db, actor_id=user_id, action="contact_link.create", target_id=link)
         await send_card(
             client,
             message.chat.id,
@@ -133,7 +125,9 @@ async def dispatch(client: Client, message: Message) -> None:
                 ctx.db, actor_id=user_id, action="user.block", target_id=str(target)
             )
             await send_card(
-                client, message.chat.id, Card(title="Blocked", body=[f"User <code>{target}</code> is now blocked."])
+                client,
+                message.chat.id,
+                Card(title="Blocked", body=[f"User <code>{target}</code> is now blocked."]),
             )
         except ValueError:
             await message.reply_text("Invalid user id.")
@@ -168,13 +162,12 @@ async def dispatch(client: Client, message: Message) -> None:
         await tags_repo.create(ctx.db, name=tag, created_by=user_id)
         await users_repo.clear_state(ctx.db, user_id)
         await audit_repo.log(ctx.db, actor_id=user_id, action="tag.create", target_id=tag)
-        await send_card(
-            client, message.chat.id, Card(title="Tag created", body=[f"#{tag}"])
-        )
+        await send_card(client, message.chat.id, Card(title="Tag created", body=[f"#{tag}"]))
         handled = True
 
     if handled:
         message.stop_propagation()
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

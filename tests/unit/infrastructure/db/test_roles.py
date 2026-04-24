@@ -3,6 +3,7 @@
 Uses :class:`AsyncMock` for the Motor collection so we can assert
 query / update shapes without bringing in mongomock.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -21,7 +22,7 @@ class _FakeCollection:
         self.update_one = AsyncMock()
         self.delete_one = AsyncMock()
 
-    def find(self, query: dict | None = None) -> "_AsyncCursor":
+    def find(self, query: dict | None = None) -> _AsyncCursor:
         return _AsyncCursor(self.docs if query is None else _filter(self.docs, query))
 
 
@@ -29,7 +30,7 @@ class _AsyncCursor:
     def __init__(self, docs: list[dict]) -> None:
         self._docs = iter(docs)
 
-    def __aiter__(self) -> "_AsyncCursor":
+    def __aiter__(self) -> _AsyncCursor:
         return self
 
     async def __anext__(self) -> dict:
@@ -48,10 +49,9 @@ def _filter(docs: list[dict], query: dict) -> list[dict]:
                 if v not in (d.get("team_ids") or []):
                     hit = False
                     break
-            else:
-                if d.get(k) != v:
-                    hit = False
-                    break
+            elif d.get(k) != v:
+                hit = False
+                break
         if hit:
             out.append(d)
     return out

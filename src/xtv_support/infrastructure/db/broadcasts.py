@@ -84,12 +84,11 @@ async def set_progress_msg(
     msg_id: int,
     started_at: datetime | None = None,
 ) -> None:
-    update: dict[str, Any] = {
-        "$set": {"progress_chat_id": chat_id, "progress_msg_id": msg_id}
-    }
+    update: dict[str, Any] = {"$set": {"progress_chat_id": chat_id, "progress_msg_id": msg_id}}
     if started_at:
         update["$set"]["started_at"] = started_at
     await db.broadcasts.update_one({"_id": bid}, update)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

@@ -1,10 +1,9 @@
 """KB gate tests — evaluate() is pure (modulo bus publish)."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
-
-import pytest
 
 from xtv_support.domain.events import KbArticleShown
 from xtv_support.domain.models.kb import KbArticle
@@ -36,9 +35,7 @@ async def test_no_hits_returns_empty_and_no_event(monkeypatch) -> None:
     monkeypatch.setattr(gate, "search", AsyncMock(return_value=[]), raising=True)
     bus = SimpleNamespace(publish=AsyncMock())
 
-    result = await kb_gate.evaluate(
-        SimpleNamespace(), bus, user_id=1, query="random nonsense"
-    )
+    result = await kb_gate.evaluate(SimpleNamespace(), bus, user_id=1, query="random nonsense")
     assert not result.triggered
     bus.publish.assert_not_awaited()
 
@@ -47,9 +44,7 @@ async def test_hits_publish_article_shown_per_suggestion(monkeypatch) -> None:
     from xtv_support.services.kb import gate
 
     articles = [_article("a"), _article("b"), _article("c")]
-    monkeypatch.setattr(
-        gate, "search", AsyncMock(return_value=articles), raising=True
-    )
+    monkeypatch.setattr(gate, "search", AsyncMock(return_value=articles), raising=True)
     bus = SimpleNamespace(publish=AsyncMock())
 
     result = await kb_gate.evaluate(
@@ -74,13 +69,9 @@ async def test_evaluate_with_none_bus_still_returns_results(monkeypatch) -> None
     from xtv_support.services.kb import gate
 
     articles = [_article("x")]
-    monkeypatch.setattr(
-        gate, "search", AsyncMock(return_value=articles), raising=True
-    )
+    monkeypatch.setattr(gate, "search", AsyncMock(return_value=articles), raising=True)
 
-    result = await kb_gate.evaluate(
-        SimpleNamespace(), None, user_id=1, query="hello world"
-    )
+    result = await kb_gate.evaluate(SimpleNamespace(), None, user_id=1, query="hello world")
     assert result.triggered and result.suggestions[0].slug == "x"
 
 

@@ -1,4 +1,5 @@
 """KB repo tests."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -15,9 +16,7 @@ def test_validate_slug_accepts(ok: str) -> None:
     assert repo.validate_slug(ok) == ok
 
 
-@pytest.mark.parametrize(
-    "bad", ["", "HasCaps", "has space", "-lead", "x" * 65]
-)
+@pytest.mark.parametrize("bad", ["", "HasCaps", "has space", "-lead", "x" * 65])
 def test_validate_slug_rejects(bad: str) -> None:
     with pytest.raises(InvalidSlugError):
         repo.validate_slug(bad)
@@ -32,10 +31,11 @@ class _FakeCollection:
         self.delete_one = AsyncMock(return_value=MagicMock(deleted_count=1))
 
     def find(self, query=None, projection=None):
-        docs = list(self.docs) if query is None else [
-            d for d in self.docs
-            if all(d.get(k) == v for k, v in query.items())
-        ]
+        docs = (
+            list(self.docs)
+            if query is None
+            else [d for d in self.docs if all(d.get(k) == v for k, v in query.items())]
+        )
         return _AsyncCursor(docs)
 
 
@@ -68,9 +68,7 @@ def db() -> SimpleNamespace:
 async def test_create_rejects_duplicate_slug(db) -> None:
     db.kb_articles.find_one.return_value = {"slug": "hi"}
     with pytest.raises(ValueError):
-        await repo.create(
-            db, slug="hi", title="Hi", body="Hello", created_by=1
-        )
+        await repo.create(db, slug="hi", title="Hi", body="Hello", created_by=1)
 
 
 async def test_create_stores_full_document(db) -> None:
@@ -95,13 +93,20 @@ async def test_create_stores_full_document(db) -> None:
 
 async def test_get_by_slug_parses(db) -> None:
     db.kb_articles.find_one.return_value = {
-        "_id": "obj1", "slug": "hi", "title": "T", "body": "B",
-        "lang": "en", "tags": ["a"], "project_ids": [], "views": 3,
-        "helpful": 2, "not_helpful": 1,
+        "_id": "obj1",
+        "slug": "hi",
+        "title": "T",
+        "body": "B",
+        "lang": "en",
+        "tags": ["a"],
+        "project_ids": [],
+        "views": 3,
+        "helpful": 2,
+        "not_helpful": 1,
     }
     a = await repo.get_by_slug(db, "hi")
     assert a and a.title == "T" and a.views == 3
-    assert a.helpfulness == 2 / 3
+    assert a.helpfulness == round(2 / 3, 3)
 
 
 async def test_list_all_filters_by_lang(db) -> None:

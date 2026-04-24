@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pyrogram.types import InlineKeyboardMarkup
 
 from xtv_support.core.constants import CallbackPrefix
-from xtv_support.ui.primitives.card import Card
 from xtv_support.ui.keyboards.base import btn, rows
+from xtv_support.ui.primitives.card import Card
 from xtv_support.ui.primitives.progress import bar as progress_bar
 from xtv_support.ui.primitives.progress import percentage as pct_str
 from xtv_support.utils.text import escape_html, truncate, user_mention
@@ -25,7 +25,7 @@ def _priority_label(prio: str) -> str:
 def _sla_progress(ticket: dict[str, Any]) -> tuple[float, str]:
     created = ticket.get("created_at")
     deadline = ticket.get("sla_deadline")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     if not deadline or not created:
         return 0.0, "not set"
@@ -59,7 +59,9 @@ def render(
     tags = ticket.get("tags") or []
     is_contact = bool(ticket.get("contact_uuid")) and not project
     project_name = escape_html(project.get("name")) if project else "Direct contact"
-    project_type = "contact" if is_contact else (project.get("type", "support") if project else "support")
+    project_type = (
+        "contact" if is_contact else (project.get("type", "support") if project else "support")
+    )
 
     mention = user_mention(user_id, user_name or f"User {user_id}")
     username_s = f"@{escape_html(username)}" if username else "—"

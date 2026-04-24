@@ -1,0 +1,16 @@
+apiVersion: v2
+name: xtv-support
+description: Enterprise Telegram support / feedback bot.
+type: application
+version: 0.1.0
+appVersion: "0.9.0"
+home: https://github.com/davdxpx/XTV-SupportBot
+sources:
+  - https://github.com/davdxpx/XTV-SupportBot
+maintainers:
+  - name: davdxpx
+    url: https://t.me/davdxpx
+keywords:
+  - telegram
+  - helpdesk
+  - support

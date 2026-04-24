@@ -6,9 +6,10 @@ dismiss with ``/humanplease``) or fall through to the normal ticket
 flow. The gate is a **pure function** — the pyrofork handler in
 ``handlers/user/kb_gate.py`` is a thin wrapper.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
@@ -37,8 +38,8 @@ class GateResult:
 
 
 async def evaluate(
-    db: "AsyncIOMotorDatabase",
-    bus: "EventBus | None",
+    db: AsyncIOMotorDatabase,
+    bus: EventBus | None,
     *,
     user_id: int,
     query: str,

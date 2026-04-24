@@ -1,4 +1,5 @@
 """StateMachine + MemoryStateStore tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -76,8 +77,10 @@ async def test_ttl_expires_entry(fsm: StateMachine) -> None:
 async def test_memory_store_is_concurrent_safe() -> None:
     store = MemoryStateStore()
     fsm = StateMachine(store)
+
     async def worker(uid: int) -> None:
         await fsm.set(uid, f"s{uid}")
+
     await asyncio.gather(*(worker(i) for i in range(50)))
     snap = store._snapshot()
     assert len(snap) == 50

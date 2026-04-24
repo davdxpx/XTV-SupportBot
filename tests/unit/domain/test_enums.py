@@ -1,4 +1,5 @@
 """Domain enum tests — Role hierarchy, Priority ranks, parser."""
+
 from __future__ import annotations
 
 import pytest
@@ -8,8 +9,12 @@ from xtv_support.domain.enums import Priority, Role, TicketStatus, Weekday
 
 def test_role_ranks_ascend() -> None:
     order = [
-        Role.USER, Role.VIEWER, Role.AGENT,
-        Role.SUPERVISOR, Role.ADMIN, Role.OWNER,
+        Role.USER,
+        Role.VIEWER,
+        Role.AGENT,
+        Role.SUPERVISOR,
+        Role.ADMIN,
+        Role.OWNER,
     ]
     ranks = [r.rank for r in order]
     assert ranks == sorted(ranks)

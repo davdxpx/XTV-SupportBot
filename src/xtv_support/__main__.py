@@ -4,6 +4,7 @@ Orchestrates the boot sequence: configure logging, construct the Telegram
 client, build the handler context, register handlers + background loops,
 then idle. Business-logic factories live in :mod:`xtv_support.core.bootstrap`.
 """
+
 from __future__ import annotations
 
 import asyncio

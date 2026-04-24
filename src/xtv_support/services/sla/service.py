@@ -16,7 +16,7 @@ from xtv_support.utils.text import user_mention
 from xtv_support.utils.time import utcnow
 
 if TYPE_CHECKING:  # pragma: no cover
-    from xtv_support.services.cooldown.service import CooldownService
+    pass
 
 log = get_logger("sla")
 
@@ -35,9 +35,7 @@ class SlaService:
 
     async def schedule(self, ticket_id, *, minutes: int | None = None) -> None:
         delta = timedelta(minutes=minutes or settings.SLA_WARN_MINUTES)
-        await tickets_repo.set_sla(
-            self._db, ticket_id, deadline=utcnow() + delta, warned=False
-        )
+        await tickets_repo.set_sla(self._db, ticket_id, deadline=utcnow() + delta, warned=False)
 
     async def cancel(self, ticket_id) -> None:
         await tickets_repo.set_sla(self._db, ticket_id, deadline=None, warned=True)
@@ -60,9 +58,7 @@ class SlaService:
 
     async def _warn(self, ticket: dict[str, Any]) -> None:
         tid = ticket["_id"]
-        await tickets_repo.set_sla(
-            self._db, tid, deadline=ticket.get("sla_deadline"), warned=True
-        )
+        await tickets_repo.set_sla(self._db, tid, deadline=ticket.get("sla_deadline"), warned=True)
         text = self._format_alert(ticket)
         topic_id = ticket.get("topic_id")
         try:
@@ -105,6 +101,7 @@ class SlaService:
             f"<blockquote>Attention {mention}: the user is waiting beyond the SLA window.\n"
             f"Please reply in this topic.</blockquote>"
         )
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

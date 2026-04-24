@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -73,7 +72,7 @@ class Settings(BaseSettings):
         return value.upper()
 
     @property
-    def ADMIN_IDS(self) -> List[int]:
+    def ADMIN_IDS(self) -> list[int]:
         raw = (self.ADMIN_IDS_RAW or "").strip()
         if not raw:
             return []

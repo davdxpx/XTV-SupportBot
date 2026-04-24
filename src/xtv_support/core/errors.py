@@ -32,6 +32,7 @@ class RateLimited(BotError):
 class AdminOnly(BotError):
     """Raised when a non-admin tries to trigger an admin-only action."""
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

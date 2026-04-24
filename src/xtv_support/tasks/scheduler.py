@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Awaitable, Callable
 
 from xtv_support.core.logger import get_logger
 
@@ -58,6 +58,7 @@ class TaskManager:
             await asyncio.gather(*self._tasks, return_exceptions=True)
         log.info("scheduler.stop", tasks=len(self._tasks))
         self._tasks.clear()
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

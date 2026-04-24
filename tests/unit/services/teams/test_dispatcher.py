@@ -1,4 +1,5 @@
 """Dispatcher tests — patches the DB layer + the bus."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -77,9 +78,7 @@ async def test_no_match_does_not_persist_or_emit(db, bus, _patch_teams_repo) -> 
     bus.publish.assert_not_awaited()
 
 
-async def test_persist_false_emits_event_but_does_not_write(
-    db, bus, _patch_teams_repo
-) -> None:
+async def test_persist_false_emits_event_but_does_not_write(db, bus, _patch_teams_repo) -> None:
     team = Team(id="s", name="S", queue_rules=(QueueRule(match={}, weight=1),))
     _patch_teams_repo.return_value = [team]
 
@@ -89,9 +88,7 @@ async def test_persist_false_emits_event_but_does_not_write(
     bus.publish.assert_awaited_once()
 
 
-async def test_persist_error_is_swallowed_and_event_still_fires(
-    db, bus, _patch_teams_repo
-) -> None:
+async def test_persist_error_is_swallowed_and_event_still_fires(db, bus, _patch_teams_repo) -> None:
     team = Team(id="s", name="S", queue_rules=(QueueRule(match={}, weight=1),))
     _patch_teams_repo.return_value = [team]
     db.tickets.update_one.side_effect = RuntimeError("mongo down")

@@ -4,9 +4,10 @@ A :class:`RoleAssignment` binds a :class:`Role` to a Telegram user id
 and, optionally, to one or more teams (``team_ids``). The RBAC
 middleware picks the *highest* role across all assignments.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 from xtv_support.domain.enums import Role

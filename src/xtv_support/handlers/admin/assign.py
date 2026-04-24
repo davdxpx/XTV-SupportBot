@@ -4,8 +4,8 @@ from pyrogram import Client
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
 
 from xtv_support.config.settings import settings
-from xtv_support.core.constants import CallbackPrefix
 from xtv_support.core.callback_data import CbAssignPick
+from xtv_support.core.constants import CallbackPrefix
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import cb_prefix
 from xtv_support.core.logger import get_logger
@@ -15,8 +15,8 @@ from xtv_support.infrastructure.db import tickets as tickets_repo
 from xtv_support.infrastructure.db import users as users_repo
 from xtv_support.middlewares.admin_guard import require_admin
 from xtv_support.services.tickets import topic_service
-from xtv_support.ui.primitives.card import Card, edit_card, send_card
 from xtv_support.ui.keyboards.base import btn, chunk
+from xtv_support.ui.primitives.card import send_card
 from xtv_support.ui.templates import user_messages
 from xtv_support.utils.ids import safe_objectid, short_ticket_id
 
@@ -125,6 +125,7 @@ async def pick_assignee(client: Client, callback: CallbackQuery) -> None:
     except Exception:  # noqa: BLE001
         pass
     await callback.answer("Saved.")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

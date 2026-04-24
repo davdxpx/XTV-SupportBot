@@ -5,7 +5,6 @@ from xtv_support.core.callback_data import (
     CbPriorityPick,
     CbRate,
     CbTagToggle,
-    CbTicket,
     starts_with,
 )
 from xtv_support.utils.ids import safe_objectid, short_ticket_id
@@ -98,6 +97,7 @@ def test_starts_with_matches():
     assert re.match(pattern, "a:projects")
     assert re.match(pattern, "a:projects|some-id")
     assert not re.match(pattern, "a:projectslong")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

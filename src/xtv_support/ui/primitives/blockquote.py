@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def wrap(body: str, *, expandable: bool = False) -> str:
@@ -13,6 +13,7 @@ def wrap(body: str, *, expandable: bool = False) -> str:
 def join_lines(lines: Iterable[str]) -> str:
     """Join lines with \\n, dropping any Nones."""
     return "\n".join(line for line in lines if line is not None)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

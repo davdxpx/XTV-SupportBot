@@ -49,6 +49,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.topic.reply",
     "xtv_support.handlers.topic.commands",
     "xtv_support.handlers.topic.macros",
+    "xtv_support.handlers.topic.ai_draft",
     # State machine (group 1)
     "xtv_support.handlers.admin.input_router",
     # Catch-all
@@ -56,7 +57,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
 )
 
 
-def register_all(client: "Client", ctx: "HandlerContext") -> None:
+def register_all(client: Client, ctx: HandlerContext) -> None:
     """Bind context, import every handler module, then attach every collected
     handler to the live :class:`pyrogram.Client` instance.
 

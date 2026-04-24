@@ -29,6 +29,7 @@ def user_mention(user_id: int, display: str) -> str:
     """Produce an HTML mention. ``display`` is escaped."""
     return f'<a href="tg://user?id={user_id}">{escape_html(display)}</a>'
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

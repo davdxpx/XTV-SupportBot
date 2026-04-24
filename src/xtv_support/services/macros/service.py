@@ -12,6 +12,7 @@ that adds two things:
   ``usage_count`` and publishes :class:`MacroUsed`. Services call this
   exactly once per successful insertion into a ticket.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -49,8 +50,8 @@ def render(macro: Macro, **context: Any) -> str:
 
 
 async def consume(
-    db: "AsyncIOMotorDatabase",
-    bus: "EventBus",
+    db: AsyncIOMotorDatabase,
+    bus: EventBus,
     *,
     macro: Macro,
     ticket_id: str,
@@ -74,7 +75,7 @@ async def consume(
 
 
 async def find_for_team(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     name: str,
     *,
     team_id: str | None,

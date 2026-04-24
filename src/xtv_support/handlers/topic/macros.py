@@ -13,6 +13,7 @@ The "team" a topic belongs to is derived from ``tickets.team_id``
 (populated by the routing dispatcher). If no team is set, team-scope
 operations fall back to global.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -51,9 +52,7 @@ async def _ticket_team_id(ctx, topic_id: int | None) -> tuple[str | None, str | 
     """Return ``(ticket_id, team_id)`` for the current topic (both may be None)."""
     if topic_id is None:
         return (None, None)
-    doc = await ctx.db.tickets.find_one(
-        {"topic_id": topic_id}, projection={"_id": 1, "team_id": 1}
-    )
+    doc = await ctx.db.tickets.find_one({"topic_id": topic_id}, projection={"_id": 1, "team_id": 1})
     if doc is None:
         return (None, None)
     return (str(doc["_id"]), doc.get("team_id"))
@@ -108,8 +107,7 @@ async def _list(ctx, message: Message, team_id: str | None) -> None:
     for m in macros:
         preview = (m.body[:60] + "…") if len(m.body) > 60 else m.body
         lines.append(
-            f"  • <code>{m.name}</code> ({m.scope}) · "
-            f"used {m.usage_count}× — <i>{preview}</i>"
+            f"  • <code>{m.name}</code> ({m.scope}) · used {m.usage_count}× — <i>{preview}</i>"
         )
     await message.reply_text("\n".join(lines))
 
@@ -140,7 +138,7 @@ async def _save(ctx, message: Message, rest: list[str], team_id: str | None) -> 
             ctx.db,
             name=name,
             body=body,
-            team_id=team_id,          # None -> global
+            team_id=team_id,  # None -> global
             created_by=message.from_user.id,
         )
     except ValueError as exc:
@@ -154,9 +152,7 @@ async def _save(ctx, message: Message, rest: list[str], team_id: str | None) -> 
         by=message.from_user.id,
         len=len(body),
     )
-    await message.reply_text(
-        f"✅ Saved macro <code>{macro.name}</code> ({macro.scope})."
-    )
+    await message.reply_text(f"✅ Saved macro <code>{macro.name}</code> ({macro.scope}).")
 
 
 async def _use(
@@ -206,12 +202,13 @@ async def _use(
         await message.reply_text(f"⚠️ Send failed: {exc}")
         return
 
-    await message.reply_text(
-        f"✅ Sent macro <code>{macro.name}</code> to <code>{user_id}</code>."
-    )
+    await message.reply_text(f"✅ Sent macro <code>{macro.name}</code> to <code>{user_id}</code>.")
     await consume(
-        ctx.db, ctx.bus,
-        macro=macro, ticket_id=ticket_id, actor_id=message.from_user.id,
+        ctx.db,
+        ctx.bus,
+        macro=macro,
+        ticket_id=ticket_id,
+        actor_id=message.from_user.id,
     )
 
 

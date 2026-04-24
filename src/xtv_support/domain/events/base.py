@@ -3,11 +3,12 @@
 Events are immutable, keyword-only dataclasses. Subclasses add their own
 required fields after the common metadata.
 """
+
 from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def _new_event_id() -> str:
@@ -15,7 +16,7 @@ def _new_event_id() -> str:
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

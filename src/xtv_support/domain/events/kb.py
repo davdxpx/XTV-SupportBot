@@ -1,4 +1,5 @@
 """Knowledge-base events."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ class KbArticleShown(DomainEvent):
     slug: str
     user_id: int
     query: str | None = None
-    rank: int = 0   # position in the suggestion list (0 = first)
+    rank: int = 0  # position in the suggestion list (0 = first)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

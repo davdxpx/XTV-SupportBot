@@ -75,6 +75,7 @@ class CooldownService:
             self._muted_until.pop(user_id, None)
             self._strikes.pop(user_id, None)
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

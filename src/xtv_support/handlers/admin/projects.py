@@ -39,7 +39,10 @@ async def view_project(client: Client, callback: CallbackQuery) -> None:
         await callback.answer("Not found.", show_alert=True)
         return
     await edit_card(
-        client, callback.message.chat.id, callback.message.id, admin_dashboard.project_detail(project)
+        client,
+        callback.message.chat.id,
+        callback.message.id,
+        admin_dashboard.project_detail(project),
     )
     await callback.answer()
 
@@ -53,7 +56,10 @@ async def delete_project(client: Client, callback: CallbackQuery) -> None:
     await callback.answer("Deleted." if ok else "Not found.", show_alert=True)
     projects = await projects_repo.list_all(ctx.db)
     await edit_card(
-        client, callback.message.chat.id, callback.message.id, admin_dashboard.project_list(projects)
+        client,
+        callback.message.chat.id,
+        callback.message.id,
+        admin_dashboard.project_list(projects),
     )
 
 
@@ -170,6 +176,7 @@ async def project_text_pick(client: Client, callback: CallbackQuery) -> None:
         client, callback.message.chat.id, callback.message.id, project_wizard.ask_topic_id()
     )
     await callback.answer()
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from pyrogram import Client, filters
-from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, Message
+from pyrogram.types import CallbackQuery, Message
 
-from xtv_support.core.constants import CallbackPrefix, HandlerGroup
 from xtv_support.core.callback_data import CbPriorityPick
+from xtv_support.core.constants import CallbackPrefix, HandlerGroup
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import cb_prefix, is_admin_forum_topic, is_admin_user
 from xtv_support.core.logger import get_logger
@@ -91,7 +91,10 @@ async def cmd_assign(client: Client, message: Message) -> None:
         return
     args = message.command[1:]
     if not args:
-        await message.reply_text("Usage: <code>/assign &lt;admin_id&gt;</code> or <code>/assign me</code>", parse_mode="html")
+        await message.reply_text(
+            "Usage: <code>/assign &lt;admin_id&gt;</code> or <code>/assign me</code>",
+            parse_mode="html",
+        )
         return
     target = args[0]
     if target == "me":
@@ -190,6 +193,7 @@ async def close_button(client: Client, callback: CallbackQuery) -> None:
         notify_user=True,
     )
     await callback.answer("Closed.")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

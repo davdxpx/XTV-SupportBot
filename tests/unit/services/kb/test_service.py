@@ -1,10 +1,9 @@
 """KB service tests — search normalisation + locale fallback."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
-
-import pytest
 
 from xtv_support.domain.models.kb import KbArticle
 from xtv_support.services.kb import service as kb_service
@@ -56,9 +55,7 @@ async def test_search_hits_requested_locale_first(monkeypatch) -> None:
     mock.side_effect = side_effect
     monkeypatch.setattr(kb_repo, "search", mock, raising=True)
 
-    out = await kb_service.search(
-        SimpleNamespace(), "reset password", lang="hi", default_lang="en"
-    )
+    out = await kb_service.search(SimpleNamespace(), "reset password", lang="hi", default_lang="en")
     assert len(out) == 1 and out[0].lang == "hi"
     # First try: hi
     assert calls[0][1]["lang"] == "hi"

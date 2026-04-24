@@ -13,9 +13,11 @@ That call:
 4. Publishes :class:`TicketRoutedToTeam` on the event bus so plugins
    and notifiers can react.
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Mapping
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import TicketRoutedToTeam
@@ -31,8 +33,8 @@ log = get_logger("teams.dispatcher")
 
 
 async def assign_to_team(
-    db: "AsyncIOMotorDatabase",
-    bus: "EventBus",
+    db: AsyncIOMotorDatabase,
+    bus: EventBus,
     ticket: Mapping[str, object],
     *,
     persist: bool = True,

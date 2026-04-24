@@ -5,6 +5,7 @@ The pure decision logic + DB-backed resolver live in
 no pyrofork dependency. The pyrofork glue in
 :mod:`xtv_support.middlewares.rbac_mw` is a three-line wrapper.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -12,7 +13,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from xtv_support.core import rbac as core_rbac
 from xtv_support.core.errors import AdminOnly
 from xtv_support.core.rbac import current, current_role, decide, require, resolve_role
 from xtv_support.domain.enums import Role

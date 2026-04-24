@@ -3,8 +3,8 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
 
-from xtv_support.core.constants import CallbackPrefix, UserState
 from xtv_support.core.callback_data import CbTagToggle
+from xtv_support.core.constants import CallbackPrefix, UserState
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import cb_prefix
 from xtv_support.core.logger import get_logger
@@ -15,8 +15,8 @@ from xtv_support.infrastructure.db import tickets as tickets_repo
 from xtv_support.infrastructure.db import users as users_repo
 from xtv_support.middlewares.admin_guard import require_admin
 from xtv_support.services.tickets import topic_service
-from xtv_support.ui.primitives.card import Card, edit_card
 from xtv_support.ui.keyboards.base import btn, chunk
+from xtv_support.ui.primitives.card import Card, edit_card
 from xtv_support.ui.templates import admin_dashboard
 from xtv_support.utils.ids import safe_objectid
 
@@ -61,7 +61,9 @@ async def tag_delete(client: Client, callback: CallbackQuery) -> None:
     ctx = get_context(client)
     _, name = callback.data.split("|", 1)
     ok = await tags_repo.delete(ctx.db, name)
-    await audit_repo.log(ctx.db, actor_id=callback.from_user.id, action="tag.delete", target_id=name)
+    await audit_repo.log(
+        ctx.db, actor_id=callback.from_user.id, action="tag.delete", target_id=name
+    )
     tags = await tags_repo.list_all(ctx.db)
     await edit_card(
         client, callback.message.chat.id, callback.message.id, admin_dashboard.tags_menu(tags)
@@ -147,6 +149,7 @@ async def tag_toggle(client: Client, callback: CallbackQuery) -> None:
             assignee_name=None,
         )
     await callback.answer("Updated.")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

@@ -1,4 +1,5 @@
 """Teams repository tests."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -20,13 +21,15 @@ class _FakeCollection:
         self.update_one = AsyncMock()
         self.delete_one = AsyncMock()
 
-    def find(self, query: dict | None = None) -> "_AsyncCursor":
+    def find(self, query: dict | None = None) -> _AsyncCursor:
         if query is None:
             return _AsyncCursor(list(self.docs))
         out = []
         for d in self.docs:
-            if all((k in ("member_ids",) and v in (d.get(k) or [])) or d.get(k) == v
-                   for k, v in query.items()):
+            if all(
+                (k in ("member_ids",) and v in (d.get(k) or [])) or d.get(k) == v
+                for k, v in query.items()
+            ):
                 out.append(d)
         return _AsyncCursor(out)
 
@@ -35,7 +38,7 @@ class _AsyncCursor:
     def __init__(self, docs: list[dict]) -> None:
         self._it = iter(docs)
 
-    def __aiter__(self) -> "_AsyncCursor":
+    def __aiter__(self) -> _AsyncCursor:
         return self
 
     async def __anext__(self) -> dict:

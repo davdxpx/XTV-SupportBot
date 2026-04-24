@@ -15,6 +15,7 @@ common questions. Two entry points:
 ``/humanplease`` in the user DM is a shortcut that jumps straight to
 ticket creation, bypassing the gate for the next message.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -254,6 +255,7 @@ async def humanplease_cmd(client: Client, message: Message) -> None:
         "👌 Got it. Your next message will skip the help suggestions "
         "and go straight to a support agent."
     )
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

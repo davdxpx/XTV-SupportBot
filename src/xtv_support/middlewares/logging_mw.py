@@ -43,7 +43,9 @@ async def log_incoming(_client: Client, message: Message) -> None:
         chat_type=_chat_type(message),
         thread=message.message_thread_id,
         user_id=user.id if user else None,
-        user=(f"@{user.username}" if user and user.username else (user.first_name if user else "?")),
+        user=(
+            f"@{user.username}" if user and user.username else (user.first_name if user else "?")
+        ),
         msg_id=message.id,
         text=_short_text(message),
     )
@@ -55,7 +57,9 @@ async def log_callback(_client: Client, callback: CallbackQuery) -> None:
     cb_log.info(
         "cb.in",
         user_id=user.id if user else None,
-        user=(f"@{user.username}" if user and user.username else (user.first_name if user else "?")),
+        user=(
+            f"@{user.username}" if user and user.username else (user.first_name if user else "?")
+        ),
         data=callback.data,
         chat_id=callback.message.chat.id if callback.message and callback.message.chat else None,
     )

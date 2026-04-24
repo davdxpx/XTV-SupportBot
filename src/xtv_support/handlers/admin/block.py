@@ -44,9 +44,12 @@ async def unblock_prompt(client: Client, callback: CallbackQuery) -> None:
         client,
         callback.message.chat.id,
         callback.message.id,
-        Card(title="Unblock user", body=["Send the numeric user id to unblock.", "/cancel to abort."]),
+        Card(
+            title="Unblock user", body=["Send the numeric user id to unblock.", "/cancel to abort."]
+        ),
     )
     await callback.answer()
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

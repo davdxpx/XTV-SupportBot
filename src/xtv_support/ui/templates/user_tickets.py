@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Iterable
+from collections.abc import Iterable
+from datetime import UTC, datetime
+from typing import Any
 
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from xtv_support.core.constants import CallbackPrefix
-from xtv_support.ui.primitives.card import Card
 from xtv_support.ui.keyboards.base import btn
+from xtv_support.ui.primitives.card import Card
 from xtv_support.utils.text import escape_html, truncate
 from xtv_support.utils.time import humanize_delta, utcnow
 
@@ -19,7 +20,7 @@ def _has_new_reply(ticket: dict[str, Any], last_seen: datetime | None) -> bool:
     if last_seen is None:
         return True
     if last_admin.tzinfo is None:
-        last_admin = last_admin.replace(tzinfo=timezone.utc)
+        last_admin = last_admin.replace(tzinfo=UTC)
     return last_admin > last_seen
 
 
@@ -73,7 +74,7 @@ def list_card(
         new = _has_new_reply(t, last_seen)
         last = t.get("last_admin_msg_at") or t.get("last_user_msg_at") or t.get("created_at")
         if last and last.tzinfo is None:
-            last = last.replace(tzinfo=timezone.utc)
+            last = last.replace(tzinfo=UTC)
         rel = humanize_delta(utcnow() - last) + " ago" if last else "—"
 
         body.append(
@@ -97,9 +98,7 @@ def list_card(
         rows.append(pager)
 
     footer = (
-        f"<i>Showing {start + 1}–{min(end, total)} of {total}.</i>"
-        if total > per_page
-        else None
+        f"<i>Showing {start + 1}–{min(end, total)} of {total}.</i>" if total > per_page else None
     )
     return Card(
         title="📜 Your tickets",
@@ -172,11 +171,7 @@ def detail_card(
     return Card(
         title=f"{_type_icon(ticket)} Ticket #{short}",
         body=body,
-        footer=(
-            "<i>Send a message here to add to this ticket.</i>"
-            if status == "open"
-            else None
-        ),
+        footer=("<i>Send a message here to add to this ticket.</i>" if status == "open" else None),
         buttons=InlineKeyboardMarkup(rows),
     )
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from xtv_support.core.constants import CallbackPrefix, MAX_BROADCAST_LEN
-from xtv_support.ui.primitives.card import Card, ProgressCard
+from xtv_support.core.constants import MAX_BROADCAST_LEN, CallbackPrefix
 from xtv_support.ui.keyboards.base import btn, rows
+from xtv_support.ui.primitives.card import Card, ProgressCard
 from xtv_support.utils.text import escape_html, truncate
 
 
@@ -50,7 +50,9 @@ def _progress_card(
         [
             btn(
                 "▶️ Resume" if paused else "⏸ Pause",
-                CallbackPrefix.ADMIN_BROADCAST_RESUME if paused else CallbackPrefix.ADMIN_BROADCAST_PAUSE,
+                CallbackPrefix.ADMIN_BROADCAST_RESUME
+                if paused
+                else CallbackPrefix.ADMIN_BROADCAST_PAUSE,
             ),
             btn("❌ Cancel", CallbackPrefix.ADMIN_BROADCAST_CANCEL),
         ],
@@ -71,14 +73,24 @@ def _progress_card(
 def running(text: str, *, sent: int, failed: int, blocked: int, total: int) -> ProgressCard:
     return _progress_card(
         status="running",
-        text=text, sent=sent, failed=failed, blocked=blocked, total=total, paused=False,
+        text=text,
+        sent=sent,
+        failed=failed,
+        blocked=blocked,
+        total=total,
+        paused=False,
     )
 
 
 def paused(text: str, *, sent: int, failed: int, blocked: int, total: int) -> ProgressCard:
     return _progress_card(
         status="paused",
-        text=text, sent=sent, failed=failed, blocked=blocked, total=total, paused=True,
+        text=text,
+        sent=sent,
+        failed=failed,
+        blocked=blocked,
+        total=total,
+        paused=True,
     )
 
 
@@ -88,7 +100,12 @@ def finished(
     state = "cancelled" if cancelled else "done"
     card = _progress_card(
         status=state,
-        text=text, sent=sent, failed=failed, blocked=blocked, total=total, paused=False,
+        text=text,
+        sent=sent,
+        failed=failed,
+        blocked=blocked,
+        total=total,
+        paused=False,
     )
     card.buttons = None
     card.progress = 1.0 if not cancelled else (sent / total if total else 0)

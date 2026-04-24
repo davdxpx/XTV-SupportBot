@@ -1,4 +1,5 @@
 """Macros repo tests."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -70,9 +71,7 @@ def test_validate_name_accepts(good: str) -> None:
     assert repo.validate_name(good) == good
 
 
-@pytest.mark.parametrize(
-    "bad", ["", "BadCaps", "has space", "-leading", "x" * 33]
-)
+@pytest.mark.parametrize("bad", ["", "BadCaps", "has space", "-leading", "x" * 33])
 def test_validate_name_rejects(bad: str) -> None:
     with pytest.raises(InvalidMacroNameError):
         repo.validate_name(bad)
@@ -92,8 +91,12 @@ async def test_create_inserts_with_timestamps(db) -> None:
     db.macros.insert_one.return_value = MagicMock(inserted_id="abc")
 
     m = await repo.create(
-        db, name="greet", body="Hi {user_name}",
-        team_id="support", tags=["welcome"], created_by=7,
+        db,
+        name="greet",
+        body="Hi {user_name}",
+        team_id="support",
+        tags=["welcome"],
+        created_by=7,
     )
     db.macros.insert_one.assert_awaited_once()
     doc = db.macros.insert_one.await_args.args[0]

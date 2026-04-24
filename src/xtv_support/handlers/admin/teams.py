@@ -15,6 +15,7 @@ Grammar
 ``/team addmember <slug> <id>``   — add a member
 ``/team removemember <slug> <id>``— remove a member
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -127,13 +128,9 @@ async def _create_team(ctx, message: Message, rest: list[str]) -> None:
     if existing is not None:
         await message.reply_text(f"Team <code>{slug}</code> already exists.")
         return
-    team = await teams_repo.create(
-        ctx.db, team_id=slug, name=name, created_by=message.from_user.id
-    )
+    team = await teams_repo.create(ctx.db, team_id=slug, name=name, created_by=message.from_user.id)
     log.info("team.created", slug=slug, name=name, by=message.from_user.id)
-    await message.reply_text(
-        f"✅ Created team <code>{team.id}</code> — {team.name}."
-    )
+    await message.reply_text(f"✅ Created team <code>{team.id}</code> — {team.name}.")
 
 
 async def _rename_team(ctx, message: Message, rest: list[str]) -> None:
@@ -209,7 +206,9 @@ async def _add_member(ctx, message: Message, rest: list[str]) -> None:
 
 async def _remove_member(ctx, message: Message, rest: list[str]) -> None:
     if len(rest) != 2:
-        await message.reply_text("Usage: <code>/team removemember &lt;slug&gt; &lt;user_id&gt;</code>")
+        await message.reply_text(
+            "Usage: <code>/team removemember &lt;slug&gt; &lt;user_id&gt;</code>"
+        )
         return
     slug, raw_id = rest
     try:
@@ -219,6 +218,7 @@ async def _remove_member(ctx, message: Message, rest: list[str]) -> None:
         return
     await teams_repo.remove_member(ctx.db, slug, uid)
     await message.reply_text(f"✅ Removed <code>{uid}</code> from <code>{slug}</code>.")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

@@ -1,10 +1,9 @@
 """Macros service tests — render() + consume()."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
-
-import pytest
 
 from xtv_support.domain.events import MacroUsed
 from xtv_support.domain.models.macro import Macro
@@ -78,8 +77,11 @@ async def test_consume_swallows_counter_errors(monkeypatch) -> None:
 
     # Must not raise; event still fires.
     await consume(
-        SimpleNamespace(), bus,
-        macro=_macro(), ticket_id="t1", actor_id=1,
+        SimpleNamespace(),
+        bus,
+        macro=_macro(),
+        ticket_id="t1",
+        actor_id=1,
     )
     bus.publish.assert_awaited_once()
 

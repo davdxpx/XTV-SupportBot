@@ -13,6 +13,7 @@ Grammar
 ``/kb del <slug>``                               — delete an article
 ``/kb search <query>``                           — full-text search
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -101,9 +102,7 @@ async def _list(ctx, message: Message, rest: str) -> None:
     lang = rest.strip().split()[0] if rest.strip() else None
     articles = await kb_repo.list_all(ctx.db, lang=lang, limit=50)
     if not articles:
-        await message.reply_text(
-            "No articles found." + (f" (lang={lang})" if lang else "")
-        )
+        await message.reply_text("No articles found." + (f" (lang={lang})" if lang else ""))
         return
     lines = [f"<b>KB articles ({len(articles)})</b>"]
     for a in articles:
@@ -125,7 +124,9 @@ async def _show(ctx, message: Message, rest: str) -> None:
         await message.reply_text(f"No article <code>{slug}</code>.")
         return
     tags = ", ".join(article.tags) if article.tags else "—"
-    helpfulness = f"{int(article.helpfulness * 100)}%" if (article.helpful + article.not_helpful) else "—"
+    helpfulness = (
+        f"{int(article.helpfulness * 100)}%" if (article.helpful + article.not_helpful) else "—"
+    )
     await message.reply_text(
         f"<b>{article.title}</b> (<code>{article.slug}</code>)\n"
         f"lang={article.lang} · tags={tags} · views={article.views} · "
@@ -145,9 +146,7 @@ async def _add(ctx, message: Message, rest: str) -> None:
     if not body and message.reply_to_message:
         body = message.reply_to_message.text or message.reply_to_message.caption or ""
     if not body:
-        await message.reply_text(
-            "Provide the body inline after a third '|' or reply to a message."
-        )
+        await message.reply_text("Provide the body inline after a third '|' or reply to a message.")
         return
     try:
         article = await kb_repo.create(
@@ -230,6 +229,7 @@ async def _search(ctx, message: Message, rest: str) -> None:
     for i, a in enumerate(results, 1):
         lines.append(f"  {i}. <code>{a.slug}</code> [{a.lang}] — {a.title}")
     await message.reply_text("\n".join(lines))
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

@@ -31,10 +31,11 @@ Selection
 * A team score of ``0`` means no rule matched — the team is skipped
   unless it is the only one with an empty-match (catch-all) rule.
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Iterable, Mapping
 
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.models.team import QueueRule, Team
@@ -48,7 +49,7 @@ class RouteResult:
 
     team: Team | None
     score: int
-    matched_rules: tuple[str, ...]   # flat ``"key=value"`` strings for audit
+    matched_rules: tuple[str, ...]  # flat ``"key=value"`` strings for audit
 
 
 # ----------------------------------------------------------------------
@@ -89,15 +90,12 @@ def route_ticket(ticket: Mapping[str, object], teams: Iterable[Team]) -> RouteRe
 # ----------------------------------------------------------------------
 # Internals — scoring
 # ----------------------------------------------------------------------
-def _score_team(
-    ticket: Mapping[str, object], team: Team
-) -> tuple[int, tuple[str, ...]]:
+def _score_team(ticket: Mapping[str, object], team: Team) -> tuple[int, tuple[str, ...]]:
     best_score = 0
     matches: list[str] = []
     for rule in team.queue_rules:
         if _rule_matches(ticket, rule):
-            if rule.weight > best_score:
-                best_score = rule.weight
+            best_score = max(best_score, rule.weight)
             matches.append(_rule_signature(rule))
     return best_score, tuple(matches)
 

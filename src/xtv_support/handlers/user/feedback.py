@@ -3,8 +3,8 @@ from __future__ import annotations
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, Message
 
-from xtv_support.core.constants import CallbackPrefix, HandlerGroup, UserState
 from xtv_support.core.callback_data import CbRate
+from xtv_support.core.constants import CallbackPrefix, HandlerGroup, UserState
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import cb_prefix, is_admin_user, is_private, not_command
 from xtv_support.core.logger import get_logger
@@ -102,7 +102,9 @@ async def _handle_feedback_submission(client: Client, message: Message, project:
     )
     # Feedback projects auto-close immediately.
     if ticket and ticket.get("_id"):
-        await tickets_repo.close(ctx.db, ticket["_id"], closed_by=None, reason="feedback_submission")
+        await tickets_repo.close(
+            ctx.db, ticket["_id"], closed_by=None, reason="feedback_submission"
+        )
     if project.get("has_rating"):
         await send_card(
             client,
@@ -153,6 +155,7 @@ async def rating_submitted(client: Client, callback: CallbackQuery) -> None:
         user_messages.rating_thanks(data.score),
     )
     await callback.answer()
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

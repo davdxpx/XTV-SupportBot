@@ -9,6 +9,7 @@ All decision logic lives in :mod:`xtv_support.core.rbac`; this module
 is intentionally thin so it can be unit-tested via the pure helpers
 without a live pyrofork Client.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client
@@ -91,6 +92,7 @@ async def set_role_for_callback(client: Client, callback: CallbackQuery) -> None
         legacy_admin_ids=ctx.settings.ADMIN_IDS,
     )
     current_role.set(role)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

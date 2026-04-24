@@ -20,11 +20,11 @@ class Colors:
 
 class ConsoleFormatter(logging.Formatter):
     FORMATS = {
-        logging.DEBUG: "\U0001F41E",  # 🐞
+        logging.DEBUG: "\U0001f41e",  # 🐞
         logging.INFO: "\u2139\ufe0f ",  # ℹ️
         logging.WARNING: "\u26a0\ufe0f ",  # ⚠️
         logging.ERROR: "\u274c ",  # ❌
-        logging.CRITICAL: "\U0001F525 ",  # 🔥
+        logging.CRITICAL: "\U0001f525 ",  # 🔥
     }
 
     COLOR_MAP = {
@@ -48,9 +48,7 @@ class ConsoleFormatter(logging.Formatter):
                 f"{color}%(name)s{Colors.RESET} :: "
                 f"{color}%(message)s{Colors.RESET}"
             )
-            self._cached_formatters[record.levelno] = logging.Formatter(
-                log_fmt, datefmt="%H:%M:%S"
-            )
+            self._cached_formatters[record.levelno] = logging.Formatter(log_fmt, datefmt="%H:%M:%S")
         return self._cached_formatters[record.levelno].format(record)
 
 
@@ -67,7 +65,10 @@ def _merge_kwargs(msg: Any, kwargs: dict[str, Any]) -> tuple[str, dict[str, Any]
 
     msg_str = str(msg)
     if extras:
-        parts = " ".join(f"{k}={v!r}" if isinstance(v, str) and (" " in v or not v) else f"{k}={v}" for k, v in extras.items())
+        parts = " ".join(
+            f"{k}={v!r}" if isinstance(v, str) and (" " in v or not v) else f"{k}={v}"
+            for k, v in extras.items()
+        )
         msg_str = f"{msg_str} {parts}" if msg_str else parts
     return msg_str, reserved
 
@@ -82,9 +83,7 @@ class BotLogger(logging.Logger):
     safely pass ``msg=...`` as structured context.
     """
 
-    def _log_with_kwargs(
-        self, level: int, event: Any, args: tuple, **kwargs: Any
-    ) -> None:
+    def _log_with_kwargs(self, level: int, event: Any, args: tuple, **kwargs: Any) -> None:
         msg_str, reserved = _merge_kwargs(event, kwargs)
         if self.isEnabledFor(level):
             # Delegate to stdlib with reserved kwargs preserved.

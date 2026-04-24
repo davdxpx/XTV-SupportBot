@@ -1,4 +1,5 @@
 """I18n translator tests."""
+
 from __future__ import annotations
 
 import pytest
@@ -73,7 +74,7 @@ def test_missing_placeholder_returns_raw_template(i18n: I18n) -> None:
 
 def test_has_reports_presence(i18n: I18n) -> None:
     assert i18n.has("user.welcome", locale="de") is True
-    assert i18n.has("user.advanced", locale="de") is True    # via fallback
+    assert i18n.has("user.advanced", locale="de") is True  # via fallback
     assert i18n.has("does.not.exist", locale="en") is False
 
 

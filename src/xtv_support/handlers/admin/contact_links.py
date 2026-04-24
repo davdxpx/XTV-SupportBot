@@ -56,6 +56,7 @@ async def contact_link_anon(client: Client, callback: CallbackQuery) -> None:
     await edit_card(client, callback.message.chat.id, callback.message.id, card)
     await callback.answer()
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

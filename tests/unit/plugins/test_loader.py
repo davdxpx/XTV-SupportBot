@@ -1,11 +1,9 @@
 """PluginLoader tests — discovery, flag gating, lifecycle isolation."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import SimpleNamespace
 from typing import Any
-
-import pytest
 
 from xtv_support.core.container import Container
 from xtv_support.core.events import EventBus
@@ -144,9 +142,7 @@ async def test_feature_flag_disables_plugin() -> None:
     assert entry is not None
     assert entry.status == "disabled"
     # No PluginLoaded / PluginFailed emitted for disabled plugins.
-    assert not any(
-        isinstance(e, (PluginLoaded, PluginFailed)) for e in rig.events_seen
-    )
+    assert not any(isinstance(e, (PluginLoaded, PluginFailed)) for e in rig.events_seen)
 
 
 async def test_feature_flag_true_activates_plugin() -> None:
