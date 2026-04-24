@@ -22,6 +22,7 @@ For each plugin the loader:
 Failures are isolated — one misbehaving plugin never prevents the rest
 from loading.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -34,7 +35,7 @@ from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import PluginFailed, PluginLoaded, PluginUnloaded
-from xtv_support.plugins.base import EventSubscription, LoadedPlugin, Plugin
+from xtv_support.plugins.base import LoadedPlugin, Plugin
 from xtv_support.plugins.registry import PluginRegistry
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -62,9 +63,9 @@ class PluginLoader:
     def __init__(
         self,
         *,
-        container: "Container",
-        bus: "EventBus",
-        flags: "FeatureFlags | None" = None,
+        container: Container,
+        bus: EventBus,
+        flags: FeatureFlags | None = None,
         registry: PluginRegistry | None = None,
     ) -> None:
         self._container = container
@@ -128,9 +129,7 @@ class PluginLoader:
             try:
                 module = importlib.import_module(info.name)
             except Exception as exc:  # noqa: BLE001
-                _log.exception(
-                    "plugin.builtin_import_failed", module=info.name, error=str(exc)
-                )
+                _log.exception("plugin.builtin_import_failed", module=info.name, error=str(exc))
                 continue
             factory = _factory_from_module(module)
             if factory is not None:
@@ -147,9 +146,7 @@ class PluginLoader:
             try:
                 factory = _factory_from_entry_point(ep)
             except Exception as exc:  # noqa: BLE001
-                _log.exception(
-                    "plugin.entry_point_failed", entry=str(ep), error=str(exc)
-                )
+                _log.exception("plugin.entry_point_failed", entry=str(ep), error=str(exc))
                 continue
             result.append((factory, "entry_point"))
         return result
@@ -157,17 +154,13 @@ class PluginLoader:
     # ------------------------------------------------------------------
     # Activation of one plugin
     # ------------------------------------------------------------------
-    async def _activate(
-        self, factory: Callable[[], Plugin], source: str
-    ) -> LoadedPlugin | None:
+    async def _activate(self, factory: Callable[[], Plugin], source: str) -> LoadedPlugin | None:
         # Instantiate first so we can register even failures with a name.
         try:
             plugin = factory()
         except Exception as exc:  # noqa: BLE001
             _log.exception("plugin.instantiation_failed", error=str(exc))
-            await self._bus.publish(
-                PluginFailed(name="<unknown>", stage="import", error=str(exc))
-            )
+            await self._bus.publish(PluginFailed(name="<unknown>", stage="import", error=str(exc)))
             return None
 
         if not isinstance(plugin, Plugin):
@@ -200,21 +193,15 @@ class PluginLoader:
         except Exception as exc:  # noqa: BLE001
             entry.status = "failed"
             entry.error = str(exc)
-            _log.exception(
-                "plugin.startup_failed", plugin=plugin.name, error=str(exc)
-            )
-            await self._bus.publish(
-                PluginFailed(name=plugin.name, stage="startup", error=str(exc))
-            )
+            _log.exception("plugin.startup_failed", plugin=plugin.name, error=str(exc))
+            await self._bus.publish(PluginFailed(name=plugin.name, stage="startup", error=str(exc)))
             return entry
 
         # Collect commands (pure data)
         try:
             entry.commands = list(plugin.register_commands())
         except Exception as exc:  # noqa: BLE001
-            _log.exception(
-                "plugin.commands_failed", plugin=plugin.name, error=str(exc)
-            )
+            _log.exception("plugin.commands_failed", plugin=plugin.name, error=str(exc))
             entry.commands = []
 
         # Wire event subscriptions
@@ -224,9 +211,7 @@ class PluginLoader:
                 self._bus.subscribe(sub.event_type, sub.handler)
             entry.subscriptions = subs
         except Exception as exc:  # noqa: BLE001
-            _log.exception(
-                "plugin.subscribe_failed", plugin=plugin.name, error=str(exc)
-            )
+            _log.exception("plugin.subscribe_failed", plugin=plugin.name, error=str(exc))
 
         entry.status = "loaded"
         await self._bus.publish(

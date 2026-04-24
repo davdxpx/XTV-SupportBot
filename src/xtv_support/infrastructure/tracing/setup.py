@@ -3,6 +3,7 @@
 Wired from ``__main__.py`` when ``OTEL_EXPORTER_OTLP_ENDPOINT`` is set.
 All imports are lazy so the observability extra stays optional.
 """
+
 from __future__ import annotations
 
 import os
@@ -29,7 +30,9 @@ def install() -> bool:
         from opentelemetry import trace  # type: ignore[import-not-found]
         from opentelemetry.sdk.resources import Resource  # type: ignore[import-not-found]
         from opentelemetry.sdk.trace import TracerProvider  # type: ignore[import-not-found]
-        from opentelemetry.sdk.trace.export import BatchSpanProcessor  # type: ignore[import-not-found]
+        from opentelemetry.sdk.trace.export import (
+            BatchSpanProcessor,  # type: ignore[import-not-found]
+        )
     except ModuleNotFoundError as exc:
         _log.warning("otel.install.missing_packages", error=str(exc))
         return False

@@ -1,4 +1,5 @@
 """Business-hours service package."""
+
 from xtv_support.services.business_hours.clock import (
     accumulate,
     is_open,

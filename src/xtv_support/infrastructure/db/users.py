@@ -67,9 +67,7 @@ async def is_blocked(db: AsyncIOMotorDatabase, user_id: int) -> bool:
     return bool(doc and doc.get("blocked"))
 
 
-async def set_cooldown(
-    db: AsyncIOMotorDatabase, user_id: int, *, until: datetime | None
-) -> None:
+async def set_cooldown(db: AsyncIOMotorDatabase, user_id: int, *, until: datetime | None) -> None:
     await db.users.update_one(
         {"user_id": user_id},
         {"$set": {"cooldown_until": until}},
@@ -111,9 +109,7 @@ async def get_preferred_lang(db: AsyncIOMotorDatabase, user_id: int) -> str | No
     return lang if isinstance(lang, str) and lang else None
 
 
-async def set_preferred_lang(
-    db: AsyncIOMotorDatabase, user_id: int, code: str
-) -> None:
+async def set_preferred_lang(db: AsyncIOMotorDatabase, user_id: int, code: str) -> None:
     """Persist the user's language choice — used by the /lang command."""
     await db.users.update_one(
         {"user_id": user_id},
@@ -122,9 +118,7 @@ async def set_preferred_lang(
     )
 
 
-async def iter_active(
-    db: AsyncIOMotorDatabase, *, batch_size: int = 500
-) -> "list[dict[str, Any]]":
+async def iter_active(db: AsyncIOMotorDatabase, *, batch_size: int = 500) -> list[dict[str, Any]]:
     """Return active users' ids. Used by broadcast."""
     cursor = db.users.find(
         {"$or": [{"blocked": {"$ne": True}}, {"blocked": {"$exists": False}}]},
@@ -132,6 +126,7 @@ async def iter_active(
         batch_size=batch_size,
     )
     return [doc async for doc in cursor]
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

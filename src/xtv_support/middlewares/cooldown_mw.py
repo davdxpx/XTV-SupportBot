@@ -13,9 +13,7 @@ from xtv_support.ui.templates.user_messages import cooldown_card
 log = get_logger("cooldown_mw")
 
 
-@Client.on_message(
-    is_private & ~is_admin_user & not_command, group=HandlerGroup.MIDDLEWARE_GUARD
-)
+@Client.on_message(is_private & ~is_admin_user & not_command, group=HandlerGroup.MIDDLEWARE_GUARD)
 async def enforce_cooldown(client: Client, message: Message) -> None:
     if not message.from_user:
         return
@@ -34,6 +32,7 @@ async def enforce_cooldown(client: Client, message: Message) -> None:
         log.debug("cooldown.notify_failed", error=str(exc))
 
     message.stop_propagation()
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

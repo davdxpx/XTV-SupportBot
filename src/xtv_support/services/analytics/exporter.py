@@ -10,12 +10,13 @@ Two call patterns:
 Both operate over the same *column contract* so the output is stable
 across entry points (Telegram ``/export``, REST API, digest archives).
 """
+
 from __future__ import annotations
 
 import csv
 import io
+from collections.abc import Iterable, Mapping
 from datetime import datetime
-from typing import Iterable, Mapping
 
 COLUMNS: tuple[str, ...] = (
     "ticket_id",

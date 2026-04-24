@@ -5,6 +5,7 @@ appear and returns a JSON-serialisable dict. Exclusive to the user
 who requested it — the handler looks them up via ``message.from_user.id``
 and hands that to :func:`build_export`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -34,9 +35,7 @@ class ExportBundle:
         }
 
 
-async def build_export(
-    db: "AsyncIOMotorDatabase", user_id: int
-) -> ExportBundle:
+async def build_export(db: AsyncIOMotorDatabase, user_id: int) -> ExportBundle:
     """Assemble the export. Sections included:
 
     * ``user`` — the user's own doc from ``users``

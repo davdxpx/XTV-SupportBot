@@ -276,9 +276,7 @@ async def send_to_topic_or_fallback(
                 target_chat, file_id, caption=text, parse_mode=ParseMode.HTML, **kwargs
             )
         else:
-            await client.send_message(
-                target_chat, text, parse_mode=ParseMode.HTML, **kwargs
-            )
+            await client.send_message(target_chat, text, parse_mode=ParseMode.HTML, **kwargs)
     except RPCError as exc:
         log.warning("topic.send_failed", ticket=str(ticket.get("_id")), error=str(exc))
 

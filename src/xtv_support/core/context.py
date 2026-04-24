@@ -36,35 +36,36 @@ class HandlerContext:
     from :attr:`container` instead of adding another field here.
     """
 
-    client: "Client"
-    settings: "Settings"
-    db: "AsyncIOMotorDatabase"
-    tasks: "TaskManager"
-    cooldown: "CooldownService"
-    sla: "SlaService"
-    broadcasts: "BroadcastManager"
+    client: Client
+    settings: Settings
+    db: AsyncIOMotorDatabase
+    tasks: TaskManager
+    cooldown: CooldownService
+    sla: SlaService
+    broadcasts: BroadcastManager
 
     # --- Kernel additions (Phase 3) ---------------------------------
-    container: "Container" = field(default=None)  # type: ignore[assignment]
-    bus: "EventBus" = field(default=None)  # type: ignore[assignment]
-    flags: "FeatureFlags" = field(default=None)  # type: ignore[assignment]
-    state: "StateMachine" = field(default=None)  # type: ignore[assignment]
-    plugin_loader: "PluginLoader | None" = None
-    plugin_registry: "PluginRegistry | None" = None
+    container: Container = field(default=None)  # type: ignore[assignment]
+    bus: EventBus = field(default=None)  # type: ignore[assignment]
+    flags: FeatureFlags = field(default=None)  # type: ignore[assignment]
+    state: StateMachine = field(default=None)  # type: ignore[assignment]
+    plugin_loader: PluginLoader | None = None
+    plugin_registry: PluginRegistry | None = None
 
     # --- Phase 4: i18n ----------------------------------------------
-    i18n: "I18n | None" = None
+    i18n: I18n | None = None
 
 
-def bind_context(client: "Client", ctx: HandlerContext) -> None:
+def bind_context(client: Client, ctx: HandlerContext) -> None:
     client._ctx = ctx  # type: ignore[attr-defined]
 
 
-def get_context(client: "Client") -> HandlerContext:
+def get_context(client: Client) -> HandlerContext:
     ctx: HandlerContext | None = getattr(client, "_ctx", None)
     if ctx is None:
         raise RuntimeError("HandlerContext not bound to client; call bind_context first.")
     return ctx
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

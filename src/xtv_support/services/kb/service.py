@@ -7,6 +7,7 @@ Composition layer over the repo that:
   the locale has no matching articles.
 * Filters by project when the user just selected one.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -31,7 +32,7 @@ def normalise_query(raw: str) -> str:
 
 
 async def search(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     raw_query: str,
     *,
     lang: str | None = None,

@@ -4,10 +4,11 @@ Parses the AI's three-section output (``Problem: ... / Resolution: ...
 / Tags: ...``) into a typed :class:`TicketSummary` so the history
 record can store structured fields instead of a blob.
 """
+
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.ai.client import AIClient, AIResult
@@ -16,9 +17,7 @@ from xtv_support.services.ai.redaction import redact
 
 log = get_logger("ai.summary")
 
-_SECTION_RE = re.compile(
-    r"^\s*(?:problem|resolution|tags)\s*:", re.IGNORECASE | re.MULTILINE
-)
+_SECTION_RE = re.compile(r"^\s*(?:problem|resolution|tags)\s*:", re.IGNORECASE | re.MULTILINE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,8 +27,8 @@ class TicketSummary:
     problem: str = ""
     resolution: str = ""
     tags: tuple[str, ...] = ()
-    raw: str = ""               # full text from the model
-    ok: bool = False            # mirrors AIResult.ok for convenience
+    raw: str = ""  # full text from the model
+    ok: bool = False  # mirrors AIResult.ok for convenience
     error: str | None = None
 
 
@@ -72,7 +71,7 @@ async def summarise(
     result: AIResult = await client.complete(
         feature="summary",
         messages=messages,
-        model=client.config.fast_model,   # cheaper model — summaries are short
+        model=client.config.fast_model,  # cheaper model — summaries are short
         user_id=user_id,
         ticket_id=ticket_id,
     )

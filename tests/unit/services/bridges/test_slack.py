@@ -1,4 +1,5 @@
 """Slack formatter tests."""
+
 from __future__ import annotations
 
 from xtv_support.domain.events import (
@@ -20,9 +21,7 @@ def test_ticket_created_payload_shape() -> None:
     e = TicketCreated(ticket_id="t1", user_id=99, project_id="P1")
     p = build_payload(e)
     att = _only_attachment(p)
-    text = " ".join(
-        b["text"]["text"] for b in att["blocks"] if b["type"] == "section"
-    )
+    text = " ".join(b["text"]["text"] for b in att["blocks"] if b["type"] == "section")
     assert "t1" in text and "99" in text and "P1" in text
     assert att["color"].startswith("#")
 

@@ -4,6 +4,7 @@ Events are immutable, keyword-only dataclasses. Subscribers live in
 services / plugins and attach via :meth:`xtv_support.core.events.EventBus.on`
 or :meth:`~xtv_support.core.events.EventBus.subscribe`.
 """
+
 from __future__ import annotations
 
 from xtv_support.domain.events.base import DomainEvent

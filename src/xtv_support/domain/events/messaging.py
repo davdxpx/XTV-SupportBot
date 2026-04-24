@@ -1,4 +1,5 @@
 """Incoming / outgoing message events."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

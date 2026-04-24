@@ -122,20 +122,20 @@ class AuditDoc(TypedDict, total=False):
 
 class RoleDoc(TypedDict, total=False):
     user_id: int
-    role: str                # xtv_support.domain.enums.Role value
+    role: str  # xtv_support.domain.enums.Role value
     team_ids: list[str]
     granted_by: int | None
     granted_at: datetime
 
 
 class TeamDoc(TypedDict, total=False):
-    _id: str                 # team slug, unique
+    _id: str  # team slug, unique
     name: str
     timezone: str
-    business_hours: list[dict]   # [{weekday: int, start: "HH:MM", end: "HH:MM"}]
-    holidays: list[str]          # YYYY-MM-DD
+    business_hours: list[dict]  # [{weekday: int, start: "HH:MM", end: "HH:MM"}]
+    holidays: list[str]  # YYYY-MM-DD
     member_ids: list[int]
-    queue_rules: list[dict]      # [{match: {...}, weight: int}]
+    queue_rules: list[dict]  # [{match: {...}, weight: int}]
     created_by: int
     created_at: datetime
 
@@ -144,7 +144,7 @@ class MacroDoc(TypedDict, total=False):
     _id: ObjectId
     name: str
     body: str
-    team_id: str | None          # None -> global
+    team_id: str | None  # None -> global
     tags: list[str]
     usage_count: int
     created_by: int
@@ -166,6 +166,7 @@ class KbArticleDoc(TypedDict, total=False):
     created_by: int
     created_at: datetime
     updated_at: datetime
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

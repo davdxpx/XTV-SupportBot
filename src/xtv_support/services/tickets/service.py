@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pyrogram import Client
 from pyrogram.enums import ParseMode
@@ -31,7 +30,11 @@ def _extract_message(message: Message) -> tuple[str, str, str | None]:
     if message.photo:
         return message.caption or "(photo)", "photo", message.photo.file_id
     if message.document:
-        return message.caption or f"(document: {message.document.file_name})", "document", message.document.file_id
+        return (
+            message.caption or f"(document: {message.document.file_name})",
+            "document",
+            message.document.file_id,
+        )
     text = message.text or message.caption or "(empty)"
     return text, "text", None
 
@@ -87,14 +90,19 @@ async def create_ticket_from_message(
             project=project,
         )
     except TopicsNotSupported:
-        topic_id = None
+        # Fallback path: the supergroup doesn't support forum topics, so
+        # we post everything to the channel root instead. ``topic_id``
+        # stays unset on the ticket document and the handler branches on
+        # ``fallback`` below.
         fallback = True
         log.warning("ticket.topic_unavailable", ticket=str(ticket_id))
 
     # Forward the original user message into the topic (or fallback to channel).
     ticket = await tickets_repo.get(db, ticket_id)
     if ticket:
-        caption = f"<b>From user:</b> {escape_html(text)}" if media_type == "text" else escape_html(text)
+        caption = (
+            f"<b>From user:</b> {escape_html(text)}" if media_type == "text" else escape_html(text)
+        )
         await topic_service.send_to_topic_or_fallback(
             client,
             ticket=ticket,
@@ -109,9 +117,7 @@ async def create_ticket_from_message(
     await send_card(
         client,
         user_id,
-        user_messages.ticket_created(
-            short, is_feedback=is_feedback, is_contact=is_contact
-        ),
+        user_messages.ticket_created(short, is_feedback=is_feedback, is_contact=is_contact),
     )
 
     await audit_repo.log(
@@ -213,10 +219,13 @@ async def close_ticket(
     )
 
 
-async def hydrate_project(db: AsyncIOMotorDatabase, ticket: dict[str, Any]) -> dict[str, Any] | None:
+async def hydrate_project(
+    db: AsyncIOMotorDatabase, ticket: dict[str, Any]
+) -> dict[str, Any] | None:
     if not ticket.get("project_id"):
         return None
     return await projects_repo.get(db, ticket["project_id"])
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

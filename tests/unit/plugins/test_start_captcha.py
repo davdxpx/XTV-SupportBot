@@ -1,4 +1,5 @@
 """Start-captcha challenge tests."""
+
 from __future__ import annotations
 
 from xtv_support.plugins.builtin.start_captcha.challenge import (

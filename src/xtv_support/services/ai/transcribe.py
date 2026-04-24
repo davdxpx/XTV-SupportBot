@@ -9,6 +9,7 @@ Callers provide already-downloaded bytes + the original filename. The
 pyrofork handler in the plugin is responsible for actually pulling
 the file from Telegram.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ log = get_logger("ai.transcribe")
 @dataclass(frozen=True, slots=True)
 class TranscriptionResult:
     text: str
-    kind: str                    # "voice" | "image"
+    kind: str  # "voice" | "image"
     ok: bool
     model: str = ""
     error: str | None = None
@@ -42,15 +43,11 @@ async def transcribe_voice(
 ) -> TranscriptionResult:
     """Run speech-to-text on a voice clip."""
     if not client.config.enabled:
-        return TranscriptionResult(
-            text="", kind="voice", ok=False, error="ai_disabled"
-        )
+        return TranscriptionResult(text="", kind="voice", ok=False, error="ai_disabled")
     try:
         import litellm  # type: ignore[import-untyped]
     except ModuleNotFoundError as exc:
-        return TranscriptionResult(
-            text="", kind="voice", ok=False, error=f"litellm_missing: {exc}"
-        )
+        return TranscriptionResult(text="", kind="voice", ok=False, error=f"litellm_missing: {exc}")
 
     model = client.config.transcribe_model
     try:
@@ -66,9 +63,7 @@ async def transcribe_voice(
             ticket_id=ticket_id,
             error=str(exc),
         )
-        return TranscriptionResult(
-            text="", kind="voice", ok=False, model=model, error=str(exc)
-        )
+        return TranscriptionResult(text="", kind="voice", ok=False, model=model, error=str(exc))
 
     text = _extract_text(response)
     log.info(
@@ -94,9 +89,7 @@ async def transcribe_image(
     data URL — the caller decides).
     """
     if not client.config.enabled:
-        return TranscriptionResult(
-            text="", kind="image", ok=False, error="ai_disabled"
-        )
+        return TranscriptionResult(text="", kind="image", ok=False, error="ai_disabled")
 
     messages = [
         {
@@ -127,8 +120,11 @@ async def transcribe_image(
     )
     if not result.ok:
         return TranscriptionResult(
-            text="", kind="image", ok=False,
-            model=client.config.vision_model, error=result.error or "ai_call_failed",
+            text="",
+            kind="image",
+            ok=False,
+            model=client.config.vision_model,
+            error=result.error or "ai_call_failed",
         )
     log.info(
         "ai.transcribe_image.ok",

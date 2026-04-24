@@ -4,6 +4,7 @@
 Prometheus exposition endpoint. Split out so toggling
 ``METRICS_ENABLED`` is a single mount point.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -12,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from fastapi import APIRouter
 
 
-def build_router() -> "APIRouter":
+def build_router() -> APIRouter:
     from fastapi import APIRouter
     from fastapi.responses import Response
 

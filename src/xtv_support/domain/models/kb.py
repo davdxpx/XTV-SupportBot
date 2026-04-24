@@ -4,9 +4,10 @@ An article is the smallest standalone answer that can resolve a user
 question without opening a ticket. The KB gate (Phase 6c) offers
 matching articles as inline buttons before a new ticket is created.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 
@@ -15,12 +16,12 @@ class KbArticle:
     """Immutable representation of one KB article."""
 
     id: str
-    slug: str                              # URL-safe unique id
+    slug: str  # URL-safe unique id
     title: str
-    body: str                              # HTML-safe content
-    lang: str = "en"                       # locale code — ties into i18n
+    body: str  # HTML-safe content
+    lang: str = "en"  # locale code — ties into i18n
     tags: tuple[str, ...] = ()
-    project_ids: tuple[str, ...] = ()      # scope: which projects see this article
+    project_ids: tuple[str, ...] = ()  # scope: which projects see this article
     views: int = 0
     helpful: int = 0
     not_helpful: int = 0

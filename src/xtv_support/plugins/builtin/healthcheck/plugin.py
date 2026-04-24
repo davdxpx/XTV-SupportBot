@@ -4,13 +4,15 @@ Demonstrates every hook the loader calls so future plugins have a
 reference to copy. Always loads (no feature flag), owns zero state, and
 simply logs when a :class:`PluginLoaded` event fires.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import PluginLoaded
-from xtv_support.plugins.base import CommandSpec, EventSubscription, Plugin as _Base
+from xtv_support.plugins.base import CommandSpec, EventSubscription
+from xtv_support.plugins.base import Plugin as _Base
 
 if TYPE_CHECKING:  # pragma: no cover
     from xtv_support.core.container import Container
@@ -25,7 +27,7 @@ class Plugin(_Base):
     version = "0.1.0"
     description = "Verifies the plugin loader is wired up correctly."
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         _log.info("healthcheck.startup", loaded=True)
 
     async def on_shutdown(self) -> None:

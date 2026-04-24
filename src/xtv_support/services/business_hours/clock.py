@@ -23,13 +23,14 @@ Empty ``business_hours`` disables the feature: ``is_open`` is ``True``
 24/7 and ``accumulate`` returns ``end - start`` — so teams without
 configured hours behave exactly like the pre-Phase-8 bot.
 """
+
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
-from typing import Iterable
+from collections.abc import Iterable
+from datetime import UTC, date, datetime, time, timedelta
 
 from xtv_support.domain.enums import Weekday
-from xtv_support.domain.models.team import BusinessHoursWindow, Team
+from xtv_support.domain.models.team import Team
 
 try:
     from zoneinfo import ZoneInfo  # Python 3.9+ stdlib
@@ -43,11 +44,11 @@ except ImportError:  # pragma: no cover
 def _team_zone(team: Team):
     """Resolve the IANA timezone; fall back to UTC when zoneinfo is missing."""
     if ZoneInfo is None:
-        return timezone.utc
+        return UTC
     try:
         return ZoneInfo(team.timezone or "UTC")
     except Exception:  # noqa: BLE001
-        return timezone.utc
+        return UTC
 
 
 def _parse_hhmm(s: str) -> time:
@@ -82,9 +83,7 @@ def is_open(team: Team, when: datetime) -> bool:
     return False
 
 
-def next_work_start(
-    team: Team, when: datetime, *, max_days: int = 14
-) -> datetime | None:
+def next_work_start(team: Team, when: datetime, *, max_days: int = 14) -> datetime | None:
     """Return the earliest datetime ``>= when`` that falls inside a work window.
 
     Walks forward day by day up to ``max_days`` (defensive upper bound).
@@ -99,7 +98,7 @@ def next_work_start(
 
     for _ in range(max_days * 24):
         if is_open(team, cursor):
-            return cursor.astimezone(when.tzinfo or timezone.utc)
+            return cursor.astimezone(when.tzinfo or UTC)
         # Advance to the next window boundary — 5-minute steps keep us
         # coarse enough for SLA purposes.
         cursor = cursor + timedelta(minutes=5)

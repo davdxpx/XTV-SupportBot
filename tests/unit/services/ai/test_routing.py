@@ -1,4 +1,5 @@
 """Smart-routing tests."""
+
 from __future__ import annotations
 
 import pytest
@@ -14,7 +15,7 @@ KNOWN = ["billing", "support", "vip"]
     [
         ("billing", "billing"),
         ("support", "support"),
-        ("VIP", "vip"),            # parser lowers
+        ("VIP", "vip"),  # parser lowers
         (" billing ", "billing"),
     ],
 )

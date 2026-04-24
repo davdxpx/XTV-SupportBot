@@ -6,12 +6,14 @@ The command builds a conversation from the ticket history, asks the
 AI for a draft, and posts the result as a reply in the topic (not to
 the user — agents always review).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
-from xtv_support.plugins.base import CommandSpec, Plugin as _Base
+from xtv_support.plugins.base import CommandSpec
+from xtv_support.plugins.base import Plugin as _Base
 
 if TYPE_CHECKING:  # pragma: no cover
     from xtv_support.core.container import Container
@@ -23,11 +25,9 @@ class Plugin(_Base):
     name = "ai_reply_draft"
     version = "0.1.0"
     feature_flag = "AI_DRAFTS"
-    description = (
-        "Adds /draft inside ticket topics so agents can get a suggested reply."
-    )
+    description = "Adds /draft inside ticket topics so agents can get a suggested reply."
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         _log.info("ai_reply_draft.startup")
 
     def register_commands(self) -> list[CommandSpec]:

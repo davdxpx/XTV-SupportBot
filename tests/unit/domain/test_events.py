@@ -1,8 +1,9 @@
 """Domain event shape tests — frozen, kw-only, sane defaults."""
+
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -21,8 +22,8 @@ def test_every_event_auto_assigns_id_and_timestamp() -> None:
     e = TicketCreated(ticket_id="t1", user_id=7)
     # event_id is a valid UUID4 string
     uuid.UUID(e.event_id)
-    assert e.occurred_at.tzinfo is timezone.utc or e.occurred_at.tzinfo is not None
-    assert e.occurred_at <= datetime.now(timezone.utc)
+    assert e.occurred_at.tzinfo is UTC or e.occurred_at.tzinfo is not None
+    assert e.occurred_at <= datetime.now(UTC)
 
 
 def test_events_are_frozen() -> None:

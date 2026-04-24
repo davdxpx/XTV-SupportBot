@@ -1,12 +1,8 @@
 """Reply-draft service tests."""
+
 from __future__ import annotations
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock
-
-import pytest
-
-from xtv_support.infrastructure.ai.client import AIClient, AIConfig, AIResult
+from xtv_support.infrastructure.ai.client import AIClient, AIConfig
 from xtv_support.services.ai.drafts import draft_reply
 
 

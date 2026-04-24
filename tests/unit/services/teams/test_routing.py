@@ -1,4 +1,5 @@
 """Queue-routing engine tests — pure, no DB / bus required."""
+
 from __future__ import annotations
 
 import pytest

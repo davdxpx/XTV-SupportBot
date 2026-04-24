@@ -6,9 +6,10 @@ loudly — returns an :class:`AIResult` with ``ok=False`` when the
 client is disabled or the provider errored, and the calling plugin
 silently skips the feature.
 """
+
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.ai.client import AIClient, AIResult

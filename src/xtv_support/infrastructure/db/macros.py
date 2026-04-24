@@ -6,6 +6,7 @@ Stored in the ``macros`` collection with indexes created in
     {_id, name, team_id|null, body, tags, usage_count,
      created_by, created_at, updated_at}
 """
+
 from __future__ import annotations
 
 import re
@@ -33,7 +34,7 @@ def validate_name(name: str) -> str:
 
 
 async def create(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     name: str,
     body: str,
@@ -64,7 +65,7 @@ async def create(
 
 
 async def get_by_name(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     name: str,
     *,
     team_id: str | None = None,
@@ -86,7 +87,7 @@ async def get_by_name(
 
 
 async def list_visible(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     team_id: str | None = None,
 ) -> list[Macro]:
@@ -101,7 +102,7 @@ async def list_visible(
 
 
 async def update_body(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     macro_id: str,
     body: str,
 ) -> None:
@@ -113,19 +114,17 @@ async def update_body(
     )
 
 
-async def delete(db: "AsyncIOMotorDatabase", macro_id: str) -> bool:
+async def delete(db: AsyncIOMotorDatabase, macro_id: str) -> bool:
     from bson import ObjectId
 
     result = await db.macros.delete_one({"_id": ObjectId(macro_id)})
     return result.deleted_count == 1
 
 
-async def increment_usage(db: "AsyncIOMotorDatabase", macro_id: str) -> None:
+async def increment_usage(db: AsyncIOMotorDatabase, macro_id: str) -> None:
     from bson import ObjectId
 
-    await db.macros.update_one(
-        {"_id": ObjectId(macro_id)}, {"$inc": {"usage_count": 1}}
-    )
+    await db.macros.update_one({"_id": ObjectId(macro_id)}, {"$inc": {"usage_count": 1}})
 
 
 def _macro_from_doc(doc: dict[str, Any]) -> Macro:

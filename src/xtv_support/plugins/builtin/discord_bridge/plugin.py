@@ -5,6 +5,7 @@ Every supported domain event is rendered via
 :mod:`xtv_support.services.bridges.discord` and POSTed to the webhook
 with a small amount of retry built into the sender loop.
 """
+
 from __future__ import annotations
 
 import json
@@ -19,7 +20,8 @@ from xtv_support.domain.events import (
     TicketCreated,
     TicketReopened,
 )
-from xtv_support.plugins.base import EventSubscription, Plugin as _Base
+from xtv_support.plugins.base import EventSubscription
+from xtv_support.plugins.base import Plugin as _Base
 from xtv_support.services.bridges.discord import build_payload
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -37,7 +39,7 @@ class Plugin(_Base):
     def __init__(self) -> None:
         self._webhook_url: str | None = None
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         self._webhook_url = os.environ.get("DISCORD_WEBHOOK_URL") or None
         if not self._webhook_url:
             _log.warning("discord_bridge.no_url")
@@ -74,8 +76,11 @@ async def _post(url: str, payload: dict[str, Any]) -> None:
         return
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, content=json.dumps(payload).encode(),
-                                     headers={"Content-Type": "application/json"})
+            resp = await client.post(
+                url,
+                content=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+            )
             if resp.status_code >= 400:
                 _log.warning(
                     "discord_bridge.post_failed",

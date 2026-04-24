@@ -1,4 +1,5 @@
 """AI routing suggestion plugin."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,7 +8,8 @@ from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import TicketCreated
 from xtv_support.infrastructure.ai.client import AIClient
 from xtv_support.infrastructure.db import teams as teams_repo
-from xtv_support.plugins.base import EventSubscription, Plugin as _Base
+from xtv_support.plugins.base import EventSubscription
+from xtv_support.plugins.base import Plugin as _Base
 from xtv_support.services.ai import routing as ai_routing
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -26,7 +28,7 @@ class Plugin(_Base):
         self._client: AIClient | None = None
         self._db = None
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         try:
             self._client = container.try_resolve(AIClient)
         except Exception:  # noqa: BLE001

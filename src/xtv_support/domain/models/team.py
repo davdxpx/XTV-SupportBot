@@ -5,6 +5,7 @@ rules (see Phase 5c) and members of the team pick them up via
 ``/queue`` / ``/mytickets``. Business hours and holidays control SLA
 accumulation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -19,7 +20,7 @@ class BusinessHoursWindow:
 
     weekday: Weekday
     start: str  # ``HH:MM`` in the team timezone
-    end: str    # ``HH:MM`` in the team timezone
+    end: str  # ``HH:MM`` in the team timezone
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -36,11 +37,11 @@ class QueueRule:
 class Team:
     """Immutable in-memory Team representation."""
 
-    id: str                                  # slug, e.g. "support-tier1"
+    id: str  # slug, e.g. "support-tier1"
     name: str
     timezone: str = "UTC"
     business_hours: tuple[BusinessHoursWindow, ...] = ()
-    holidays: tuple[str, ...] = ()           # ISO dates YYYY-MM-DD
+    holidays: tuple[str, ...] = ()  # ISO dates YYYY-MM-DD
     member_ids: tuple[int, ...] = ()
     queue_rules: tuple[QueueRule, ...] = ()
     created_by: int | None = None

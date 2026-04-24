@@ -1,4 +1,5 @@
 """Projects routes — read only in Phase 11b."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,7 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from fastapi import APIRouter
 
 
-def build_router() -> "APIRouter":
+def build_router() -> APIRouter:
     from fastapi import APIRouter, Depends, Query
 
     from xtv_support.api.deps import get_db, require_scope

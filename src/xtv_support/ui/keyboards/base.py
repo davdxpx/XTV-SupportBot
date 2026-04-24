@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -21,8 +21,11 @@ def btn(label: str, callback_data: str) -> InlineKeyboardButton:
     return InlineKeyboardButton(label, callback_data=callback_data)
 
 
-def chunk(buttons: list[InlineKeyboardButton], per_row: int = 2) -> list[list[InlineKeyboardButton]]:
+def chunk(
+    buttons: list[InlineKeyboardButton], per_row: int = 2
+) -> list[list[InlineKeyboardButton]]:
     return [buttons[i : i + per_row] for i in range(0, len(buttons), per_row)]
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

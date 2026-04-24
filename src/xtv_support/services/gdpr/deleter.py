@@ -11,10 +11,11 @@ Two-step flow:
    finds users whose ``deleted_at`` is beyond the grace window and
    drops their tickets + CSAT + audit entries + user doc.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
@@ -36,7 +37,7 @@ class DeletionReceipt:
 
 
 async def request_deletion(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     user_id: int,
     *,
     grace_days: int = DEFAULT_GRACE_DAYS,
@@ -58,7 +59,7 @@ async def request_deletion(
     return DeletionReceipt(user_id=user_id, requested_at=now, purge_at=purge_at)
 
 
-async def cancel_deletion(db: "AsyncIOMotorDatabase", user_id: int) -> bool:
+async def cancel_deletion(db: AsyncIOMotorDatabase, user_id: int) -> bool:
     """Operators may cancel a pending deletion inside the grace period."""
     result = await db.users.update_one(
         {"user_id": user_id, "deleted_at": {"$ne": None}},
@@ -73,7 +74,7 @@ async def cancel_deletion(db: "AsyncIOMotorDatabase", user_id: int) -> bool:
 
 
 async def purge_expired(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     older_than_days: int = DEFAULT_GRACE_DAYS,
 ) -> int:
@@ -94,9 +95,7 @@ async def purge_expired(
         try:
             await db.tickets.delete_many({"user_id": uid})
             await db.csat_responses.delete_many({"user_id": uid})
-            await db.audit_log.delete_many(
-                {"$or": [{"target_id": str(uid)}, {"actor_id": uid}]}
-            )
+            await db.audit_log.delete_many({"$or": [{"target_id": str(uid)}, {"actor_id": uid}]})
             await db.users.delete_one({"user_id": uid})
             purged += 1
             _log.info("gdpr.purge.one", user_id=uid)

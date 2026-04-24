@@ -9,10 +9,11 @@ default (the same place tracebacks go); operators can override by
 setting ``DIGEST_TOPIC_ID`` in the env if they want digests in a
 different thread.
 """
+
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
@@ -36,7 +37,7 @@ class Plugin(_Base):
     def __init__(self) -> None:
         self._container = None
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         self._container = container
         tm = container.try_resolve(_task_manager_type())
         if tm is None:
@@ -53,20 +54,17 @@ class Plugin(_Base):
             _log.debug("analytics_digest.skipped missing_dep")
             return
 
-        end = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        end = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         start = end - timedelta(days=7)
         rollups = [
-            doc async for doc in db.analytics_daily.find(
+            doc
+            async for doc in db.analytics_daily.find(
                 {"day": {"$gte": start.date().isoformat(), "$lt": end.date().isoformat()}}
             )
         ]
         payload = render(rollups, for_range="last 7 days")
 
-        topic_id = os.environ.get("DIGEST_TOPIC_ID") or os.environ.get(
-            "ERROR_LOG_TOPIC_ID"
-        )
+        topic_id = os.environ.get("DIGEST_TOPIC_ID") or os.environ.get("ERROR_LOG_TOPIC_ID")
         admin_channel = os.environ.get("ADMIN_CHANNEL_ID")
         if not admin_channel:
             _log.debug("analytics_digest.no_admin_channel")

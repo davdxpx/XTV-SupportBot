@@ -99,6 +99,7 @@ async def project_selected(client: Client, callback: CallbackQuery) -> None:
     )
     await callback.answer()
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

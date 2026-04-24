@@ -27,6 +27,7 @@ A missing placeholder is non-fatal — the raw template is returned so the
 bot never crashes just because a caller forgot to pass ``name``. A
 warning is logged on the ``xtv_support.i18n`` logger.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -44,10 +45,10 @@ current_locale: ContextVar[str | None] = ContextVar("current_locale", default=No
 
 # Process-wide I18n singleton. The bootstrap assigns it once; tests can
 # override via :func:`set_instance` / :func:`reset_instance`.
-_instance: "I18n | None" = None
+_instance: I18n | None = None
 
 
-def set_instance(instance: "I18n") -> None:
+def set_instance(instance: I18n) -> None:
     global _instance
     _instance = instance
 
@@ -57,7 +58,7 @@ def reset_instance() -> None:
     _instance = None
 
 
-def get_instance() -> "I18n | None":
+def get_instance() -> I18n | None:
     return _instance
 
 
@@ -114,9 +115,7 @@ class I18n:
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
-    def _resolve(
-        self, key: str, locale: str | None, kwargs: Mapping[str, Any]
-    ) -> str | None:
+    def _resolve(self, key: str, locale: str | None, kwargs: Mapping[str, Any]) -> str | None:
         """Pick the right template considering plural suffixes."""
         count = kwargs.get("count")
         if isinstance(count, int):

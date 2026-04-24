@@ -96,14 +96,10 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
     await db.macros.create_index([("tags", ASCENDING)], name="ix_macro_tags")
 
     # --- Phase 6b: Knowledge Base ------------------------------------
-    await db.kb_articles.create_index(
-        [("slug", ASCENDING)], unique=True, name="ux_kb_slug"
-    )
+    await db.kb_articles.create_index([("slug", ASCENDING)], unique=True, name="ux_kb_slug")
     await db.kb_articles.create_index([("lang", ASCENDING)], name="ix_kb_lang")
     await db.kb_articles.create_index([("tags", ASCENDING)], name="ix_kb_tags")
-    await db.kb_articles.create_index(
-        [("project_ids", ASCENDING)], name="ix_kb_projects"
-    )
+    await db.kb_articles.create_index([("project_ids", ASCENDING)], name="ix_kb_projects")
     # Full-text index — title weighs more than body or tags so a
     # ``?q=reset password`` query with a matching title beats a body
     # hit by default.
@@ -134,9 +130,7 @@ async def backfill_defaults(db: AsyncIOMotorDatabase) -> None:
         "header_msg_id": None,
     }
     for field, default in defaults.items():
-        await db.tickets.update_many(
-            {field: {"$exists": False}}, {"$set": {field: default}}
-        )
+        await db.tickets.update_many({field: {"$exists": False}}, {"$set": {field: default}})
 
     await db.tickets.update_many(
         {"last_user_msg_at": {"$exists": False}},

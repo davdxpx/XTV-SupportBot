@@ -6,10 +6,12 @@ module. Handlers call :func:`require` / :func:`decide` from here so
 tests and non-Telegram code paths can exercise permission checks
 without pulling pyrogram.
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 from xtv_support.core.errors import AdminOnly
 from xtv_support.core.logger import get_logger
@@ -63,7 +65,7 @@ def require(*required: Role) -> None:
 # DB-backed resolver
 # ----------------------------------------------------------------------
 async def resolve_role(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     user_id: int,
     *,
     legacy_admin_ids: Iterable[int] | None = None,

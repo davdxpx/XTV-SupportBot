@@ -6,6 +6,7 @@ Walks every *.py under ``src/``, ``tests/`` and the repo root and rewrites
 conservative: only touches line-prefixes that start with ``from app`` or
 ``import app``.
 """
+
 from __future__ import annotations
 
 import pathlib
@@ -17,53 +18,75 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Order matters — longer keys first so we don't clobber shorter matches.
 SIMPLE_PREFIX_REPLACEMENTS: list[tuple[str, str]] = [
     # Services: legacy `app.services.X_service` -> `xtv_support.services.X.service`
-    ("from app.services.ticket_service import",    "from xtv_support.services.tickets.service import"),
-    ("from app.services.topic_service import",     "from xtv_support.services.tickets.topic_service import"),
-    ("from app.services.broadcast_service import", "from xtv_support.services.broadcasts.service import"),
-    ("from app.services.cooldown_service import",  "from xtv_support.services.cooldown.service import"),
-    ("from app.services.sla_service import",       "from xtv_support.services.sla.service import"),
-    ("from app.services.autoclose_service import", "from xtv_support.services.autoclose.service import"),
+    ("from app.services.ticket_service import", "from xtv_support.services.tickets.service import"),
+    (
+        "from app.services.topic_service import",
+        "from xtv_support.services.tickets.topic_service import",
+    ),
+    (
+        "from app.services.broadcast_service import",
+        "from xtv_support.services.broadcasts.service import",
+    ),
+    (
+        "from app.services.cooldown_service import",
+        "from xtv_support.services.cooldown.service import",
+    ),
+    ("from app.services.sla_service import", "from xtv_support.services.sla.service import"),
+    (
+        "from app.services.autoclose_service import",
+        "from xtv_support.services.autoclose.service import",
+    ),
     # `from app.services import ticket_service` -> aliased import from tickets pkg
-    ("from app.services import ticket_service, topic_service",
-        "from xtv_support.services.tickets import service as ticket_service, topic_service"),
-    ("from app.services import ticket_service",
-        "from xtv_support.services.tickets import service as ticket_service"),
-    ("from app.services import topic_service",
-        "from xtv_support.services.tickets import topic_service"),
-    ("from app.services import autoclose_service",
-        "from xtv_support.services.autoclose import service as autoclose_service"),
-    ("from app.services import broadcast_service",
-        "from xtv_support.services.broadcasts import service as broadcast_service"),
-    ("from app.services import cooldown_service",
-        "from xtv_support.services.cooldown import service as cooldown_service"),
-    ("from app.services import sla_service",
-        "from xtv_support.services.sla import service as sla_service"),
-
+    (
+        "from app.services import ticket_service, topic_service",
+        "from xtv_support.services.tickets import service as ticket_service, topic_service",
+    ),
+    (
+        "from app.services import ticket_service",
+        "from xtv_support.services.tickets import service as ticket_service",
+    ),
+    (
+        "from app.services import topic_service",
+        "from xtv_support.services.tickets import topic_service",
+    ),
+    (
+        "from app.services import autoclose_service",
+        "from xtv_support.services.autoclose import service as autoclose_service",
+    ),
+    (
+        "from app.services import broadcast_service",
+        "from xtv_support.services.broadcasts import service as broadcast_service",
+    ),
+    (
+        "from app.services import cooldown_service",
+        "from xtv_support.services.cooldown import service as cooldown_service",
+    ),
+    (
+        "from app.services import sla_service",
+        "from xtv_support.services.sla import service as sla_service",
+    ),
     # UI primitives moved to ui/primitives/, keyboards to ui/keyboards/base
     ("from app.ui.blockquote import", "from xtv_support.ui.primitives.blockquote import"),
-    ("from app.ui.card import",       "from xtv_support.ui.primitives.card import"),
-    ("from app.ui.glyphs import",     "from xtv_support.ui.primitives.glyphs import"),
-    ("from app.ui.progress import",   "from xtv_support.ui.primitives.progress import"),
-    ("from app.ui.keyboards import",  "from xtv_support.ui.keyboards.base import"),
-
+    ("from app.ui.card import", "from xtv_support.ui.primitives.card import"),
+    ("from app.ui.glyphs import", "from xtv_support.ui.primitives.glyphs import"),
+    ("from app.ui.progress import", "from xtv_support.ui.primitives.progress import"),
+    ("from app.ui.keyboards import", "from xtv_support.ui.keyboards.base import"),
     # Config + bootstrap + constants landed at specific new paths
-    ("from app.config import",    "from xtv_support.config.settings import"),
+    ("from app.config import", "from xtv_support.config.settings import"),
     ("from app.bootstrap import", "from xtv_support.core.bootstrap import"),
     ("from app.constants import", "from xtv_support.core.constants import"),
-
     # DB → infrastructure/db
-    ("from app.db.",              "from xtv_support.infrastructure.db."),
-    ("from app.db import",        "from xtv_support.infrastructure.db import"),
-
+    ("from app.db.", "from xtv_support.infrastructure.db."),
+    ("from app.db import", "from xtv_support.infrastructure.db import"),
     # Straight package-prefix rewrites for what already has the right sublayout
-    ("from app.core.",        "from xtv_support.core."),
+    ("from app.core.", "from xtv_support.core."),
     ("from app.middlewares.", "from xtv_support.middlewares."),
-    ("from app.handlers.",    "from xtv_support.handlers."),
-    ("from app.tasks.",       "from xtv_support.tasks."),
+    ("from app.handlers.", "from xtv_support.handlers."),
+    ("from app.tasks.", "from xtv_support.tasks."),
     ("from app.tasks import", "from xtv_support.tasks import"),
     ("from app.ui.templates.", "from xtv_support.ui.templates."),
     ("from app.ui.templates import", "from xtv_support.ui.templates import"),
-    ("from app.utils.",       "from xtv_support.utils."),
+    ("from app.utils.", "from xtv_support.utils."),
 ]
 
 # Regex catch-all for bare ``import app...`` lines (rare here, but safe).

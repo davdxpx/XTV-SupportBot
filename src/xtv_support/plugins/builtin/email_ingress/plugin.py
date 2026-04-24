@@ -5,6 +5,7 @@ toggle it via env; the actual IMAP poller + SMTP outbox are deferred
 to v0.10. Toggling ``FEATURE_EMAIL_INGRESS=true`` today logs a
 "scheduled" hint so operators don't expect an inbox sync yet.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -24,5 +25,5 @@ class Plugin(_Base):
     feature_flag = "EMAIL_INGRESS"
     description = "IMAP-polled email -> ticket bridge (scaffolding, full impl in v0.10)."
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         _log.info("email_ingress.scaffolding_only")

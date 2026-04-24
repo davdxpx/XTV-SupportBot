@@ -5,6 +5,7 @@ API stable by delegating to the RBAC permission helpers — admins
 defined in ``settings.ADMIN_IDS`` still pass automatically, and users
 promoted via the new ``roles`` collection also pass now.
 """
+
 from __future__ import annotations
 
 from pyrogram.types import CallbackQuery
@@ -12,9 +13,9 @@ from pyrogram.types import CallbackQuery
 from xtv_support.config.settings import settings
 from xtv_support.core.errors import AdminOnly
 from xtv_support.core.logger import get_logger
-from xtv_support.domain.enums import Role
 from xtv_support.core.rbac import current as current_role
 from xtv_support.core.rbac import decide
+from xtv_support.domain.enums import Role
 
 log = get_logger("admin_guard")
 
@@ -50,6 +51,7 @@ async def require_admin(callback: CallbackQuery) -> None:
 
 def is_admin_id(user_id: int | None) -> bool:
     return bool(user_id and user_id in settings.ADMIN_IDS)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

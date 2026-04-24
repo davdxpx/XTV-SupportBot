@@ -14,11 +14,12 @@ The scanner is a pure function. The pyrofork middleware
 ``middlewares/link_scan_mw.py`` (later phase) calls
 :func:`scan_text` and decides what to do with the result.
 """
+
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 _URL_RE = re.compile(r"https?://([^\s/]+)(/[^\s]*)?", re.IGNORECASE)
 _IP_RE = re.compile(r"^\d{1,3}(?:\.\d{1,3}){3}$")

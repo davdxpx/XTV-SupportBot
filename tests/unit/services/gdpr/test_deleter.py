@@ -1,11 +1,10 @@
 """GDPR soft-delete + purge tests."""
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
-
-import pytest
 
 from xtv_support.services.gdpr.deleter import (
     DEFAULT_GRACE_DAYS,
@@ -40,7 +39,9 @@ class _AsyncCursor:
     def __init__(self, docs):
         self._it = iter(docs)
 
-    def __aiter__(self): return self
+    def __aiter__(self):
+        return self
+
     async def __anext__(self):
         try:
             return next(self._it)
@@ -76,13 +77,15 @@ async def test_default_grace_constant_is_reasonable() -> None:
 
 
 async def test_purge_expired_deletes_matching_users() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     db = SimpleNamespace(
-        users=_UsersColl([
-            {"user_id": 1, "deleted_at": now - timedelta(days=60)},
-            {"user_id": 2, "deleted_at": now - timedelta(days=45)},
-            {"user_id": 3, "deleted_at": now - timedelta(days=1)},
-        ]),
+        users=_UsersColl(
+            [
+                {"user_id": 1, "deleted_at": now - timedelta(days=60)},
+                {"user_id": 2, "deleted_at": now - timedelta(days=45)},
+                {"user_id": 3, "deleted_at": now - timedelta(days=1)},
+            ]
+        ),
         tickets=_SimpleColl(),
         csat_responses=_SimpleColl(),
         audit_log=_SimpleColl(),
@@ -97,11 +100,13 @@ async def test_purge_expired_deletes_matching_users() -> None:
 
 
 async def test_purge_expired_with_no_candidates_is_zero() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     db = SimpleNamespace(
-        users=_UsersColl([
-            {"user_id": 1, "deleted_at": now - timedelta(days=1)},
-        ]),
+        users=_UsersColl(
+            [
+                {"user_id": 1, "deleted_at": now - timedelta(days=1)},
+            ]
+        ),
         tickets=_SimpleColl(),
         csat_responses=_SimpleColl(),
         audit_log=_SimpleColl(),

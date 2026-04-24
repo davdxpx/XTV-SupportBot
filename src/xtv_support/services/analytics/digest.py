@@ -4,11 +4,11 @@ Pure text builder — takes the rollup documents out of
 ``analytics_daily`` and formats a concise, readable HTML digest the
 plugin can paste into the admin forum topic.
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Iterable, Mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,15 +90,11 @@ def render(
     if top_projects:
         lines.append("")
         lines.append("<b>Top projects</b>:")
-        lines.extend(
-            f"  • <code>{slug}</code> — {count}" for slug, count in top_projects
-        )
+        lines.extend(f"  • <code>{slug}</code> — {count}" for slug, count in top_projects)
     if top_teams:
         lines.append("")
         lines.append("<b>Top teams</b>:")
-        lines.extend(
-            f"  • <code>{slug}</code> — {count}" for slug, count in top_teams
-        )
+        lines.extend(f"  • <code>{slug}</code> — {count}" for slug, count in top_teams)
 
     return DigestPayload(
         title=f"📊 Analytics digest — {for_range}",

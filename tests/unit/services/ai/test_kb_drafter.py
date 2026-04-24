@@ -1,8 +1,9 @@
 """KB-drafter parser + service tests."""
+
 from __future__ import annotations
 
 from xtv_support.infrastructure.ai.client import AIClient, AIConfig
-from xtv_support.services.ai.kb_drafter import KbDraft, draft_article, parse
+from xtv_support.services.ai.kb_drafter import draft_article, parse
 
 
 # ----------------------------------------------------------------------

@@ -1,4 +1,5 @@
 """Escalation-engine tests."""
+
 from __future__ import annotations
 
 from xtv_support.domain.models.escalation import (
@@ -25,9 +26,7 @@ def _rule(
     return EscalationRule(
         id=name,
         name=name,
-        when=EscalationWhen(
-            event=event, tag=tag, priority=priority, project_id=project_id
-        ),
+        when=EscalationWhen(event=event, tag=tag, priority=priority, project_id=project_id),
         do=EscalationDo(
             reassign_to=reassign_to,
             notify_role=notify_role,
@@ -67,14 +66,10 @@ def test_tag_filter_on_sla_breach_checks_ticket_tags() -> None:
 def test_tag_filter_on_tagged_event_uses_added_tag() -> None:
     rule = _rule("vip-add", event="ticket_tagged", tag="vip")
     # ticket already tagged "vip" but tag_added is "other" -> no match.
-    outcomes = evaluate(
-        "ticket_tagged", {"tags": ["vip"]}, [rule], tag_added="other"
-    )
+    outcomes = evaluate("ticket_tagged", {"tags": ["vip"]}, [rule], tag_added="other")
     assert outcomes == []
     # now tag_added matches.
-    outcomes = evaluate(
-        "ticket_tagged", {"tags": ["vip"]}, [rule], tag_added="vip"
-    )
+    outcomes = evaluate("ticket_tagged", {"tags": ["vip"]}, [rule], tag_added="vip")
     assert len(outcomes) == 1
 
 
@@ -99,14 +94,10 @@ def test_project_filter() -> None:
 def test_team_scoped_rule_only_fires_for_that_team() -> None:
     rule = _rule("support-only", event="sla_breached", team_id="support")
     # Ticket belongs to "billing" -> skip.
-    outcomes = evaluate(
-        "sla_breached", {}, [rule], ticket_team_id="billing"
-    )
+    outcomes = evaluate("sla_breached", {}, [rule], ticket_team_id="billing")
     assert outcomes == []
     # Matches team.
-    outcomes = evaluate(
-        "sla_breached", {}, [rule], ticket_team_id="support"
-    )
+    outcomes = evaluate("sla_breached", {}, [rule], ticket_team_id="support")
     assert len(outcomes) == 1
 
 

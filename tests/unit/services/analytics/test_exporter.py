@@ -1,9 +1,10 @@
 """Exporter tests — CSV + JSON column contract."""
+
 from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from xtv_support.services.analytics.exporter import (
     COLUMNS,
@@ -13,7 +14,7 @@ from xtv_support.services.analytics.exporter import (
 
 
 def _utc(y, m, d, H=0, M=0, S=0) -> datetime:
-    return datetime(y, m, d, H, M, S, tzinfo=timezone.utc)
+    return datetime(y, m, d, H, M, S, tzinfo=UTC)
 
 
 def _ticket() -> dict:

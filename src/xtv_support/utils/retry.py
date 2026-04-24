@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from functools import wraps
-from typing import Awaitable, Callable, TypeVar
+from typing import TypeVar
 
 from xtv_support.core.logger import get_logger
 
@@ -43,6 +44,7 @@ def async_retry(
         return wrapper
 
     return decorator
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

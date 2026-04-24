@@ -5,6 +5,7 @@ the shared secret they configured when registering the webhook. The
 signature is a lowercase hex digest prefixed with ``sha256=`` so
 consumers familiar with GitHub's webhook scheme feel at home.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -12,7 +13,6 @@ import hmac
 import secrets
 import uuid
 from dataclasses import dataclass
-
 
 SIGNATURE_HEADER = "X-XTV-Signature"
 EVENT_HEADER = "X-XTV-Event"

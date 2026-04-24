@@ -52,6 +52,7 @@ async def list_all(db: AsyncIOMotorDatabase) -> list[dict[str, Any]]:
     cursor = db.tags.find().sort("name", 1)
     return [doc async for doc in cursor]
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

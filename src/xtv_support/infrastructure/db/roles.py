@@ -7,6 +7,7 @@ Stores a single document per user in the ``roles`` collection::
 Writers: only the ``owner`` / ``admin`` scope should hit these — the
 RBAC middleware enforces that.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -19,7 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover — type-only
     from motor.motor_asyncio import AsyncIOMotorDatabase
 
 
-async def get_role(db: "AsyncIOMotorDatabase", user_id: int) -> RoleAssignment | None:
+async def get_role(db: AsyncIOMotorDatabase, user_id: int) -> RoleAssignment | None:
     doc = await db.roles.find_one({"user_id": user_id})
     if doc is None:
         return None
@@ -27,7 +28,7 @@ async def get_role(db: "AsyncIOMotorDatabase", user_id: int) -> RoleAssignment |
 
 
 async def get_role_or_default(
-    db: "AsyncIOMotorDatabase", user_id: int, *, default: Role = Role.USER
+    db: AsyncIOMotorDatabase, user_id: int, *, default: Role = Role.USER
 ) -> RoleAssignment:
     """Return the stored assignment, or a fresh :attr:`USER`-level one."""
     existing = await get_role(db, user_id)
@@ -37,7 +38,7 @@ async def get_role_or_default(
 
 
 async def grant(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     user_id: int,
     role: Role,
@@ -59,33 +60,29 @@ async def grant(
     )
 
 
-async def revoke(db: "AsyncIOMotorDatabase", user_id: int) -> None:
+async def revoke(db: AsyncIOMotorDatabase, user_id: int) -> None:
     """Delete the role assignment, dropping the user back to :attr:`Role.USER`."""
     await db.roles.delete_one({"user_id": user_id})
 
 
-async def list_by_role(
-    db: "AsyncIOMotorDatabase", role: Role
-) -> list[RoleAssignment]:
+async def list_by_role(db: AsyncIOMotorDatabase, role: Role) -> list[RoleAssignment]:
     cursor = db.roles.find({"role": str(role)})
     return [_assignment_from_doc(doc) async for doc in cursor]
 
 
-async def list_by_team(
-    db: "AsyncIOMotorDatabase", team_id: str
-) -> list[RoleAssignment]:
+async def list_by_team(db: AsyncIOMotorDatabase, team_id: str) -> list[RoleAssignment]:
     cursor = db.roles.find({"team_ids": team_id})
     return [_assignment_from_doc(doc) async for doc in cursor]
 
 
-async def add_to_team(db: "AsyncIOMotorDatabase", user_id: int, team_id: str) -> None:
+async def add_to_team(db: AsyncIOMotorDatabase, user_id: int, team_id: str) -> None:
     await db.roles.update_one(
         {"user_id": user_id},
         {"$addToSet": {"team_ids": team_id}},
     )
 
 
-async def remove_from_team(db: "AsyncIOMotorDatabase", user_id: int, team_id: str) -> None:
+async def remove_from_team(db: AsyncIOMotorDatabase, user_id: int, team_id: str) -> None:
     await db.roles.update_one(
         {"user_id": user_id},
         {"$pull": {"team_ids": team_id}},

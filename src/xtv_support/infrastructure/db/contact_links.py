@@ -31,6 +31,7 @@ async def create(
 async def get(db: AsyncIOMotorDatabase, link_uuid: str) -> dict[str, Any] | None:
     return await db.contact_links.find_one({"uuid": link_uuid})
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

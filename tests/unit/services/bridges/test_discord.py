@@ -1,4 +1,5 @@
 """Discord formatter tests."""
+
 from __future__ import annotations
 
 from xtv_support.domain.events import (
@@ -48,7 +49,7 @@ def test_sla_breached_shows_minutes() -> None:
     e = SlaBreached(ticket_id="t1", age_seconds=9000, breach_after_seconds=7200)
     embed = embed_for(e)
     assert embed is not None
-    assert "150m" in embed["description"]   # 9000 / 60
+    assert "150m" in embed["description"]  # 9000 / 60
 
 
 def test_unbridged_event_returns_none() -> None:

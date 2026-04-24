@@ -1,12 +1,14 @@
 """AI sentiment plugin — labels incoming user messages."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import MessageReceived
-from xtv_support.infrastructure.ai.client import AIClient, AIConfig
-from xtv_support.plugins.base import EventSubscription, Plugin as _Base
+from xtv_support.infrastructure.ai.client import AIClient
+from xtv_support.plugins.base import EventSubscription
+from xtv_support.plugins.base import Plugin as _Base
 from xtv_support.services.ai import sentiment
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -25,7 +27,7 @@ class Plugin(_Base):
         self._client: AIClient | None = None
         self._db = None
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         self._client = _resolve_ai_client(container)
         db = container.try_resolve(_motor_type()) if _motor_type() else None
         self._db = db

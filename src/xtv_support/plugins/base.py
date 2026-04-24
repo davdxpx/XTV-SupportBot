@@ -22,6 +22,7 @@ without a large refactor:
 Any hook returning ``None`` (the default) means the plugin opts out of
 that extension point, so most plugins only override one or two methods.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -30,7 +31,6 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover — type-only
     from xtv_support.core.container import Container
-    from xtv_support.core.events import EventBus
     from xtv_support.domain.events.base import DomainEvent
 
 
@@ -38,10 +38,10 @@ if TYPE_CHECKING:  # pragma: no cover — type-only
 class CommandSpec:
     """Declarative description of a slash command contributed by a plugin."""
 
-    name: str                 # "macro" (user types /macro)
-    scope: str                # "user" | "admin" | "topic" | "system" | "agent"
-    summary: str              # one-line help text
-    hidden: bool = False      # do not advertise in /help
+    name: str  # "macro" (user types /macro)
+    scope: str  # "user" | "admin" | "topic" | "system" | "agent"
+    summary: str  # one-line help text
+    hidden: bool = False  # do not advertise in /help
     feature_flag: str | None = None  # gate the command on a FEATURE_* flag
 
 
@@ -58,7 +58,7 @@ class MigrationSpec:
 class EventSubscription:
     """Pair of event class + handler the loader wires into the bus."""
 
-    event_type: type["DomainEvent"]
+    event_type: type[DomainEvent]
     handler: Callable[[Any], Awaitable[None] | None]
 
 
@@ -82,7 +82,7 @@ class Plugin:
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
-    async def on_startup(self, container: "Container") -> None:  # noqa: D401
+    async def on_startup(self, container: Container) -> None:  # noqa: D401
         """Run once, after the container and event bus are built."""
 
     async def on_shutdown(self) -> None:
@@ -112,7 +112,7 @@ class PluginLike(Protocol):
     name: str
     version: str
 
-    async def on_startup(self, container: "Container") -> None: ...
+    async def on_startup(self, container: Container) -> None: ...
     async def on_shutdown(self) -> None: ...
     def register_commands(self) -> list[CommandSpec]: ...
     def subscribe_events(self) -> list[EventSubscription]: ...
@@ -125,8 +125,8 @@ class LoadedPlugin:
     """Registry entry tracking a plugin's runtime state."""
 
     plugin: Plugin
-    source: str                    # "builtin" | "entry_point" | "path"
-    status: str = "pending"        # pending | loaded | failed | disabled
+    source: str  # "builtin" | "entry_point" | "path"
+    status: str = "pending"  # pending | loaded | failed | disabled
     error: str | None = None
     commands: list[CommandSpec] = field(default_factory=list)
     subscriptions: list[EventSubscription] = field(default_factory=list)

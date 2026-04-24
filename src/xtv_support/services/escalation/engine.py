@@ -14,11 +14,11 @@ Rule semantics
   actions on the same ticket.
 * ``cooldown_s`` is enforced by the caller (keeps engine pure).
 """
+
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 from xtv_support.domain.models.escalation import EscalationRule
 
@@ -70,18 +70,15 @@ def evaluate(
 
         if rule.when.priority is not None and rule.when.priority != priority:
             continue
-        if rule.when.project_id is not None and str(rule.when.project_id) != str(
-            project_id
-        ):
+        if rule.when.project_id is not None and str(rule.when.project_id) != str(project_id):
             continue
 
         if rule.when.tag is not None:
             if event == "ticket_tagged":
                 if rule.when.tag != tag_added:
                     continue
-            else:
-                if rule.when.tag not in tags:
-                    continue
+            elif rule.when.tag not in tags:
+                continue
 
         out.append(EscalationOutcome(rule=rule))
     return out

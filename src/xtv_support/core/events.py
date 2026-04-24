@@ -15,6 +15,7 @@ The bus is deliberately tiny — no persistence, no priorities, no ordering
 guarantees beyond subscription order. A future phase can swap it for a
 Redis Streams / Kafka adapter without touching producers.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -111,9 +112,7 @@ class EventBus:
         # Run all handlers concurrently; each one is isolated by _run.
         await asyncio.gather(*(self._run(h, event) for h in handlers))
 
-    def _resolve_handlers(
-        self, event_type: type[DomainEvent], propagate: bool
-    ) -> list[Handler]:
+    def _resolve_handlers(self, event_type: type[DomainEvent], propagate: bool) -> list[Handler]:
         if not propagate:
             return list(self._handlers.get(event_type, ()))
         out: list[Handler] = []

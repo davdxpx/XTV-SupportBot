@@ -11,6 +11,7 @@ Grammar
 ``/role revoke <uid>``        — delete an assignment (drops to user)
 ``/role me``                  — show the caller's own resolved role
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -49,9 +50,7 @@ async def role_command(client: Client, message: Message) -> None:
 
     # ``/role me`` is free for every authenticated user.
     if args and args[0].lower() == "me":
-        await message.reply_text(
-            f"Your resolved role: <b>{current().value}</b>"
-        )
+        await message.reply_text(f"Your resolved role: <b>{current().value}</b>")
         return
 
     # Everything else requires admin.
@@ -122,7 +121,9 @@ async def _list_roles(ctx, message: Message, rest: list[str]) -> None:
 
 async def _grant_role(ctx, message: Message, rest: list[str]) -> None:
     if len(rest) < 2:
-        await message.reply_text("Usage: <code>/role grant &lt;user_id&gt; &lt;role&gt; [team,…]</code>")
+        await message.reply_text(
+            "Usage: <code>/role grant &lt;user_id&gt; &lt;role&gt; [team,…]</code>"
+        )
         return
     try:
         uid = int(rest[0])
@@ -159,9 +160,7 @@ async def _grant_role(ctx, message: Message, rest: list[str]) -> None:
         teams=team_ids,
     )
     suffix = f" (teams: {','.join(team_ids)})" if team_ids else ""
-    await message.reply_text(
-        f"✅ Granted <b>{role.value}</b> to <code>{uid}</code>{suffix}."
-    )
+    await message.reply_text(f"✅ Granted <b>{role.value}</b> to <code>{uid}</code>{suffix}.")
 
 
 async def _revoke_role(ctx, message: Message, rest: list[str]) -> None:
@@ -186,6 +185,7 @@ async def _revoke_role(ctx, message: Message, rest: list[str]) -> None:
     await roles_repo.revoke(ctx.db, uid)
     log.info("role.revoked", user_id=uid, by=message.from_user.id)
     await message.reply_text(f"🗑️ Revoked role for <code>{uid}</code>.")
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

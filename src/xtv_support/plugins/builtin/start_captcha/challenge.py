@@ -4,6 +4,7 @@ Pure — used by the plugin to build the inline-keyboard question and
 to verify the user's click callback. A stateless HMAC of the user_id
 + answer lets us verify answers without persisting per-user state.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -17,7 +18,7 @@ from dataclasses import dataclass
 class Challenge:
     question: str
     correct: int
-    options: tuple[int, ...]       # shuffled; exactly 4 items
+    options: tuple[int, ...]  # shuffled; exactly 4 items
 
 
 def new_challenge() -> Challenge:

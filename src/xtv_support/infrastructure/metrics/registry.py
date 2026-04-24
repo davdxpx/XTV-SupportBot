@@ -5,6 +5,7 @@ without the ``observability`` extra installed. The registry + metric
 objects are singletons per-process; the FastAPI route in
 ``api/routes/system.py`` serves them in OpenMetrics format.
 """
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """CSAT survey events."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ class CsatReceived(DomainEvent):
 
     ticket_id: str
     user_id: int
-    score: int                        # 1..5
+    score: int  # 1..5
     team_id: str | None = None
 
 

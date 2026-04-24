@@ -6,13 +6,14 @@ Keeping them pure lets us test exhaustively without any DB and lets
 the REST API, the digest plugin, and the /admin dashboard share the
 same numbers.
 """
+
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from statistics import median
-from typing import Iterable, Mapping
 
 
 # ----------------------------------------------------------------------
@@ -23,7 +24,7 @@ class TicketVolume:
     """Ticket counts split by dimension for a time range."""
 
     total: int
-    by_day: dict[str, int] = field(default_factory=dict)      # YYYY-MM-DD
+    by_day: dict[str, int] = field(default_factory=dict)  # YYYY-MM-DD
     by_project: dict[str, int] = field(default_factory=dict)
     by_team: dict[str, int] = field(default_factory=dict)
     by_priority: dict[str, int] = field(default_factory=dict)
@@ -67,8 +68,8 @@ class AgentLeaderboardRow:
 def _to_utc_date(value) -> str | None:
     if not isinstance(value, datetime):
         return None
-    aware = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
-    return aware.astimezone(timezone.utc).date().isoformat()
+    aware = value if value.tzinfo else value.replace(tzinfo=UTC)
+    return aware.astimezone(UTC).date().isoformat()
 
 
 def _pct(values: list[float], pct: float) -> float | None:
@@ -157,9 +158,12 @@ def compute_sla_compliance(tickets: Iterable[Mapping]) -> SlaCompliance:
             continue
         total += 1
         # Breached when closed (or current time) > deadline.
-        if isinstance(closed, datetime) and closed > deadline:
-            breached += 1
-        elif closed is None and datetime.now(timezone.utc) > deadline:
+        if (
+            isinstance(closed, datetime)
+            and closed > deadline
+            or closed is None
+            and datetime.now(UTC) > deadline
+        ):
             breached += 1
     return SlaCompliance(breached=breached, total=total)
 
@@ -188,8 +192,7 @@ def compute_agent_leaderboard(
     rows: list[AgentLeaderboardRow] = []
     for agent, count in closed_per_agent.items():
         avg_res = (
-            round(sum(res_times[agent]) / len(res_times[agent]), 2)
-            if res_times[agent] else None
+            round(sum(res_times[agent]) / len(res_times[agent]), 2) if res_times[agent] else None
         )
         scores = (csat_by_agent or {}).get(agent) or []
         csat_avg = round(sum(scores) / len(scores), 2) if scores else None

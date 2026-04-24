@@ -1,4 +1,5 @@
 """Prompt-builder unit tests."""
+
 from __future__ import annotations
 
 from xtv_support.services.ai import prompts
@@ -45,9 +46,7 @@ def test_routing_prompt_formats_team_block() -> None:
 
 
 def test_translate_prompt_substitutes_target_lang() -> None:
-    msgs = prompts.build_translate_prompt(
-        source_text="Hallo Welt", target_lang="English"
-    )
+    msgs = prompts.build_translate_prompt(source_text="Hallo Welt", target_lang="English")
     assert "into English" in msgs[0]["content"]
     assert msgs[1]["content"] == "Hallo Welt"
 

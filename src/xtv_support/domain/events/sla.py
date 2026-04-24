@@ -1,4 +1,5 @@
 """SLA breach / warning events."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

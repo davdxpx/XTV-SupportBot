@@ -10,9 +10,10 @@ makes them:
 * cacheable — identical system prompts get a hit on Anthropic's
   prompt-caching if the provider is Anthropic.
 """
+
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 # ----------------------------------------------------------------------
 # System prompts — stable, cacheable.
@@ -113,9 +114,7 @@ def build_routing_prompt(
     ]
 
 
-def build_translate_prompt(
-    *, source_text: str, target_lang: str
-) -> list[dict[str, str]]:
+def build_translate_prompt(*, source_text: str, target_lang: str) -> list[dict[str, str]]:
     return [
         {
             "role": "system",

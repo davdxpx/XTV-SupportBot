@@ -3,12 +3,11 @@
 Voice tests run without the real litellm package by monkey-patching
 the dynamic import to a stub module.
 """
+
 from __future__ import annotations
 
 import sys
 import types
-
-import pytest
 
 from xtv_support.infrastructure.ai.client import AIClient, AIConfig
 from xtv_support.services.ai.transcribe import (
@@ -45,9 +44,7 @@ def test_extract_text_unknown_shape() -> None:
 # ----------------------------------------------------------------------
 async def test_transcribe_voice_disabled() -> None:
     client = AIClient(AIConfig(enabled=False))
-    r = await transcribe_voice(
-        client, audio_bytes=b"...", filename="a.ogg"
-    )
+    r = await transcribe_voice(client, audio_bytes=b"...", filename="a.ogg")
     assert not r.ok
     assert r.kind == "voice"
     assert r.error == "ai_disabled"
@@ -61,9 +58,7 @@ async def test_transcribe_voice_happy_with_stub_litellm(monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "litellm", fake_module)
 
     client = AIClient(AIConfig(enabled=True))
-    r = await transcribe_voice(
-        client, audio_bytes=b"blob", filename="a.ogg", ticket_id="t1"
-    )
+    r = await transcribe_voice(client, audio_bytes=b"blob", filename="a.ogg", ticket_id="t1")
     assert r.ok
     assert r.text == "hello there"
     assert r.kind == "voice"

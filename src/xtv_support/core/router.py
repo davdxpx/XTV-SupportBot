@@ -57,7 +57,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
 )
 
 
-def register_all(client: "Client", ctx: "HandlerContext") -> None:
+def register_all(client: Client, ctx: HandlerContext) -> None:
     """Bind context, import every handler module, then attach every collected
     handler to the live :class:`pyrogram.Client` instance.
 

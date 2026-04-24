@@ -103,6 +103,7 @@ async def build_context(client: Client) -> HandlerContext:
     except Exception:  # noqa: BLE001
         pass
     from xtv_support.config.settings import Settings
+
     try:
         container.register_instance(Settings, settings)
     except Exception:  # noqa: BLE001

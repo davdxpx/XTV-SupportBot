@@ -11,11 +11,12 @@ need via :func:`require_scope`; the dependency resolves the current
 key from the ``Authorization: Bearer <key>`` header and raises HTTP
 401 / 403 accordingly.
 """
+
 from __future__ import annotations
 
 import hashlib
 import secrets
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -28,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
 _log = get_logger("api.security")
 
 KEY_PREFIX = "xtv_"
-KEY_LENGTH = 40                        # 40 random chars after the prefix
+KEY_LENGTH = 40  # 40 random chars after the prefix
 
 
 # Known scopes — kept centralised so typos become loud.
@@ -83,7 +84,7 @@ def scope_satisfies(key_scopes: tuple[str, ...], required: str) -> bool:
 # Persistence
 # ----------------------------------------------------------------------
 async def create_key(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     label: str,
     scopes: list[str],
@@ -114,22 +115,16 @@ async def create_key(
     return NewApiKey(plaintext=plaintext, meta=meta)
 
 
-async def lookup_by_key(
-    db: "AsyncIOMotorDatabase", plaintext: str
-) -> ApiKey | None:
+async def lookup_by_key(db: AsyncIOMotorDatabase, plaintext: str) -> ApiKey | None:
     """Return the :class:`ApiKey` matching ``plaintext`` or ``None``."""
     if not plaintext or not plaintext.startswith(KEY_PREFIX):
         return None
-    doc = await db.api_keys.find_one(
-        {"hash": hash_key(plaintext), "revoked_at": None}
-    )
+    doc = await db.api_keys.find_one({"hash": hash_key(plaintext), "revoked_at": None})
     if doc is None:
         return None
     # Best-effort: bump last_used_at without blocking.
     try:
-        await db.api_keys.update_one(
-            {"_id": doc["_id"]}, {"$set": {"last_used_at": utcnow()}}
-        )
+        await db.api_keys.update_one({"_id": doc["_id"]}, {"$set": {"last_used_at": utcnow()}})
     except Exception as exc:  # noqa: BLE001
         _log.debug("api_key.touch_failed", error=str(exc))
     return ApiKey(
@@ -143,9 +138,7 @@ async def lookup_by_key(
     )
 
 
-async def revoke_key(
-    db: "AsyncIOMotorDatabase", key_id: str
-) -> bool:
+async def revoke_key(db: AsyncIOMotorDatabase, key_id: str) -> bool:
     from bson import ObjectId
 
     result = await db.api_keys.update_one(
@@ -155,9 +148,7 @@ async def revoke_key(
     return result.matched_count == 1
 
 
-async def list_keys(
-    db: "AsyncIOMotorDatabase", *, include_revoked: bool = False
-) -> list[ApiKey]:
+async def list_keys(db: AsyncIOMotorDatabase, *, include_revoked: bool = False) -> list[ApiKey]:
     query: dict = {} if include_revoked else {"revoked_at": None}
     cursor = db.api_keys.find(query).sort("created_at", -1)
     out: list[ApiKey] = []

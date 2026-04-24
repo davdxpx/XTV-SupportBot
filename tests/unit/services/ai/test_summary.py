@@ -1,8 +1,9 @@
 """Ticket-summary tests — parser + end-to-end."""
+
 from __future__ import annotations
 
 from xtv_support.infrastructure.ai.client import AIClient, AIConfig
-from xtv_support.services.ai.summary import TicketSummary, parse, summarise
+from xtv_support.services.ai.summary import parse, summarise
 
 
 # ----------------------------------------------------------------------

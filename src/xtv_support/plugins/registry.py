@@ -4,6 +4,7 @@ The registry is just an ordered dict wrapped in a small API so the
 dashboard and the ``/admin » Plugins`` view can enumerate plugins along
 with their status without reaching into the loader's internals.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable

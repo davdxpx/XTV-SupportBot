@@ -1,4 +1,5 @@
 """Auto-translation tests."""
+
 from __future__ import annotations
 
 from xtv_support.infrastructure.ai.client import AIClient, AIConfig
@@ -39,9 +40,7 @@ async def test_translate_detects_noop_response() -> None:
         }
 
     client._call_litellm = fake
-    r = await translate(
-        client, source_text="Hello, world!", target_lang="English"
-    )
+    r = await translate(client, source_text="Hello, world!", target_lang="English")
     assert r.ok
     assert r.same_as_source
 

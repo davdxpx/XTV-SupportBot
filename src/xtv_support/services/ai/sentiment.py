@@ -6,6 +6,7 @@ neutral / negative / urgent``; we parse leniently (case-insensitive,
 ignore stray punctuation) and fall back to NEUTRAL when the model
 returns something unexpected.
 """
+
 from __future__ import annotations
 
 import re
@@ -25,7 +26,7 @@ _LABEL_RE = re.compile(r"[a-zA-Z]+")
 @dataclass(frozen=True, slots=True)
 class SentimentResult:
     sentiment: TicketSentiment
-    confident: bool                # False when we had to fall back
+    confident: bool  # False when we had to fall back
     raw: str = ""
     error: str | None = None
 
@@ -33,9 +34,7 @@ class SentimentResult:
 def parse(text: str) -> SentimentResult:
     """Extract the first word and map it to a :class:`TicketSentiment`."""
     if not text:
-        return SentimentResult(
-            sentiment=TicketSentiment.NEUTRAL, confident=False, error="empty"
-        )
+        return SentimentResult(sentiment=TicketSentiment.NEUTRAL, confident=False, error="empty")
     match = _LABEL_RE.search(text)
     if not match:
         return SentimentResult(
@@ -63,8 +62,8 @@ async def classify(
         feature="sentiment",
         messages=messages,
         model=client.config.fast_model,
-        max_tokens=8,                       # single word, tiny cap
-        temperature=0.0,                    # no creativity wanted here
+        max_tokens=8,  # single word, tiny cap
+        temperature=0.0,  # no creativity wanted here
         user_id=user_id,
         ticket_id=ticket_id,
     )

@@ -24,6 +24,7 @@ async def drop_blocked_users(client: Client, message: Message) -> None:
         log.info("blocked.drop", user_id=message.from_user.id)
         message.stop_propagation()
 
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

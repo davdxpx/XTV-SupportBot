@@ -3,6 +3,7 @@
 Separated from the sender so the exponential-backoff policy can be
 unit-tested without an HTTP client in the loop.
 """
+
 from __future__ import annotations
 
 MAX_ATTEMPTS = 5

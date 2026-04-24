@@ -147,9 +147,16 @@ class BroadcastManager:
         finally:
             state.cancelled.set()
             await progress_task
-            final_state = "cancelled" if state.cancelled.is_set() and (state.sent + state.failed + state.blocked) < state.total else "done"
+            final_state = (
+                "cancelled"
+                if state.cancelled.is_set()
+                and (state.sent + state.failed + state.blocked) < state.total
+                else "done"
+            )
             await broadcasts_repo.set_state(self._db, state.bid, final_state, finished=True)
-            await self._render_final(progress_chat_id, progress_msg_id, cancelled=(final_state == "cancelled"))
+            await self._render_final(
+                progress_chat_id, progress_msg_id, cancelled=(final_state == "cancelled")
+            )
             self._state = None
 
     async def _progress_loop(self, chat_id: int, msg_id: int) -> None:
@@ -167,9 +174,7 @@ class BroadcastManager:
         while not state.cancelled.is_set():
             await asyncio.sleep(settings.PROGRESS_EDIT_INTERVAL)
             is_paused = state.paused.is_set()
-            card = (
-                broadcast_tmpl.paused if is_paused else broadcast_tmpl.running
-            )(
+            card = (broadcast_tmpl.paused if is_paused else broadcast_tmpl.running)(
                 state.text,
                 sent=state.sent,
                 failed=state.failed,
@@ -179,7 +184,9 @@ class BroadcastManager:
             card._message_id = msg_id
             card._chat_id = chat_id
             try:
-                await card.update(self._client, progress=state.sent / max(state.total, 1), force=True)
+                await card.update(
+                    self._client, progress=state.sent / max(state.total, 1), force=True
+                )
             except RPCError:
                 pass
 
@@ -200,6 +207,7 @@ class BroadcastManager:
             await card.finalize(self._client)
         except RPCError:
             pass
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

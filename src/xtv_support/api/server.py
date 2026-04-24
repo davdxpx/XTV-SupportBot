@@ -6,6 +6,7 @@ Bootstraps the health, ready, and version routes; other route
 modules (tickets / projects / analytics / webhooks) are added here
 as they arrive.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -15,7 +16,6 @@ from xtv_support.version import __version__
 
 if TYPE_CHECKING:  # pragma: no cover
     from fastapi import FastAPI
-
     from motor.motor_asyncio import AsyncIOMotorDatabase
 
 _log = get_logger("api.server")
@@ -23,9 +23,9 @@ _log = get_logger("api.server")
 
 def create_app(
     *,
-    db: "AsyncIOMotorDatabase | None" = None,
+    db: AsyncIOMotorDatabase | None = None,
     title: str = "XTV-SupportBot API",
-) -> "FastAPI":
+) -> FastAPI:
     """Build a fresh FastAPI instance with the default route set."""
     try:
         from fastapi import FastAPI

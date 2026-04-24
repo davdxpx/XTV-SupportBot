@@ -1,4 +1,5 @@
 """Metrics registry tests — works with or without prometheus_client."""
+
 from __future__ import annotations
 
 from xtv_support.infrastructure.metrics.registry import (

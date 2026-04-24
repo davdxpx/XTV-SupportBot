@@ -14,6 +14,7 @@ Usage
     python scripts/rotate_secrets.py captcha     # CAPTCHA_SECRET
     python scripts/rotate_secrets.py all
 """
+
 from __future__ import annotations
 
 import secrets

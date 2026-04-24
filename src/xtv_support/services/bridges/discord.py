@@ -4,6 +4,7 @@ Consumes domain events and produces the JSON payload Discord's
 ``Incoming Webhook`` endpoint expects. Pure — the pyrofork plugin in
 ``plugins/builtin/discord_bridge`` handles the actual HTTP POST.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -18,10 +19,10 @@ from xtv_support.domain.events import (
 )
 
 # Discord embed colours (decimal).
-_COLOUR_INFO = 3_447_003        # #3498db
-_COLOUR_OK = 3_066_993          # #2ecc71
-_COLOUR_WARN = 15_844_367       # #f1c40f
-_COLOUR_DANGER = 15_158_332     # #e74c3c
+_COLOUR_INFO = 3_447_003  # #3498db
+_COLOUR_OK = 3_066_993  # #2ecc71
+_COLOUR_WARN = 15_844_367  # #f1c40f
+_COLOUR_DANGER = 15_158_332  # #e74c3c
 
 
 def embed_for(event: DomainEvent) -> dict[str, Any] | None:
@@ -41,7 +42,11 @@ def embed_for(event: DomainEvent) -> dict[str, Any] | None:
             "title": f"📌 Ticket #{event.ticket_id} assigned",
             "color": _COLOUR_INFO,
             "fields": [
-                {"name": "Assignee", "value": str(event.assignee_id) if event.assignee_id else "cleared", "inline": True},
+                {
+                    "name": "Assignee",
+                    "value": str(event.assignee_id) if event.assignee_id else "cleared",
+                    "inline": True,
+                },
                 {"name": "By", "value": str(event.assigned_by), "inline": True},
             ],
         }
@@ -66,8 +71,7 @@ def embed_for(event: DomainEvent) -> dict[str, Any] | None:
         return {
             "title": f"🔥 SLA breach — ticket #{event.ticket_id}",
             "description": (
-                f"Waited {event.age_seconds // 60}m "
-                f"(limit {event.breach_after_seconds // 60}m)."
+                f"Waited {event.age_seconds // 60}m (limit {event.breach_after_seconds // 60}m)."
             ),
             "color": _COLOUR_DANGER,
         }

@@ -6,6 +6,7 @@ and stashes it under ``tickets.translations[<lang>]`` so the topic
 renderer can show both the original and the English version side by
 side.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,7 +14,8 @@ from typing import TYPE_CHECKING
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import MessageReceived
 from xtv_support.infrastructure.ai.client import AIClient
-from xtv_support.plugins.base import EventSubscription, Plugin as _Base
+from xtv_support.plugins.base import EventSubscription
+from xtv_support.plugins.base import Plugin as _Base
 from xtv_support.services.ai import translate as ai_translate
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -33,7 +35,7 @@ class Plugin(_Base):
         self._db = None
         self._default_lang = "en"
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         try:
             self._client = container.try_resolve(AIClient)
         except Exception:  # noqa: BLE001

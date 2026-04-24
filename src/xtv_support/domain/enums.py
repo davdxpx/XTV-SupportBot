@@ -5,6 +5,7 @@ Today these values live as ``Literal[…]`` aliases in
 handlers. Formalising them here gives the RBAC / teams / escalation
 code a common type to import.
 """
+
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
@@ -24,12 +25,12 @@ class Role(StrEnum):
     def rank(self) -> int:
         return _ROLE_RANK[self]
 
-    def can(self, required: "Role") -> bool:
+    def can(self, required: Role) -> bool:
         """True iff this role is at least as privileged as ``required``."""
         return self.rank >= required.rank
 
     @classmethod
-    def from_string(cls, raw: str | None, *, default: "Role | None" = None) -> "Role":
+    def from_string(cls, raw: str | None, *, default: Role | None = None) -> Role:
         """Parse a string, falling back to ``default`` (or :attr:`USER`)."""
         if raw is None:
             return default or cls.USER

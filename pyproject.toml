@@ -99,8 +99,31 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM", "PL", "ASYNC"]
-ignore = ["PLR0913", "PLR2004"]
+# v0.9 keeps the ruleset tight around real bugs (F = unused imports /
+# undefined names, E = pycodestyle errors, ASYNC = asyncio gotchas) and
+# leaves stylistic Pylint (PL*) / naming (N*) opinions off. Expands in
+# v1.0 once the codebase has settled.
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+ignore = [
+    # Line-length — format handles the common case; a few long literals
+    # (prompt strings, generated import-rewrites) stay over the limit
+    # deliberately.
+    "E501",
+    # FastAPI uses Depends() / Query() in argument defaults — idiomatic,
+    # not a real "mutable default" bug.
+    "B008",
+    # ``pytest.raises(Exception)`` — we assert "must not raise anything"
+    # in a handful of tests and the narrow form hurts readability.
+    "B017",
+    # Non-fatal ``try/except: pass`` writes are intentional in a few
+    # places; contextlib.suppress adds an import + indent for no gain.
+    "SIM105",
+    # Collapsible if/elif/ternary — pattern is sometimes clearer when
+    # expanded; leave it to human taste.
+    "SIM102",
+    "SIM108",
+    "SIM114",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

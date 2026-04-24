@@ -1,13 +1,14 @@
 """GDPR exporter tests."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from xtv_support.services.gdpr.exporter import ExportBundle, _jsonable, _jsonable_value
 
 
 def test_jsonable_value_datetime_serialised() -> None:
-    v = _jsonable_value(datetime(2026, 4, 20, 10, tzinfo=timezone.utc))
+    v = _jsonable_value(datetime(2026, 4, 20, 10, tzinfo=UTC))
     assert v == "2026-04-20T10:00:00+00:00"
 
 
@@ -20,7 +21,7 @@ def test_jsonable_value_primitives_passthrough() -> None:
 
 
 def test_jsonable_value_list_recurses() -> None:
-    out = _jsonable_value([1, "x", datetime(2026, 1, 1, tzinfo=timezone.utc)])
+    out = _jsonable_value([1, "x", datetime(2026, 1, 1, tzinfo=UTC)])
     assert out == [1, "x", "2026-01-01T00:00:00+00:00"]
 
 
@@ -36,7 +37,7 @@ def test_jsonable_non_dict_returns_empty_dict() -> None:
 def test_bundle_to_json_shape() -> None:
     b = ExportBundle(
         user_id=7,
-        generated_at=datetime(2026, 4, 20, 10, tzinfo=timezone.utc),
+        generated_at=datetime(2026, 4, 20, 10, tzinfo=UTC),
         sections={"user": [{"user_id": 7}], "tickets": []},
     )
     js = b.to_json()

@@ -21,6 +21,7 @@ was closed"), and false-negatives on PII slip through to the provider
 anyway. In practice operators should rely on their provider contract
 as the primary control and treat this scrubber as defence in depth.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -37,9 +38,7 @@ _CC_RE = re.compile(
 _SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 _EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 _PHONE_RE = re.compile(r"\+?\d[\d\s().-]{8,}\d")
-_API_KEY_RE = re.compile(
-    r"\b(?:sk|pk|api|key|token)[-_][A-Za-z0-9]{16,}\b", re.IGNORECASE
-)
+_API_KEY_RE = re.compile(r"\b(?:sk|pk|api|key|token)[-_][A-Za-z0-9]{16,}\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)

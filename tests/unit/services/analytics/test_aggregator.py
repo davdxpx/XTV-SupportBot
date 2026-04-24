@@ -1,7 +1,8 @@
 """Analytics aggregator tests — pure, no DB required."""
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from xtv_support.services.analytics.aggregator import (
     compute_agent_leaderboard,
@@ -12,7 +13,7 @@ from xtv_support.services.analytics.aggregator import (
 
 
 def _utc(y, m, d, H=0, M=0, S=0) -> datetime:
-    return datetime(y, m, d, H, M, S, tzinfo=timezone.utc)
+    return datetime(y, m, d, H, M, S, tzinfo=UTC)
 
 
 # ----------------------------------------------------------------------
@@ -28,18 +29,24 @@ def test_volume_counts_every_dimension() -> None:
     tickets = [
         {
             "created_at": _utc(2026, 4, 20, 10),
-            "project_id": "P1", "team_id": "support",
-            "priority": "normal", "status": "open",
+            "project_id": "P1",
+            "team_id": "support",
+            "priority": "normal",
+            "status": "open",
         },
         {
             "created_at": _utc(2026, 4, 20, 15),
-            "project_id": "P1", "team_id": "support",
-            "priority": "urgent", "status": "closed",
+            "project_id": "P1",
+            "team_id": "support",
+            "priority": "urgent",
+            "status": "closed",
         },
         {
             "created_at": _utc(2026, 4, 21, 9),
-            "project_id": "P2", "team_id": "billing",
-            "priority": "normal", "status": "open",
+            "project_id": "P2",
+            "team_id": "billing",
+            "priority": "normal",
+            "status": "open",
         },
     ]
     v = compute_volume(tickets)
@@ -91,8 +98,8 @@ def test_response_times_medians() -> None:
     ]
     r = compute_response_times(tickets)
     assert r.samples == 3
-    assert r.first_response_median == 180   # middle value of [60, 180, 600]
-    assert r.resolution_median == 5400      # mean of 3600 and 7200
+    assert r.first_response_median == 180  # middle value of [60, 180, 600]
+    assert r.resolution_median == 5400  # mean of 3600 and 7200
 
 
 def test_response_times_skips_missing_timestamps() -> None:
@@ -113,8 +120,14 @@ def test_sla_empty() -> None:
 def test_sla_compliance_counts_breaches_on_close() -> None:
     base = _utc(2026, 4, 20, 10)
     tickets = [
-        {"sla_deadline": base + timedelta(hours=1), "closed_at": base + timedelta(hours=2)},   # breached
-        {"sla_deadline": base + timedelta(hours=1), "closed_at": base + timedelta(minutes=30)},# met
+        {
+            "sla_deadline": base + timedelta(hours=1),
+            "closed_at": base + timedelta(hours=2),
+        },  # breached
+        {
+            "sla_deadline": base + timedelta(hours=1),
+            "closed_at": base + timedelta(minutes=30),
+        },  # met
         {"sla_deadline": base + timedelta(hours=1)},  # still open, deadline long past -> breached
     ]
     s = compute_sla_compliance(tickets)
@@ -128,13 +141,25 @@ def test_sla_compliance_counts_breaches_on_close() -> None:
 def test_leaderboard_ranks_by_closed_count() -> None:
     base = _utc(2026, 4, 20, 10)
     tickets = [
-        {"status": "closed", "assignee_id": 1,
-         "created_at": base, "closed_at": base + timedelta(hours=1)},
-        {"status": "closed", "assignee_id": 1,
-         "created_at": base, "closed_at": base + timedelta(hours=3)},
-        {"status": "closed", "assignee_id": 2,
-         "created_at": base, "closed_at": base + timedelta(hours=2)},
-        {"status": "open",   "assignee_id": 3},  # open, skipped
+        {
+            "status": "closed",
+            "assignee_id": 1,
+            "created_at": base,
+            "closed_at": base + timedelta(hours=1),
+        },
+        {
+            "status": "closed",
+            "assignee_id": 1,
+            "created_at": base,
+            "closed_at": base + timedelta(hours=3),
+        },
+        {
+            "status": "closed",
+            "assignee_id": 2,
+            "created_at": base,
+            "closed_at": base + timedelta(hours=2),
+        },
+        {"status": "open", "assignee_id": 3},  # open, skipped
     ]
     rows = compute_agent_leaderboard(tickets)
     assert len(rows) == 2
@@ -146,8 +171,12 @@ def test_leaderboard_ranks_by_closed_count() -> None:
 def test_leaderboard_uses_closed_by_when_assignee_missing() -> None:
     base = _utc(2026, 4, 20, 10)
     tickets = [
-        {"status": "closed", "closed_by": 5,
-         "created_at": base, "closed_at": base + timedelta(hours=1)},
+        {
+            "status": "closed",
+            "closed_by": 5,
+            "created_at": base,
+            "closed_at": base + timedelta(hours=1),
+        },
     ]
     rows = compute_agent_leaderboard(tickets)
     assert len(rows) == 1 and rows[0].agent_id == 5
@@ -168,9 +197,6 @@ def test_leaderboard_includes_csat_averages() -> None:
 
 
 def test_leaderboard_top_limit() -> None:
-    tickets = [
-        {"status": "closed", "assignee_id": i}
-        for i in range(15)
-    ]
+    tickets = [{"status": "closed", "assignee_id": i} for i in range(15)]
     rows = compute_agent_leaderboard(tickets, top=5)
     assert len(rows) == 5

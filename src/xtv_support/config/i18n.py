@@ -11,6 +11,7 @@ Two loaders:
 * :func:`load_locales_from` — explicit directory for tests and
   hot-reload scenarios.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -26,6 +26,7 @@ c.register(TicketService, make_ticket_service)
 svc = c.resolve(TicketService)
 ``
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

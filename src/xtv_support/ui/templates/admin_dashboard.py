@@ -3,8 +3,8 @@ from __future__ import annotations
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from xtv_support.core.constants import CallbackPrefix
-from xtv_support.ui.primitives.card import Card
 from xtv_support.ui.keyboards.base import btn
+from xtv_support.ui.primitives.card import Card
 
 
 def dashboard(*, projects: int, users: int, tickets: int, open_tickets: int) -> Card:

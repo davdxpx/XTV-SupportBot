@@ -9,6 +9,7 @@ Services import these via::
 All handles are backed by :mod:`registry` so they degrade to a no-op
 when ``prometheus_client`` is not installed.
 """
+
 from __future__ import annotations
 
 from xtv_support.infrastructure.metrics.registry import counter, histogram

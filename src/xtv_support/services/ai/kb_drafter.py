@@ -5,6 +5,7 @@ admin can tweak and publish with ``/kb add``. Output is parsed into a
 structured :class:`KbDraft` so the handler can pre-fill the ``/kb add``
 form instead of asking the admin to split the response by hand.
 """
+
 from __future__ import annotations
 
 import re
@@ -51,12 +52,11 @@ def parse(text: str) -> KbDraft:
                 section = "body"
                 if value:
                     body_lines.append(value)
-        else:
-            if section == "body":
-                body_lines.append(line)
-            elif section == "title" and line.strip():
-                # Continuation of a multi-line title — rare but tolerated.
-                title = (title + " " + line.strip()).strip()
+        elif section == "body":
+            body_lines.append(line)
+        elif section == "title" and line.strip():
+            # Continuation of a multi-line title — rare but tolerated.
+            title = (title + " " + line.strip()).strip()
 
     body = "\n".join(body_lines).strip()
     ok = bool(title and body)
@@ -82,13 +82,16 @@ async def draft_article(
     result = await client.complete(
         feature="kb_drafter",
         messages=messages,
-        model=client.config.default_model,   # quality matters more than speed here
+        model=client.config.default_model,  # quality matters more than speed here
         user_id=user_id,
         ticket_id=ticket_id,
     )
     if not result.ok:
         return KbDraft(
-            title="", tags=(), body="", ok=False,
+            title="",
+            tags=(),
+            body="",
+            ok=False,
             error=result.error or "ai_call_failed",
         )
     parsed = parse(result.text)

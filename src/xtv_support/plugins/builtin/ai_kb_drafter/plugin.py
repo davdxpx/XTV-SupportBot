@@ -1,10 +1,12 @@
 """KB-drafter plugin — /ai kb-draft to scaffold a /kb add payload."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
-from xtv_support.plugins.base import CommandSpec, Plugin as _Base
+from xtv_support.plugins.base import CommandSpec
+from xtv_support.plugins.base import Plugin as _Base
 
 if TYPE_CHECKING:  # pragma: no cover
     from xtv_support.core.container import Container
@@ -21,7 +23,7 @@ class Plugin(_Base):
         "from the current ticket's conversation."
     )
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         _log.info("ai_kb_drafter.startup")
 
     def register_commands(self) -> list[CommandSpec]:

@@ -1,7 +1,7 @@
 """CSAT service tests."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -9,10 +9,9 @@ import pytest
 
 from xtv_support.domain.events import CsatReceived
 from xtv_support.services.csat.service import (
-    CsatStats,
-    InvalidScoreError,
     MAX_SCORE,
     MIN_SCORE,
+    InvalidScoreError,
     aggregate_stats,
     record_rating,
     validate_score,
@@ -51,8 +50,11 @@ class _CsatColl:
 
 
 class _EmptyCursor:
-    def __aiter__(self): return self
-    async def __anext__(self): raise StopAsyncIteration
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        raise StopAsyncIteration
 
 
 @pytest.fixture
@@ -63,8 +65,12 @@ def db() -> SimpleNamespace:
 async def test_record_rating_persists_and_emits(db) -> None:
     bus = SimpleNamespace(publish=AsyncMock())
     await record_rating(
-        db, bus,
-        ticket_id="t1", user_id=99, score=5, team_id="support",
+        db,
+        bus,
+        ticket_id="t1",
+        user_id=99,
+        score=5,
+        team_id="support",
     )
     # Upsert on (ticket_id, user_id).
     db.csat_responses.update_one.assert_awaited_once()
@@ -95,8 +101,11 @@ async def test_record_rating_swallows_db_errors(db) -> None:
 
 async def test_record_rating_with_none_bus(db) -> None:
     await record_rating(
-        db, None,
-        ticket_id="t1", user_id=1, score=3,
+        db,
+        None,
+        ticket_id="t1",
+        user_id=1,
+        score=3,
     )
     db.csat_responses.update_one.assert_awaited_once()
 
@@ -116,7 +125,9 @@ class _AggCursor:
     def __init__(self, docs):
         self._it = iter(docs)
 
-    def __aiter__(self): return self
+    def __aiter__(self):
+        return self
+
     async def __anext__(self):
         try:
             return next(self._it)
@@ -135,26 +146,37 @@ async def test_aggregate_stats_empty() -> None:
 
 async def test_aggregate_stats_summary() -> None:
     db = SimpleNamespace(
-        csat_responses=_AggColl([
-            {"score": 5}, {"score": 5}, {"score": 4},
-            {"score": 3}, {"score": 2}, {"score": 1},
-        ])
+        csat_responses=_AggColl(
+            [
+                {"score": 5},
+                {"score": 5},
+                {"score": 4},
+                {"score": 3},
+                {"score": 2},
+                {"score": 1},
+            ]
+        )
     )
     s = await aggregate_stats(db)
     assert s.responses == 6
     assert s.average == round((5 + 5 + 4 + 3 + 2 + 1) / 6, 2)
     assert s.distribution == {1: 1, 2: 1, 3: 1, 4: 1, 5: 2}
-    assert s.promoters == 3        # 5, 5, 4
-    assert s.detractors == 2       # 2, 1
+    assert s.promoters == 3  # 5, 5, 4
+    assert s.detractors == 2  # 2, 1
     assert s.promoter_share == round(3 / 6, 3)
 
 
 async def test_aggregate_stats_ignores_out_of_range_scores() -> None:
     db = SimpleNamespace(
-        csat_responses=_AggColl([
-            {"score": 5}, {"score": 9}, {"score": 0}, {"score": 4},
-        ])
+        csat_responses=_AggColl(
+            [
+                {"score": 5},
+                {"score": 9},
+                {"score": 0},
+                {"score": 4},
+            ]
+        )
     )
     s = await aggregate_stats(db)
-    assert s.responses == 2     # 5 and 4
+    assert s.responses == 2  # 5 and 4
     assert s.distribution == {1: 0, 2: 0, 3: 0, 4: 1, 5: 1}

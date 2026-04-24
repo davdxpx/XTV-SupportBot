@@ -5,6 +5,7 @@ supported locale (flag + native name). Tapping a button persists the
 choice on ``users.lang`` and acknowledges in the *just-picked* language
 so the effect is immediately visible.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -13,7 +14,7 @@ from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMa
 from xtv_support.config.i18n import list_supported
 from xtv_support.core.constants import CallbackPrefix, HandlerGroup
 from xtv_support.core.context import get_context
-from xtv_support.core.filters import cb_prefix, is_private
+from xtv_support.core.filters import cb_prefix
 from xtv_support.core.i18n import current_locale
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.db import users as users_repo
@@ -94,6 +95,7 @@ async def lang_pick(client: Client, callback: CallbackQuery) -> None:
         return
     await callback.answer()
     log.info("lang.changed", user_id=callback.from_user.id, code=code)
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

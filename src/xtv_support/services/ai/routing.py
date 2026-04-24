@@ -11,6 +11,7 @@ The output is always **a slug that exists in the provided team list**
 slug is unknown we fall back to ``general`` and mark the result as
 non-confident.
 """
+
 from __future__ import annotations
 
 import re
@@ -39,9 +40,7 @@ class RoutingSuggestion:
 def parse(text: str, known_slugs: Iterable[str]) -> RoutingSuggestion:
     known = {s.lower() for s in known_slugs}
     if not text:
-        return RoutingSuggestion(
-            team_id=_FALLBACK, confident=False, error="empty"
-        )
+        return RoutingSuggestion(team_id=_FALLBACK, confident=False, error="empty")
     # First slug-looking token wins.
     match = _SLUG_RE.search(text.lower())
     candidate = match.group(0) if match else ""
@@ -51,23 +50,19 @@ def parse(text: str, known_slugs: Iterable[str]) -> RoutingSuggestion:
         return RoutingSuggestion(
             team_id=_FALLBACK, confident=False, raw=text, error="ai_chose_fallback"
         )
-    return RoutingSuggestion(
-        team_id=_FALLBACK, confident=False, raw=text, error="unknown_slug"
-    )
+    return RoutingSuggestion(team_id=_FALLBACK, confident=False, raw=text, error="unknown_slug")
 
 
 async def suggest(
     client: AIClient,
     *,
     user_text: str,
-    teams: list[tuple[str, str]],   # [(slug, description), ...]
+    teams: list[tuple[str, str]],  # [(slug, description), ...]
     user_id: int | None = None,
     ticket_id: str | None = None,
 ) -> RoutingSuggestion:
     if not teams:
-        return RoutingSuggestion(
-            team_id=_FALLBACK, confident=False, error="no_teams_given"
-        )
+        return RoutingSuggestion(team_id=_FALLBACK, confident=False, error="no_teams_given")
     clean = redact(user_text, enabled=client.config.redact_pii).redacted
     messages = prompts.build_routing_prompt(user_text=clean, teams=teams)
     result = await client.complete(

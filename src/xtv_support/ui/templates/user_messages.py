@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from xtv_support.core.constants import CallbackPrefix
-from xtv_support.ui.primitives.card import Card
 from xtv_support.ui.keyboards.base import btn, chunk
+from xtv_support.ui.primitives.card import Card
 from xtv_support.utils.text import escape_html
 
 
@@ -122,10 +122,7 @@ def please_start_card() -> Card:
 
 
 def rating_card(project_id: str) -> Card:
-    buttons = [
-        btn(f"{i} ⭐", f"{CallbackPrefix.USER_RATE}|{project_id}|{i}")
-        for i in range(1, 6)
-    ]
+    buttons = [btn(f"{i} ⭐", f"{CallbackPrefix.USER_RATE}|{project_id}|{i}") for i in range(1, 6)]
     keyboard = InlineKeyboardMarkup([buttons])
     return Card(
         title="⭐ Rate your experience",

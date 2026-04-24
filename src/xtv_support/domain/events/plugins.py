@@ -1,4 +1,5 @@
 """Plugin lifecycle events (emitted by the plugin loader in Phase 3c)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

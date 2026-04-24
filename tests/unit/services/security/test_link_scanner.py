@@ -1,4 +1,5 @@
 """Link-scanner tests — pure heuristics."""
+
 from __future__ import annotations
 
 from xtv_support.services.security.link_scanner import (
@@ -64,8 +65,6 @@ def test_scan_result_aggregators() -> None:
 
 
 def test_multiple_urls_in_one_message() -> None:
-    r = scan_text(
-        "first https://example.com second https://phishing.example.com/login"
-    )
-    assert len(r.suspicious) == 1   # only the blocklisted URL fires
+    r = scan_text("first https://example.com second https://phishing.example.com/login")
+    assert len(r.suspicious) == 1  # only the blocklisted URL fires
     assert r.suspicious[0].host == "phishing.example.com"

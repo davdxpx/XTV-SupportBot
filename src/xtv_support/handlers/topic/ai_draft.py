@@ -7,6 +7,7 @@ to the user.
 
 Requires ``FEATURE_AI_DRAFTS`` and Agent+ role.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -20,7 +21,6 @@ from xtv_support.core.logger import get_logger
 from xtv_support.core.rbac import require
 from xtv_support.domain.enums import Role
 from xtv_support.infrastructure.ai.client import AIClient
-from xtv_support.infrastructure.db import tickets as tickets_repo
 from xtv_support.services.ai.drafts import draft_reply
 
 log = get_logger("draft_cmd")
@@ -106,6 +106,7 @@ def _build_history(ticket: dict) -> list[dict[str, str]]:
         role = "user" if sender == "user" else "assistant"
         out.append({"role": role, "content": text})
     return out
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

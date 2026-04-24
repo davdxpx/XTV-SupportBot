@@ -10,10 +10,11 @@ Two public entry points:
 * :func:`aggregate_stats` — rolling N-day aggregate for the admin
   dashboard (avg score, response count, NPS-ish proxy).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from xtv_support.core.logger import get_logger
@@ -47,9 +48,9 @@ def validate_score(score: int) -> int:
 class CsatStats:
     responses: int
     average: float
-    distribution: dict[int, int]     # {1..5: count}
-    promoters: int                   # score >= 4
-    detractors: int                  # score <= 2
+    distribution: dict[int, int]  # {1..5: count}
+    promoters: int  # score >= 4
+    detractors: int  # score <= 2
 
     @property
     def promoter_share(self) -> float:
@@ -57,8 +58,8 @@ class CsatStats:
 
 
 async def record_rating(
-    db: "AsyncIOMotorDatabase",
-    bus: "EventBus | None",
+    db: AsyncIOMotorDatabase,
+    bus: EventBus | None,
     *,
     ticket_id: str,
     user_id: int,
@@ -97,16 +98,14 @@ async def record_rating(
 
 
 async def record_comment(
-    db: "AsyncIOMotorDatabase",
-    bus: "EventBus | None",
+    db: AsyncIOMotorDatabase,
+    bus: EventBus | None,
     *,
     ticket_id: str,
     user_id: int,
     comment: str,
 ) -> None:
-    doc = await db.csat_responses.find_one(
-        {"ticket_id": ticket_id, "user_id": user_id}
-    )
+    doc = await db.csat_responses.find_one({"ticket_id": ticket_id, "user_id": user_id})
     if doc is None:
         _log.debug(
             "csat.comment_without_rating",
@@ -135,7 +134,7 @@ async def record_comment(
 
 
 async def aggregate_stats(
-    db: "AsyncIOMotorDatabase",
+    db: AsyncIOMotorDatabase,
     *,
     days: int = 30,
     team_id: str | None = None,

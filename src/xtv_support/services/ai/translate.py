@@ -7,6 +7,7 @@ the input unchanged when it's already in the target language, so
 monolingual teams don't pay a token bill on English-to-English
 round-trips.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,7 +22,7 @@ log = get_logger("ai.translate")
 @dataclass(frozen=True, slots=True)
 class TranslationResult:
     translated: str
-    same_as_source: bool         # True when the model returned the input verbatim
+    same_as_source: bool  # True when the model returned the input verbatim
     ok: bool
     error: str | None = None
 
@@ -37,9 +38,7 @@ async def translate(
     if not source_text.strip():
         return TranslationResult(translated="", same_as_source=True, ok=True)
 
-    messages = prompts.build_translate_prompt(
-        source_text=source_text, target_lang=target_lang
-    )
+    messages = prompts.build_translate_prompt(source_text=source_text, target_lang=target_lang)
     result = await client.complete(
         feature="translate",
         messages=messages,

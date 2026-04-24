@@ -1,4 +1,5 @@
 """FeatureFlags unit tests."""
+
 from __future__ import annotations
 
 import pytest
@@ -25,8 +26,17 @@ def test_defaults_match_contract(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.parametrize(
     "raw,expected",
-    [("true", True), ("True", True), ("1", True), ("yes", True), ("on", True),
-     ("false", False), ("0", False), ("no", False), ("off", False)],
+    [
+        ("true", True),
+        ("True", True),
+        ("1", True),
+        ("yes", True),
+        ("on", True),
+        ("false", False),
+        ("0", False),
+        ("no", False),
+        ("off", False),
+    ],
 )
 def test_env_var_parses_booleans(monkeypatch: pytest.MonkeyPatch, raw: str, expected: bool) -> None:
     monkeypatch.setenv("FEATURE_AI_DRAFTS", raw)

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
 from xtv_support.services.cooldown.service import CooldownService
@@ -47,6 +45,7 @@ async def test_strikes_isolated_per_user():
     assert not (await svc.check(10)).allowed
     # Second user is untouched.
     assert (await svc.check(99)).allowed
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

@@ -4,6 +4,7 @@ Public API is intentionally minimal. Consumers import submodules directly
 (``from xtv_support.services.tickets import service``). Only the version
 and the CLI ``entrypoint`` are exposed at top level.
 """
+
 from __future__ import annotations
 
 from xtv_support.version import VERSION, __version__

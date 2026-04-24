@@ -1,4 +1,5 @@
 """HMAC signer + verifier tests."""
+
 from __future__ import annotations
 
 import json
@@ -17,9 +18,7 @@ from xtv_support.services.webhooks.signer import (
 
 def test_sign_populates_all_headers() -> None:
     body = json.dumps({"hello": "world"}).encode()
-    signed = sign(
-        body=body, secret="s3cret", event="ticket.created", timestamp=1_700_000_000
-    )
+    signed = sign(body=body, secret="s3cret", event="ticket.created", timestamp=1_700_000_000)
     assert signed.headers[EVENT_HEADER] == "ticket.created"
     assert signed.headers[TIMESTAMP_HEADER] == "1700000000"
     assert signed.headers[SIGNATURE_HEADER].startswith("sha256=")
@@ -49,7 +48,7 @@ def test_verify_accepts_signature_without_prefix() -> None:
     signed = sign(body=b"x", secret="k", event="e", timestamp=0)
     sig = signed.headers[SIGNATURE_HEADER]
     assert sig.startswith("sha256=")
-    assert verify(body=b"x", secret="k", signature=sig[len("sha256="):])
+    assert verify(body=b"x", secret="k", signature=sig[len("sha256=") :])
 
 
 def test_verify_empty_inputs() -> None:
@@ -63,7 +62,5 @@ def test_sign_rejects_empty_secret() -> None:
 
 
 def test_delivery_id_override() -> None:
-    signed = sign(
-        body=b"x", secret="k", event="e", timestamp=0, delivery_id="my-delivery-1"
-    )
+    signed = sign(body=b"x", secret="k", event="e", timestamp=0, delivery_id="my-delivery-1")
     assert signed.headers[DELIVERY_HEADER] == "my-delivery-1"

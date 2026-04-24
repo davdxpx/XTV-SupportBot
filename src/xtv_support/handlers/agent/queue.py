@@ -6,6 +6,7 @@
 
 Both commands require the caller to have at least :attr:`Role.AGENT`.
 """
+
 from __future__ import annotations
 
 from pyrogram import Client, filters
@@ -38,10 +39,7 @@ def _ticket_line(doc: dict) -> str:
     project = doc.get("project_id") or "—"
     priority = doc.get("priority") or "normal"
     tags = ",".join(doc.get("tags") or []) or "—"
-    return (
-        f"  • <code>#{tid}</code> · pri={priority} · "
-        f"project={project} · tags={tags}"
-    )
+    return f"  • <code>#{tid}</code> · pri={priority} · project={project} · tags={tags}"
 
 
 @Client.on_message(filters.private & filters.command("queue"), group=HandlerGroup.COMMAND)
@@ -58,25 +56,36 @@ async def queue_cmd(client: Client, message: Message) -> None:
         return
 
     team_ids = [t.id for t in teams]
-    cursor = ctx.db.tickets.find(
-        {
-            "status": "open",
-            "team_id": {"$in": team_ids},
-        },
-        projection={
-            "_id": 1, "project_id": 1, "priority": 1, "tags": 1, "team_id": 1,
-        },
-    ).sort("created_at", -1).limit(MAX_ROWS)
+    cursor = (
+        ctx.db.tickets.find(
+            {
+                "status": "open",
+                "team_id": {"$in": team_ids},
+            },
+            projection={
+                "_id": 1,
+                "project_id": 1,
+                "priority": 1,
+                "tags": 1,
+                "team_id": 1,
+            },
+        )
+        .sort("created_at", -1)
+        .limit(MAX_ROWS)
+    )
     rows = [doc async for doc in cursor]
     if not rows:
-        await message.reply_text(
-            f"✅ Your queues (<b>{', '.join(team_ids)}</b>) are empty."
-        )
+        await message.reply_text(f"✅ Your queues (<b>{', '.join(team_ids)}</b>) are empty.")
         return
 
     lines = [f"<b>Queue — {len(rows)} open</b>"]
     for doc in rows:
-        lines.append(f"  [{doc.get('team_id', '?')}] " + _ticket_line(doc).lstrip("  "))
+        # _ticket_line returns a string with a leading two-space indent;
+        # strip it here (``lstrip`` with a multi-char arg misreads as a
+        # character set, hence the explicit slice).
+        rendered = _ticket_line(doc)
+        rendered = rendered[2:] if rendered.startswith("  ") else rendered
+        lines.append(f"  [{doc.get('team_id', '?')}] {rendered}")
     if len(rows) == MAX_ROWS:
         lines.append(f"<i>Showing the latest {MAX_ROWS}.</i>")
     await message.reply_text("\n".join(lines))
@@ -87,15 +96,22 @@ async def mytickets_cmd(client: Client, message: Message) -> None:
     if not await _guard(message):
         return
     ctx = get_context(client)
-    cursor = ctx.db.tickets.find(
-        {
-            "status": "open",
-            "assignee_id": message.from_user.id,
-        },
-        projection={
-            "_id": 1, "project_id": 1, "priority": 1, "tags": 1,
-        },
-    ).sort("created_at", -1).limit(MAX_ROWS)
+    cursor = (
+        ctx.db.tickets.find(
+            {
+                "status": "open",
+                "assignee_id": message.from_user.id,
+            },
+            projection={
+                "_id": 1,
+                "project_id": 1,
+                "priority": 1,
+                "tags": 1,
+            },
+        )
+        .sort("created_at", -1)
+        .limit(MAX_ROWS)
+    )
     rows = [doc async for doc in cursor]
     if not rows:
         await message.reply_text("📭 You have no assigned open tickets.")
@@ -105,6 +121,7 @@ async def mytickets_cmd(client: Client, message: Message) -> None:
     if len(rows) == MAX_ROWS:
         lines.append(f"<i>Showing the latest {MAX_ROWS}.</i>")
     await message.reply_text("\n".join(lines))
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

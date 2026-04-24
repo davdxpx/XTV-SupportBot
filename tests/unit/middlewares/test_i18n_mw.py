@@ -5,6 +5,7 @@ only wires the pure :func:`pick_locale` into ``@Client.on_message``; we
 test the picker and the normaliser directly here since they carry every
 non-trivial branch.
 """
+
 from __future__ import annotations
 
 import pytest

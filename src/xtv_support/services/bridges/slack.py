@@ -4,6 +4,7 @@ Takes the same domain events as the Discord formatter and produces
 Slack-compatible JSON. Colours are expressed as ``attachments[].color``
 so the sidebar renders accordingly.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,7 +17,6 @@ from xtv_support.domain.events import (
     TicketCreated,
     TicketReopened,
 )
-
 
 _COLOUR_INFO = "#3498db"
 _COLOUR_OK = "#2ecc71"
@@ -37,10 +37,7 @@ def build_payload(event: DomainEvent) -> dict[str, Any] | None:
                     "color": _COLOUR_INFO,
                     "blocks": [
                         _section(f"*🎫 Ticket #{event.ticket_id}* opened"),
-                        _section(
-                            f"*User:* {event.user_id}\n"
-                            f"*Project:* {event.project_id or '—'}"
-                        ),
+                        _section(f"*User:* {event.user_id}\n*Project:* {event.project_id or '—'}"),
                     ],
                 }
             ]
@@ -52,9 +49,7 @@ def build_payload(event: DomainEvent) -> dict[str, Any] | None:
                 {
                     "color": _COLOUR_INFO,
                     "blocks": [
-                        _section(
-                            f"*📌 Ticket #{event.ticket_id}* assigned to *{assignee}*"
-                        ),
+                        _section(f"*📌 Ticket #{event.ticket_id}* assigned to *{assignee}*"),
                     ],
                 }
             ]
@@ -66,8 +61,7 @@ def build_payload(event: DomainEvent) -> dict[str, Any] | None:
                     "color": _COLOUR_OK,
                     "blocks": [
                         _section(
-                            f"*✅ Ticket #{event.ticket_id}* closed "
-                            f"(reason: `{event.reason}`)"
+                            f"*✅ Ticket #{event.ticket_id}* closed (reason: `{event.reason}`)"
                         ),
                     ],
                 }
@@ -88,9 +82,7 @@ def build_payload(event: DomainEvent) -> dict[str, Any] | None:
                 {
                     "color": _COLOUR_DANGER,
                     "blocks": [
-                        _section(
-                            f"*🔥 SLA breach* — ticket #{event.ticket_id}"
-                        ),
+                        _section(f"*🔥 SLA breach* — ticket #{event.ticket_id}"),
                         _section(
                             f"Waited *{event.age_seconds // 60}m* "
                             f"(limit {event.breach_after_seconds // 60}m)"

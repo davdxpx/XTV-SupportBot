@@ -1,7 +1,6 @@
 """PII-redaction tests."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from xtv_support.services.ai.redaction import redact
 

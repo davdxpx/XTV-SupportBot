@@ -18,7 +18,7 @@ class CbBase:
         raise NotImplementedError
 
     @classmethod
-    def unpack(cls, data: str) -> "CbBase":
+    def unpack(cls, data: str) -> CbBase:
         raise NotImplementedError
 
 
@@ -32,7 +32,7 @@ class CbSimple(CbBase):
         return self.prefix
 
     @classmethod
-    def unpack(cls, data: str) -> "CbSimple":
+    def unpack(cls, data: str) -> CbSimple:
         return cls()
 
 
@@ -45,7 +45,7 @@ class CbProject(CbBase):
         return f"{self.prefix}{SEP}{self.project_id}"
 
     @classmethod
-    def unpack(cls, data: str) -> "CbProject":
+    def unpack(cls, data: str) -> CbProject:
         _, pid = data.split(SEP, 1)
         return cls(project_id=pid)
 
@@ -73,7 +73,7 @@ class CbTicket(CbBase):
         return f"{self.prefix}{SEP}{self.ticket_id}"
 
     @classmethod
-    def unpack(cls, data: str) -> "CbTicket":
+    def unpack(cls, data: str) -> CbTicket:
         _, tid = data.split(SEP, 1)
         return cls(ticket_id=tid)
 
@@ -88,7 +88,7 @@ class CbAssignPick(CbBase):
         return f"{self.prefix}{SEP}{self.ticket_id}{SEP}{self.admin_id}"
 
     @classmethod
-    def unpack(cls, data: str) -> "CbAssignPick":
+    def unpack(cls, data: str) -> CbAssignPick:
         _, tid, aid = data.split(SEP, 2)
         return cls(ticket_id=tid, admin_id=int(aid))
 
@@ -103,7 +103,7 @@ class CbTagToggle(CbBase):
         return f"{self.prefix}{SEP}{self.ticket_id}{SEP}{self.tag}"
 
     @classmethod
-    def unpack(cls, data: str) -> "CbTagToggle":
+    def unpack(cls, data: str) -> CbTagToggle:
         _, tid, tag = data.split(SEP, 2)
         return cls(ticket_id=tid, tag=tag)
 
@@ -118,7 +118,7 @@ class CbPriorityPick(CbBase):
         return f"{self.prefix}{SEP}{self.ticket_id}{SEP}{self.priority}"
 
     @classmethod
-    def unpack(cls, data: str) -> "CbPriorityPick":
+    def unpack(cls, data: str) -> CbPriorityPick:
         _, tid, prio = data.split(SEP, 2)
         return cls(ticket_id=tid, priority=prio)
 
@@ -133,7 +133,7 @@ class CbRate(CbBase):
         return f"{self.prefix}{SEP}{self.project_id}{SEP}{self.score}"
 
     @classmethod
-    def unpack(cls, data: str) -> "CbRate":
+    def unpack(cls, data: str) -> CbRate:
         _, pid, score = data.split(SEP, 2)
         return cls(project_id=pid, score=int(score))
 
@@ -143,6 +143,7 @@ def starts_with(prefix: str) -> str:
     import re
 
     return rf"^{re.escape(prefix)}(?:\{SEP}|$)"
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

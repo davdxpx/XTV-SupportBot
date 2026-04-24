@@ -4,6 +4,7 @@ Phase 11b ships read-only endpoints. Write endpoints (reply / close)
 land later once the Telegram service layer exposes them outside of
 pyrofork handlers.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -12,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from fastapi import APIRouter
 
 
-def build_router() -> "APIRouter":
+def build_router() -> APIRouter:
     from fastapi import APIRouter, Depends, HTTPException, Query
 
     from xtv_support.api.deps import get_db, require_scope
@@ -32,17 +33,26 @@ def build_router() -> "APIRouter":
             query["status"] = status
         if team_id:
             query["team_id"] = team_id
-        cursor = db.tickets.find(
-            query,
-            projection={
-                "_id": 1, "user_id": 1, "project_id": 1, "team_id": 1,
-                "status": 1, "priority": 1, "tags": 1, "created_at": 1,
-                "closed_at": 1, "assignee_id": 1,
-            },
-        ).sort("created_at", -1).limit(limit)
-        rows = [
-            {**doc, "_id": str(doc["_id"])} async for doc in cursor
-        ]
+        cursor = (
+            db.tickets.find(
+                query,
+                projection={
+                    "_id": 1,
+                    "user_id": 1,
+                    "project_id": 1,
+                    "team_id": 1,
+                    "status": 1,
+                    "priority": 1,
+                    "tags": 1,
+                    "created_at": 1,
+                    "closed_at": 1,
+                    "assignee_id": 1,
+                },
+            )
+            .sort("created_at", -1)
+            .limit(limit)
+        )
+        rows = [{**doc, "_id": str(doc["_id"])} async for doc in cursor]
         return {"items": rows, "count": len(rows)}
 
     @router.get("/{ticket_id}")

@@ -8,6 +8,7 @@ fetchable URL. For the initial v0.9 release only the image code path
 is wired; voice transcription hooks in later once the media service
 has a reliable temp-URL pipeline.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -15,7 +16,8 @@ from typing import TYPE_CHECKING
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events import MessageReceived
 from xtv_support.infrastructure.ai.client import AIClient
-from xtv_support.plugins.base import EventSubscription, Plugin as _Base
+from xtv_support.plugins.base import EventSubscription
+from xtv_support.plugins.base import Plugin as _Base
 from xtv_support.services.ai import transcribe as ai_transcribe
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -28,15 +30,13 @@ class Plugin(_Base):
     name = "ai_transcribe"
     version = "0.1.0"
     feature_flag = "AI_TRANSCRIBE"
-    description = (
-        "Transcribe voice notes / OCR images so agents can read them at a glance."
-    )
+    description = "Transcribe voice notes / OCR images so agents can read them at a glance."
 
     def __init__(self) -> None:
         self._client: AIClient | None = None
         self._db = None
 
-    async def on_startup(self, container: "Container") -> None:
+    async def on_startup(self, container: Container) -> None:
         try:
             self._client = container.try_resolve(AIClient)
         except Exception:  # noqa: BLE001

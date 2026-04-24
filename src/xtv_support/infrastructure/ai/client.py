@@ -24,6 +24,7 @@ Design choices
   with ``ok`` + ``error``. Plugins never raise on AI hiccups; they
   just skip the feature for that update.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -56,7 +57,7 @@ class AIConfig:
     redact_pii: bool = True
 
     @classmethod
-    def from_env(cls, env: dict[str, str] | None = None) -> "AIConfig":
+    def from_env(cls, env: dict[str, str] | None = None) -> AIConfig:
         import os
 
         src = env if env is not None else os.environ
@@ -73,14 +74,10 @@ class AIConfig:
             default_model=_get("AI_MODEL_DEFAULT", defaults.default_model),
             fast_model=_get("AI_MODEL_FAST", defaults.fast_model),
             vision_model=_get("AI_MODEL_VISION", defaults.vision_model),
-            transcribe_model=_get(
-                "AI_MODEL_TRANSCRIBE", defaults.transcribe_model
-            ),
+            transcribe_model=_get("AI_MODEL_TRANSCRIBE", defaults.transcribe_model),
             max_tokens=int(_get("AI_MAX_TOKENS", str(defaults.max_tokens))),
             temperature=float(_get("AI_TEMPERATURE", str(defaults.temperature))),
-            request_timeout_s=float(
-                _get("AI_REQUEST_TIMEOUT_S", str(defaults.request_timeout_s))
-            ),
+            request_timeout_s=float(_get("AI_REQUEST_TIMEOUT_S", str(defaults.request_timeout_s))),
             redact_pii=_get("AI_PII_REDACTION", "true").lower() in bool_truthy,
         )
 
@@ -97,7 +94,7 @@ class AIResult:
     cost_usd: float = 0.0
     feature: str = ""
     error: str | None = None
-    raw: Any = None   # full provider response for plugins that want it
+    raw: Any = None  # full provider response for plugins that want it
 
 
 @dataclass(slots=True)
@@ -127,7 +124,7 @@ class AIClient:
     def __init__(
         self,
         config: AIConfig,
-        db: "AsyncIOMotorDatabase | None" = None,
+        db: AsyncIOMotorDatabase | None = None,
     ) -> None:
         self.config = config
         self._db = db
@@ -160,10 +157,8 @@ class AIClient:
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens or self.config.max_tokens,
-                temperature=(
-                    temperature if temperature is not None else self.config.temperature
-                ),
-                timeout=self.config.request_timeout_s,
+                temperature=(temperature if temperature is not None else self.config.temperature),
+                request_timeout_s=self.config.request_timeout_s,
             )
         except Exception as exc:  # noqa: BLE001 — never raise into callers
             _log.warning(
@@ -178,9 +173,7 @@ class AIClient:
             text = response["choices"][0]["message"]["content"] or ""
         except (KeyError, IndexError, TypeError) as exc:
             _log.warning("ai.bad_response_shape", feature=feature, error=str(exc))
-            return AIResult(
-                ok=False, feature=feature, model=model, error="bad_response_shape"
-            )
+            return AIResult(ok=False, feature=feature, model=model, error="bad_response_shape")
 
         usage = response.get("usage") or {}
         prompt_tokens = int(usage.get("prompt_tokens") or 0)
@@ -220,17 +213,20 @@ class AIClient:
         messages: list[dict[str, str]],
         max_tokens: int,
         temperature: float,
-        timeout: float,
+        request_timeout_s: float,
     ) -> dict[str, Any]:
         """Actual LiteLLM invocation. Imported lazily so the module stays
         importable without the ``ai`` extra installed.
+
+        ``request_timeout_s`` (not ``timeout``) avoids ASYNC109; LiteLLM's
+        provider call still takes a ``timeout=`` kwarg — we just rename at
+        the seam.
         """
         try:
             import litellm  # type: ignore[import-untyped]
         except ModuleNotFoundError as exc:
             raise RuntimeError(
-                "litellm is not installed — install the `ai` extra: "
-                "pip install -e '.[ai]'"
+                "litellm is not installed — install the `ai` extra: pip install -e '.[ai]'"
             ) from exc
 
         response = await litellm.acompletion(
@@ -238,7 +234,7 @@ class AIClient:
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
-            timeout=timeout,
+            timeout=request_timeout_s,
         )
         return response if isinstance(response, dict) else response.model_dump()
 

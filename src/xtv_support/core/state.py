@@ -18,6 +18,7 @@ Design choices
 * **Expiry is optional** — admin wizards can pass ``ttl_seconds`` so a
   crashed wizard self-recovers; regular handlers leave it ``None``.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -143,7 +144,5 @@ class StateMachine:
         if entry is None:
             return
         merged = {**dict(entry.data), **updates}
-        new_entry = StateEntry(
-            value=entry.value, data=merged, expires_at=entry.expires_at
-        )
+        new_entry = StateEntry(value=entry.value, data=merged, expires_at=entry.expires_at)
         await self._store.set(user_id, new_entry)
