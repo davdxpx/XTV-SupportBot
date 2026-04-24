@@ -66,10 +66,42 @@ class Settings(BaseSettings):
     # --- Localization ---
     DEFAULT_LANG: str = "en"
 
+    # --- REST API (FastAPI) ---
+    # When ``API_ENABLED=true`` the boot sequence starts uvicorn alongside
+    # the Telegram client. On Railway / Render / Fly, ``PORT`` is injected
+    # by the platform and takes precedence over ``API_PORT``.
+    API_ENABLED: bool = False
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = 8000
+    # Railway/Heroku style port override. Kept separate so users can force
+    # a specific port locally while still deferring to ``$PORT`` in prod.
+    PORT: int | None = None
+    # Comma-separated list of allowed origins for CORS. Use ``*`` to allow
+    # everything (fine for read-only keys, risky for write endpoints).
+    API_CORS_ORIGINS: str = ""
+    API_RATE_LIMIT_PER_MINUTE: int = 120
+
     @field_validator("LOG_LEVEL")
     @classmethod
     def _upper_log_level(cls, value: str) -> str:
         return value.upper()
+
+    @property
+    def effective_api_port(self) -> int:
+        """Return the port the API should bind to.
+
+        ``$PORT`` (set automatically by Railway, Render, Heroku, Fly) wins
+        over ``API_PORT`` so the same image works on any PaaS without
+        custom config.
+        """
+        return int(self.PORT) if self.PORT else int(self.API_PORT)
+
+    @property
+    def cors_origins(self) -> list[str]:
+        raw = (self.API_CORS_ORIGINS or "").strip()
+        if not raw:
+            return []
+        return [p.strip() for p in raw.split(",") if p.strip()]
 
     @property
     def ADMIN_IDS(self) -> list[int]:
