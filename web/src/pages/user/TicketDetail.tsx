@@ -57,7 +57,16 @@ export function TicketDetail() {
     },
   });
 
-  if (isLoading) return <p className="muted">Loading ticket…</p>;
+  if (isLoading) {
+    return (
+      <div className="stack">
+        <span className="skeleton skeleton-line" style={{ width: '30%' }} />
+        <span className="skeleton skeleton-line" style={{ width: '60%' }} />
+        <div className="skeleton skeleton-block" />
+        <div className="skeleton skeleton-block" />
+      </div>
+    );
+  }
   if (!data) return <p className="muted">Ticket not found.</p>;
 
   const isOpen = data.status === 'open';
@@ -98,6 +107,7 @@ export function TicketDetail() {
               className="btn btn-primary"
               style={{ flex: 1 }}
             >
+              {reply.isPending && <span className="spinner" />}
               {reply.isPending ? 'Sending…' : 'Send reply'}
             </button>
             <button

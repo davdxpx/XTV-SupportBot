@@ -55,27 +55,37 @@ function Root() {
 
   if (me.isLoading) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', fontFamily: 'system-ui' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
-        Loading…
+      <div className="loading-screen">
+        <div className="loading-screen-inner">
+          <span className="spinner spinner-lg spinner-color" />
+          <div className="loading-screen-msg">
+            {inTelegram ? 'Signing you in…' : 'Loading…'}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (me.isError) {
-    // 401 from a bad key → clear it & bounce to login. Other errors → surface.
     const status = me.error instanceof ApiError ? me.error.status : 0;
     if (status === 401 || status === 422) return <Navigate to="/login" replace />;
     return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: 'center',
-          fontFamily: 'system-ui',
-          color: '#991b1b',
-        }}
-      >
-        Couldn't reach the server ({status || 'network'}). Try reloading.
+      <div className="error-screen">
+        <div style={{ textAlign: 'center', maxWidth: 360 }}>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>😶‍🌫️</div>
+          <h2 style={{ margin: 0 }}>Couldn't reach the server</h2>
+          <p className="muted">
+            ({status || 'network'}) — try reloading.
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 12 }}
+          >
+            Reload
+          </button>
+        </div>
       </div>
     );
   }

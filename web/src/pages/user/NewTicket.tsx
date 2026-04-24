@@ -110,6 +110,7 @@ export function NewTicket() {
         disabled={!canSubmit}
         className="btn btn-primary"
       >
+        {submit.isPending && <span className="spinner" />}
         {submit.isPending ? 'Sending…' : 'Send ticket'}
       </button>
     </div>
