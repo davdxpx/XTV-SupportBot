@@ -103,10 +103,12 @@ def render_teams_tab(num_teams: int, num_members: int) -> Panel:
             StatTile(label="Total members", value=str(num_members)),
         ),
         action_rows=(
-            (PanelButton(label="➕ New team", callback="cb:v2:admin:teams:new"),),
-            (PanelButton(label="📜 List teams", callback="cb:v2:admin:teams:list"),),
+            (
+                PanelButton(label="📜 Browse teams", callback="cb:v2:admin:teams:list"),
+                PanelButton(label="➕ New team", callback="cb:v2:admin:teams:new"),
+            ),
         ),
-        footer="<i>Use /team for full CRUD; tab shortcuts above.</i>",
+        footer="<i>Tap a team to rename / change timezone / manage members / delete.</i>",
     )
 
 

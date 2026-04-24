@@ -40,6 +40,7 @@ _HANDLER_MODULES: tuple[str, ...] = (
     "xtv_support.handlers.admin.assign",
     "xtv_support.handlers.admin.tags",
     "xtv_support.handlers.admin.teams",
+    "xtv_support.handlers.admin.teams_menu",
     "xtv_support.handlers.admin.roles",
     "xtv_support.handlers.admin.kb",
     "xtv_support.handlers.admin.templates",

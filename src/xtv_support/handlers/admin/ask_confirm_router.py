@@ -72,7 +72,7 @@ async def dispatch(client: Client, message: Message) -> None:
         return
 
     try:
-        await handler(ctx, client, user_id, text, state.args)
+        await handler(ctx, client, message, state.args)
     except Exception as exc:  # noqa: BLE001
         log.warning(
             "akc.handler_raised",

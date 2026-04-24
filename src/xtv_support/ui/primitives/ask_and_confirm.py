@@ -47,8 +47,11 @@ log = get_logger("ui.ask_and_confirm")
 STATE_PREFIX = "akc:"
 
 # Registry filled by feature modules at import time.
-#   HANDLERS[context_key] = async (ctx, client, user_id, text, args) -> None
-HandlerFn = Callable[[Any, "Client", int, str, dict[str, Any]], Awaitable[None]]
+# Signature:
+#   async (ctx, client, message, args) -> None
+# — ``message`` is the pyrogram Message the admin just sent (gives chat_id,
+# id, text). ``args`` is the bag the caller passed to :func:`ask`.
+HandlerFn = Callable[[Any, "Client", Any, dict[str, Any]], Awaitable[None]]
 HANDLERS: dict[str, HandlerFn] = {}
 
 
