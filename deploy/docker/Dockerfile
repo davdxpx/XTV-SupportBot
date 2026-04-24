@@ -10,7 +10,7 @@ FROM node:20-slim AS web-builder
 WORKDIR /web
 COPY web/package.json web/package-lock.json web/tsconfig.json web/vite.config.ts web/index.html ./
 COPY web/src ./src
-RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 RUN npm run build
 
 # ---------------------------------------------------------------------------
