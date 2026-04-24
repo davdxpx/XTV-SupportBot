@@ -113,7 +113,6 @@ def _flags_snapshot(ctx) -> list[tuple[str, bool]]:
     if flags is None:
         return []
     candidates = [
-        "NEW_ONBOARDING",
         "CUSTOMER_HISTORY_PIN",
         "AGENT_INBOX",
         "AI_DRAFTS",

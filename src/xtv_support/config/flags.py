@@ -60,17 +60,18 @@ class FeatureFlags(BaseSettings):
     SLACK_BRIDGE: bool = False
     EMAIL_INGRESS: bool = False
 
-    # --- v1.0 overhaul (Phase 4.3 / 4.4 / 4.5) --------------------------
-    # NEW_ONBOARDING flips /start from the legacy KB-gate-then-ticket
-    # flow into the new onboarding panel (New ticket / Browse help /
-    # My tickets / Settings). /home, /faq, /settings always work.
-    NEW_ONBOARDING: bool = False
-    # CUSTOMER_HISTORY_PIN pins a "last 5 tickets" card to every new
-    # topic (phase 4.5); default on so new deploys benefit immediately.
+    # --- v0.9 pre-release UX toggles ------------------------------------
+    # CUSTOMER_HISTORY_PIN pins a "last 5 tickets" card to every new topic;
+    # default on so new deploys benefit immediately.
     CUSTOMER_HISTORY_PIN: bool = True
-    # AGENT_INBOX exposes /inbox (phase 4.5). Default off until the full
-    # cockpit is shipped to avoid confusing agents during rollout.
+    # AGENT_INBOX exposes /inbox. Default off until the cockpit's saved-
+    # view flows are complete; command fallbacks stay available.
     AGENT_INBOX: bool = False
+    # NEW_ONBOARDING is retired — the onboarding panel is now the default
+    # ``/start`` (and ``/home``) render, no flag needed. Kept as a no-op
+    # attribute so old ``.env`` files with ``FEATURE_NEW_ONBOARDING=…``
+    # don't cause pydantic errors.
+    NEW_ONBOARDING: bool = True
 
     def is_enabled(self, name: str) -> bool:
         """Lookup helper for dynamic names: ``flags.is_enabled("ai_drafts")``."""
