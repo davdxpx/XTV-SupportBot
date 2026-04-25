@@ -1,6 +1,12 @@
 <div align="center">
 
-# XTV-SupportBot
+# 𝕏TV-SupportBot
+
+> *Developed by [𝕏0L0™](https://t.me/davdxpx) for the [𝕏TV Network](https://t.me/XTVglobal)*
+
+<p align="center">
+  <img src="./assets/banner.png" alt="𝕏TV SupportBot™ Banner" width="100%">
+</p>
 
 **An enterprise-grade Telegram support, feedback and contact bot.**
 *Forum-topic tickets · RBAC & teams · macros & knowledge base · AI assistance ·
