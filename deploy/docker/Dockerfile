@@ -6,7 +6,7 @@
 # Final  — slim runtime with the SPA assets baked into /web/.
 
 # ---------------------------------------------------------------------------
-FROM node:20-slim AS web-builder
+FROM node:25-slim AS web-builder
 WORKDIR /web
 COPY web/package.json web/package-lock.json web/tsconfig.json web/vite.config.ts web/index.html ./
 COPY web/src ./src
