@@ -14,7 +14,7 @@ RUN npm ci --no-audit --no-fund
 RUN npm run build
 
 # ---------------------------------------------------------------------------
-FROM python:3.12-slim AS python-builder
+FROM python:3.14-slim AS python-builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -33,7 +33,7 @@ COPY main.py ./
 RUN pip install --prefix=/install -r requirements.txt
 
 # ---------------------------------------------------------------------------
-FROM python:3.12-slim AS final
+FROM python:3.14-slim AS final
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
