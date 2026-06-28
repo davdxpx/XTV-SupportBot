@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.types import CallbackQuery, Message
 
 from xtv_support.core.callback_data import CbPriorityPick
@@ -58,7 +59,9 @@ async def cmd_tag(client: Client, message: Message) -> None:
         return
     args = message.command[1:]
     if len(args) < 2 or args[0] not in ("add", "rm", "remove"):
-        await message.reply_text("Usage: <code>/tag add|rm &lt;name&gt;</code>", parse_mode="html")
+        await message.reply_text(
+            "Usage: <code>/tag add|rm &lt;name&gt;</code>", parse_mode=ParseMode.HTML
+        )
         return
     op, tag = args[0], args[1].lower()
     if not tags_repo.valid_name(tag):
@@ -93,7 +96,7 @@ async def cmd_assign(client: Client, message: Message) -> None:
     if not args:
         await message.reply_text(
             "Usage: <code>/assign &lt;admin_id&gt;</code> or <code>/assign me</code>",
-            parse_mode="html",
+            parse_mode=ParseMode.HTML,
         )
         return
     target = args[0]
@@ -138,7 +141,7 @@ async def open_priority_picker(client: Client, callback: CallbackQuery) -> None:
     try:
         await callback.message.reply_text(
             f"⚡ <b>Priority</b> for #{ticket_id[-6:]}",
-            parse_mode="html",
+            parse_mode=ParseMode.HTML,
             reply_markup=keyboard,
         )
     except Exception as exc:  # noqa: BLE001

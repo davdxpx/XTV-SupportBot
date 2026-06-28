@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from xtv_support.core.constants import HandlerGroup
@@ -18,7 +19,9 @@ async def admin_history(client: Client, message: Message) -> None:
     """Admin-only: /history <user_id> shows the last tickets for a user."""
     ctx = get_context(client)
     if len(message.command) < 2:
-        await message.reply_text("Usage: <code>/history &lt;user_id&gt;</code>", parse_mode="html")
+        await message.reply_text(
+            "Usage: <code>/history &lt;user_id&gt;</code>", parse_mode=ParseMode.HTML
+        )
         return
     try:
         target_id = int(message.command[1])
