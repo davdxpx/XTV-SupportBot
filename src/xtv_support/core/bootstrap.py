@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pymongo.errors import PyMongoError
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 
@@ -16,8 +17,6 @@ from xtv_support.core.state import MemoryStateStore, StateMachine, StateStore
 from xtv_support.infrastructure.ai.client import AIClient, AIConfig
 from xtv_support.infrastructure.db import migrations as db_migrations
 from xtv_support.infrastructure.db.client import close as close_db
-from pymongo.errors import PyMongoError
-
 from xtv_support.infrastructure.db.client import get_db
 from xtv_support.plugins.loader import PluginLoader
 from xtv_support.plugins.registry import PluginRegistry
