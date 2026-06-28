@@ -64,6 +64,11 @@ export function NewTicket() {
           <div className="skeleton skeleton-block" />
         </div>
       )}
+      {projects.isError && (
+        <div className="pill pill-danger" style={{ padding: 10 }}>
+          Error loading intake areas.
+        </div>
+      )}
       {projects.data && projects.data.items.length === 0 && (
         <div className="card muted" style={{ textAlign: 'center' }}>
           No intake areas available yet. Ask an admin to create one.
@@ -95,20 +100,22 @@ export function NewTicket() {
         </section>
       )}
 
-      <section>
-        <label className="label" htmlFor="new-msg">Your message</label>
-        <textarea
-          id="new-msg"
-          className="textarea"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={6}
-          placeholder="Describe your issue — photo, voice note, or document works too."
-        />
-        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-          {message.length} / 4000
-        </div>
-      </section>
+      {!!projectId && (
+        <section>
+          <label className="label" htmlFor="new-msg">Your message</label>
+          <textarea
+            id="new-msg"
+            className="textarea"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={6}
+            placeholder="Describe your issue — photo, voice note, or document works too."
+          />
+          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+            {message.length} / 4000
+          </div>
+        </section>
+      )}
 
       {error && (
         <div className="pill pill-danger" style={{ padding: 10 }}>
