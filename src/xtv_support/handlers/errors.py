@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from xtv_support.config.settings import settings
@@ -42,7 +43,7 @@ async def report_error(client: Client, exc: BaseException, context: str = "") ->
         await client.send_message(
             settings.ADMIN_CHANNEL_ID,
             body,
-            parse_mode="html",
+            parse_mode=ParseMode.HTML,
             message_thread_id=settings.ERROR_LOG_TOPIC_ID,
         )
     except Exception as report_exc:  # noqa: BLE001

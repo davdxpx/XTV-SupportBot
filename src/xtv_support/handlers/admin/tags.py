@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client
+from pyrogram.enums import ParseMode
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
 
 from xtv_support.core.callback_data import CbTagToggle
@@ -102,7 +103,7 @@ async def open_tag_picker(client: Client, callback: CallbackQuery) -> None:
     try:
         await callback.message.reply_text(
             f"🏷 <b>Toggle tags</b> for #{ticket_id[-6:]}",
-            parse_mode="html",
+            parse_mode=ParseMode.HTML,
             reply_markup=keyboard,
         )
     except Exception as exc:  # noqa: BLE001

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client
+from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from xtv_support.core.constants import (
@@ -155,7 +156,7 @@ async def dispatch(client: Client, message: Message) -> None:
         tag = text.strip().lower()
         if not tags_repo.valid_name(tag):
             await message.reply_text(
-                "Tag must match <code>[a-z0-9_-]{1,24}</code>.", parse_mode="html"
+                "Tag must match <code>[a-z0-9_-]{1,24}</code>.", parse_mode=ParseMode.HTML
             )
             message.stop_propagation()
             return

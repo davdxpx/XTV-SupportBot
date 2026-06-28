@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client
+from pyrogram.enums import ParseMode
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
 
 from xtv_support.config.settings import settings
@@ -45,7 +46,7 @@ async def open_assign_picker(client: Client, callback: CallbackQuery) -> None:
     try:
         await callback.message.reply_text(
             f"👨‍💻 <b>Assign ticket</b> #{short_ticket_id(oid)}\nPick an admin or unassign.",
-            parse_mode="html",
+            parse_mode=ParseMode.HTML,
             reply_markup=keyboard,
         )
     except Exception as exc:  # noqa: BLE001
