@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pymongo.errors import PyMongoError
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 
@@ -25,6 +26,7 @@ from xtv_support.services.cooldown.service import CooldownService
 from xtv_support.services.rules.evaluator import RuleEvaluator
 from xtv_support.services.sla.service import SlaService
 from xtv_support.tasks.scheduler import TaskManager
+from xtv_support.utils.retry import async_retry
 
 log = get_logger("bootstrap")
 
@@ -64,6 +66,13 @@ async def build_context(client: Client) -> HandlerContext:
     global _plugin_loader
 
     db = get_db()
+
+    # Wait for MongoDB to be ready (e.g. DNS resolution on boot) before running migrations
+    @async_retry(attempts=5, backoff=2.0, exceptions=(PyMongoError,))
+    async def _ping_db():
+        await db.command("ping")
+
+    await _ping_db()
     await db_migrations.run(db)
 
     # --- Kernel (Phase 3) -------------------------------------------
