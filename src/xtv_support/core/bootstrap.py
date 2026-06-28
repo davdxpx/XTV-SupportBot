@@ -16,6 +16,8 @@ from xtv_support.core.state import MemoryStateStore, StateMachine, StateStore
 from xtv_support.infrastructure.ai.client import AIClient, AIConfig
 from xtv_support.infrastructure.db import migrations as db_migrations
 from xtv_support.infrastructure.db.client import close as close_db
+from pymongo.errors import PyMongoError
+
 from xtv_support.infrastructure.db.client import get_db
 from xtv_support.plugins.loader import PluginLoader
 from xtv_support.plugins.registry import PluginRegistry
@@ -25,6 +27,7 @@ from xtv_support.services.cooldown.service import CooldownService
 from xtv_support.services.rules.evaluator import RuleEvaluator
 from xtv_support.services.sla.service import SlaService
 from xtv_support.tasks.scheduler import TaskManager
+from xtv_support.utils.retry import async_retry
 
 log = get_logger("bootstrap")
 
@@ -64,6 +67,13 @@ async def build_context(client: Client) -> HandlerContext:
     global _plugin_loader
 
     db = get_db()
+
+    # Wait for MongoDB to be ready (e.g. DNS resolution on boot) before running migrations
+    @async_retry(attempts=5, backoff=2.0, exceptions=(PyMongoError,))
+    async def _ping_db():
+        await db.command("ping")
+
+    await _ping_db()
     await db_migrations.run(db)
 
     # --- Kernel (Phase 3) -------------------------------------------
