@@ -59,7 +59,9 @@ async def cmd_tag(client: Client, message: Message) -> None:
         return
     args = message.command[1:]
     if len(args) < 2 or args[0] not in ("add", "rm", "remove"):
-        await message.reply_text("Usage: <code>/tag add|rm &lt;name&gt;</code>", parse_mode=ParseMode.HTML)
+        await message.reply_text(
+            "Usage: <code>/tag add|rm &lt;name&gt;</code>", parse_mode=ParseMode.HTML
+        )
         return
     op, tag = args[0], args[1].lower()
     if not tags_repo.valid_name(tag):

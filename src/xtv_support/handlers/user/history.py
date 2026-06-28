@@ -19,7 +19,9 @@ async def admin_history(client: Client, message: Message) -> None:
     """Admin-only: /history <user_id> shows the last tickets for a user."""
     ctx = get_context(client)
     if len(message.command) < 2:
-        await message.reply_text("Usage: <code>/history &lt;user_id&gt;</code>", parse_mode=ParseMode.HTML)
+        await message.reply_text(
+            "Usage: <code>/history &lt;user_id&gt;</code>", parse_mode=ParseMode.HTML
+        )
         return
     try:
         target_id = int(message.command[1])
