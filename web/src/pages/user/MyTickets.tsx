@@ -29,7 +29,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 
 export function MyTickets() {
   const [filter, setFilter] = useState<Filter>('all');
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['my-tickets', filter],
     queryFn: () =>
       api<TicketsResponse>(
@@ -55,6 +55,12 @@ export function MyTickets() {
           </button>
         ))}
       </div>
+
+      {isError && (
+        <div className="pill pill-danger" style={{ padding: 10 }}>
+          Error loading tickets: {String(error)}
+        </div>
+      )}
 
       {isLoading && (
         <ul className="ticket-list">

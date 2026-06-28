@@ -21,7 +21,7 @@ const LANGUAGES: { code: string; label: string }[] = [
 
 export function UserSettings() {
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['me-settings'],
     queryFn: () => api<UserSettings>('/api/v1/me/settings'),
   });
@@ -42,7 +42,9 @@ export function UserSettings() {
     },
   });
 
-  if (!local) return <p className="muted">Loading…</p>;
+  if (isLoading) return <p className="muted">Loading…</p>;
+  if (isError) return <div className="pill pill-danger">Error: {String(error)}</div>;
+  if (!local) return null;
 
   const patch = (p: Partial<UserSettings>) => {
     setLocal({ ...local, ...p });
