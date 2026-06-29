@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from xtv_support.services.external_directory.model import ResolvedUserSignal
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Condition:
@@ -47,9 +49,27 @@ class Rule:
     created_by: int | None = None
 
 
-def condition_matches(cond: Condition, ticket: dict) -> bool:
+def _user_signal_to_dict(signal: ResolvedUserSignal) -> dict:
+    return {
+        "is_vip": signal.is_vip,
+        "tier_label": signal.tier_label,
+        "tier_rank_order": signal.tier_rank_order,
+        "priority_score": signal.priority_score,
+        "display_badge": signal.display_badge,
+        "source": signal.source,
+    }
+
+
+def condition_matches(
+    cond: Condition, ticket: dict, *, user_signal: ResolvedUserSignal | None = None
+) -> bool:
     """Pure predicate evaluation. Unknown op → no match."""
-    value = _walk(ticket, cond.field)
+    if cond.field.startswith("user."):
+        if user_signal is None:
+            return False
+        value = _walk(_user_signal_to_dict(user_signal), cond.field[5:])
+    else:
+        value = _walk(ticket, cond.field)
     op = cond.op
     if op == "eq":
         return value == cond.value
@@ -87,5 +107,7 @@ def _walk(doc: dict, path: str):
     return cur
 
 
-def all_conditions_match(conds: tuple[Condition, ...], ticket: dict) -> bool:
-    return all(condition_matches(c, ticket) for c in conds)
+def all_conditions_match(
+    conds: tuple[Condition, ...], ticket: dict, *, user_signal: ResolvedUserSignal | None = None
+) -> bool:
+    return all(condition_matches(c, ticket, user_signal=user_signal) for c in conds)

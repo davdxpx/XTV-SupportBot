@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from xtv_support.services.external_directory.model import ResolvedUserSignal
 from xtv_support.services.rules.dry_run import dry_run
 from xtv_support.services.rules.model import (
     ActionRef,
@@ -69,3 +70,98 @@ def test_dry_run_reports_per_condition() -> None:
     result = dry_run(rule, ticket)
     assert not result.would_fire
     assert [c.matched for c in result.conditions] == [True, False]
+
+
+def test_user_signal_eq_true():
+    ticket = {"priority": "high"}
+    signal = ResolvedUserSignal(is_vip=True)
+    assert condition_matches(
+        Condition(field="user.is_vip", op="eq", value=True), ticket, user_signal=signal
+    )
+    assert not condition_matches(
+        Condition(field="user.is_vip", op="eq", value=False), ticket, user_signal=signal
+    )
+
+
+def test_user_signal_eq_false():
+    ticket = {"priority": "high"}
+    signal = ResolvedUserSignal(is_vip=False)
+    assert condition_matches(
+        Condition(field="user.is_vip", op="eq", value=False), ticket, user_signal=signal
+    )
+    assert not condition_matches(
+        Condition(field="user.is_vip", op="eq", value=True), ticket, user_signal=signal
+    )
+
+
+def test_user_signal_gt():
+    ticket = {}
+    signal = ResolvedUserSignal(tier_rank_order=5)
+    assert condition_matches(
+        Condition(field="user.tier_rank_order", op="gt", value=3), ticket, user_signal=signal
+    )
+    assert not condition_matches(
+        Condition(field="user.tier_rank_order", op="gt", value=5), ticket, user_signal=signal
+    )
+
+
+def test_user_signal_lt():
+    ticket = {}
+    signal = ResolvedUserSignal(tier_rank_order=2)
+    assert condition_matches(
+        Condition(field="user.tier_rank_order", op="lt", value=5), ticket, user_signal=signal
+    )
+    assert not condition_matches(
+        Condition(field="user.tier_rank_order", op="lt", value=1), ticket, user_signal=signal
+    )
+
+
+def test_user_signal_missing_returns_false():
+    ticket = {"priority": "high"}
+    assert not condition_matches(
+        Condition(field="user.is_vip", op="eq", value=True), ticket, user_signal=None
+    )
+
+
+def test_condition_targets_ticket_unchanged():
+    ticket = {"priority": "urgent"}
+    signal = ResolvedUserSignal(is_vip=False)
+    assert condition_matches(
+        Condition(field="priority", op="eq", value="urgent"), ticket, user_signal=signal
+    )
+
+
+def test_all_conditions_combine_user_and_ticket():
+    ticket = {"priority": "urgent"}
+    signal = ResolvedUserSignal(is_vip=True)
+    conds = (
+        Condition(field="priority", op="eq", value="urgent"),
+        Condition(field="user.is_vip", op="eq", value=True),
+    )
+    assert all_conditions_match(conds, ticket, user_signal=signal)
+
+    # Fail ticket condition
+    conds2 = (
+        Condition(field="priority", op="eq", value="low"),
+        Condition(field="user.is_vip", op="eq", value=True),
+    )
+    assert not all_conditions_match(conds2, ticket, user_signal=signal)
+
+    # Fail user condition
+    conds3 = (
+        Condition(field="priority", op="eq", value="urgent"),
+        Condition(field="user.is_vip", op="eq", value=False),
+    )
+    assert not all_conditions_match(conds3, ticket, user_signal=signal)
+
+
+def test_dry_run_with_user_signal():
+    ticket = {"priority": "high"}
+    signal = ResolvedUserSignal(is_vip=True)
+    rule = _rule(
+        Condition(field="priority", op="eq", value="high"),
+        Condition(field="user.is_vip", op="eq", value=True),
+    )
+    result = dry_run(rule, ticket, user_signal=signal)
+    assert result.would_fire
+    assert [c.matched for c in result.conditions] == [True, True]
