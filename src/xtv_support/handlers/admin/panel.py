@@ -27,6 +27,7 @@ from xtv_support.ui.templates.admin_panel import (
     OverviewStats,
     render_analytics_section,
     render_broadcasts_section,
+    render_extdir_section,
     render_home,
     render_overview_section,
     render_projects_section,
@@ -153,6 +154,8 @@ async def _render_section(ctx, section: str) -> Panel:
         return render_analytics_section(days, total, ratio)
     if section == "settings":
         return render_settings_section(_flags_snapshot(ctx))
+    if section == "extdir":
+        return render_extdir_section()
     # Unknown key → fall back to home.
     return render_home(await _overview(ctx), webapp_url=webapp_url)
 
