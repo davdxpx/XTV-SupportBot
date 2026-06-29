@@ -52,7 +52,14 @@ def build_router() -> APIRouter:
             .sort("created_at", -1)
             .limit(limit)
         )
-        rows = [{**doc, "_id": str(doc["_id"])} async for doc in cursor]
+        rows = []
+        async for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            if "project_id" in doc and doc["project_id"] is not None:
+                doc["project_id"] = str(doc["project_id"])
+            if "team_id" in doc and doc["team_id"] is not None:
+                doc["team_id"] = str(doc["team_id"])
+            rows.append(doc)
         return {"items": rows, "count": len(rows)}
 
     @router.get("/{ticket_id}")
@@ -71,6 +78,10 @@ def build_router() -> APIRouter:
         if doc is None:
             raise HTTPException(status_code=404, detail="not_found")
         doc["_id"] = str(doc["_id"])
+        if "project_id" in doc and doc["project_id"] is not None:
+            doc["project_id"] = str(doc["project_id"])
+        if "team_id" in doc and doc["team_id"] is not None:
+            doc["team_id"] = str(doc["team_id"])
         return doc
 
     return router

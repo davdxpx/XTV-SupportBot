@@ -59,9 +59,13 @@ def _pair(*buttons: PanelButton) -> tuple[PanelButton, ...]:
 # ---------------------------------------------------------------------------
 # Landing card — /admin opens this
 # ---------------------------------------------------------------------------
-def render_home(stats: OverviewStats) -> Panel:
+def render_home(stats: OverviewStats, webapp_url: str | None = None) -> Panel:
     """The big 2×4 drill-down grid."""
     tiles: list[tuple[PanelButton, ...]] = []
+
+    if webapp_url:
+        tiles.append((PanelButton(label="🌐 Open App", url=webapp_url),))
+
     row: list[PanelButton] = []
     for key, label in SECTIONS:
         row.append(PanelButton(label=label, callback=f"cb:v2:admin:section:{key}"))

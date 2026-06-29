@@ -31,7 +31,7 @@ export function Projects() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
 
-  const { data } = useQuery({
+  const { data, isError, error: queryError } = useQuery({
     queryKey: ['admin-projects'],
     queryFn: () => api<ProjectsResponse>('/api/v1/projects'),
   });
@@ -40,6 +40,18 @@ export function Projects() {
     mutationFn: (id: string) => api(`/api/v1/projects/${id}`, { method: 'DELETE' }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-projects'] }),
   });
+
+  if (isError) {
+    const isForbidden = String(queryError).includes('403') || String(queryError).includes('insufficient_scope');
+    return (
+      <div className="stack stack-lg">
+        <h1 className="heading">Projects</h1>
+        <div className="pill pill-danger">
+          {isForbidden ? 'You do not have the required permissions (projects:read) to view this page.' : String(queryError)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="stack stack-lg">

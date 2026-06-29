@@ -9,6 +9,7 @@ callbacks stay registered so existing keyboards (e.g. the teams menu's
 """
 
 from __future__ import annotations
+from pyrogram.errors import MessageNotModified
 
 from datetime import timedelta
 
@@ -129,8 +130,9 @@ def _flags_snapshot(ctx) -> list[tuple[str, bool]]:
 # ---------------------------------------------------------------------------
 async def _render_section(ctx, section: str) -> Panel:
     """Dispatch ``cb:v2:admin:section:<key>`` to the right renderer."""
+    webapp_url = getattr(ctx.settings, "WEBAPP_URL", "")
     if section == "home":
-        return render_home(await _overview(ctx))
+        return render_home(await _overview(ctx), webapp_url=webapp_url)
     if section == "overview":
         return render_overview_section(await _overview(ctx))
     if section == "tickets":
@@ -152,7 +154,7 @@ async def _render_section(ctx, section: str) -> Panel:
     if section == "settings":
         return render_settings_section(_flags_snapshot(ctx))
     # Unknown key → fall back to home.
-    return render_home(await _overview(ctx))
+    return render_home(await _overview(ctx), webapp_url=webapp_url)
 
 
 async def _send_or_edit(
@@ -162,6 +164,7 @@ async def _send_or_edit(
     panel: Panel,
 ) -> None:
     text, kb = panel.render()
+
     if cq is not None and cq.message is not None:
         try:
             await cq.message.edit_text(
@@ -170,6 +173,8 @@ async def _send_or_edit(
                 reply_markup=kb,
                 disable_web_page_preview=True,
             )
+        except MessageNotModified:
+            pass
         finally:
             await cq.answer()
         return

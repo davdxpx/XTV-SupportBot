@@ -11,12 +11,17 @@ interface UserSettings {
 }
 
 const LANGUAGES: { code: string; label: string }[] = [
-  { code: 'en', label: '🇬🇧 English' },
-  { code: 'de', label: '🇩🇪 Deutsch' },
-  { code: 'es', label: '🇪🇸 Español' },
-  { code: 'ru', label: '🇷🇺 Русский' },
-  { code: 'hi', label: '🇮🇳 हिन्दी' },
   { code: 'bn', label: '🇧🇩 বাংলা' },
+  { code: 'en', label: '🇬🇧 English' },
+  { code: 'es', label: '🇪🇸 Español' },
+  { code: 'gu', label: '🇮🇳 ગુજરાતી' },
+  { code: 'hi', label: '🇮🇳 हिन्दी' },
+  { code: 'mr', label: '🇮🇳 मराठी' },
+  { code: 'pa', label: '🇮🇳 ਪੰਜਾਬੀ' },
+  { code: 'ru', label: '🇷🇺 Русский' },
+  { code: 'ta', label: '🇮🇳 தமிழ்' },
+  { code: 'te', label: '🇮🇳 తెలుగు' },
+  { code: 'ur', label: '🇵🇰 اردو' },
 ];
 
 export function UserSettings() {
