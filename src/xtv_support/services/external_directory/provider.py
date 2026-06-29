@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -15,6 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import PyMongoError
 
 from xtv_support.core.logger import get_logger
+from xtv_support.services.external_directory.connection_manager import ExternalConnectionManager
 from xtv_support.services.external_directory.interpreter import resolve_signal
 from xtv_support.services.external_directory.model import (
     ExternalDirectoryConfig,
@@ -32,32 +32,20 @@ class ExternalDirectoryProvider:
     def __init__(
         self,
         config: ExternalDirectoryConfig,
-        *,
-        client_factory: Callable[[str], AsyncIOMotorClient] | None = None,
+        raw_uri: str,
+        connection_manager: ExternalConnectionManager,
     ) -> None:
         self._config = config
-        self._client_factory = client_factory
-        self._client: AsyncIOMotorClient | None = None
+        self._raw_uri = raw_uri
+        self._connection_manager = connection_manager
         self._cache: OrderedDict[int, dict] = OrderedDict()
         self._lock = asyncio.Lock()
 
-    def _get_client(self) -> AsyncIOMotorClient:
-        if self._client is None:
-            # Resolving the URI ref is outside the scope of this prompt,
-            # but we assume the factory handles it for now, or we just pass the ref.
-            uri = self._config.connection_uri_ref
-            if self._client_factory:
-                self._client = self._client_factory(uri)
-            else:
-                self._client = AsyncIOMotorClient(
-                    uri,
-                    serverSelectionTimeoutMS=5_000,
-                    tz_aware=True,
-                )
-        return self._client
+    async def _get_client(self) -> AsyncIOMotorClient:
+        return await self._connection_manager.get_client(self._raw_uri)
 
     async def _fetch_raw_document(self, telegram_user_id: int) -> dict[str, Any] | None:
-        client = self._get_client()
+        client = await self._get_client()
         db = client[self._config.database_name]
         coll = db[self._config.collection_name]
 
