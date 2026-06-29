@@ -99,7 +99,7 @@ async def _load_selection(ctx, actor_id: int) -> set[str]:
 async def _save_selection(ctx, actor_id: int, selection: set[str]) -> None:
     if ctx.state is None:
         return
-    await ctx.state.merge_data(actor_id, {SELECTION_STATE: list(selection)})
+    await ctx.state.merge_data(actor_id, **{SELECTION_STATE: list(selection)})
 
 
 async def _current_view(ctx, actor_id: int) -> str:
@@ -112,7 +112,7 @@ async def _current_view(ctx, actor_id: int) -> str:
 async def _set_view(ctx, actor_id: int, view: str) -> None:
     if ctx.state is None:
         return
-    await ctx.state.merge_data(actor_id, {"agent_inbox_view": view})
+    await ctx.state.merge_data(actor_id, agent_inbox_view=view)
 
 
 # ---------------------------------------------------------------------------

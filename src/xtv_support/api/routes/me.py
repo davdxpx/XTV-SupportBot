@@ -306,7 +306,7 @@ def build_router() -> APIRouter:
         return {
             "language": doc.get("lang") or user.language_code or settings.DEFAULT_LANG,
             "ui_pref": doc.get("ui_pref"),
-            "notify_on_reply": bool(prefs.get("notify_on_reply", True)),
+            "notify_on_reply": bool(prefs.get("notify_reply", True)),
             "notify_csat": bool(prefs.get("notify_csat", True)),
             "notify_announcements": bool(prefs.get("notify_announcements", True)),
         }
@@ -334,8 +334,9 @@ def build_router() -> APIRouter:
                 set_ops["ui_pref"] = UIMode.parse(str(pref)).value
         prefs_patch: dict[str, Any] = {}
         for key in ("notify_on_reply", "notify_csat", "notify_announcements"):
+            db_key = "notify_reply" if key == "notify_on_reply" else key
             if key in body:
-                prefs_patch[f"notification_prefs.{key}"] = bool(body[key])
+                prefs_patch[f"notification_prefs.{db_key}"] = bool(body[key])
         if prefs_patch:
             set_ops.update(prefs_patch)
         if not set_ops:
