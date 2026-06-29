@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     BROADCAST_CONCURRENCY: int = 20
     BROADCAST_FLOOD_BUFFER_MS: int = 250
 
+    # --- External Directory ---
+    EXTERNAL_DIRECTORY_ENCRYPTION_KEY: SecretStr | None = None
+
     # --- UI ---
     PROGRESS_EDIT_INTERVAL: float = 1.5
 

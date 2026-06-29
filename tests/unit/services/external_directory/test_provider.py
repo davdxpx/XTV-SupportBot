@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock
+
 import pytest
 
 from xtv_support.services.external_directory.model import ExternalDirectoryConfig
@@ -55,7 +57,13 @@ async def test_provider_success(base_config):
     mock_db = MockDB({"test_coll": mock_coll})
     mock_client = MockClient({"test_db": mock_db})
 
-    provider = ExternalDirectoryProvider(base_config, client_factory=lambda _: mock_client)
+    provider = ExternalDirectoryProvider(
+        base_config,
+        raw_uri="mock",
+        connection_manager=type(
+            "MockCM", (), {"get_client": AsyncMock(return_value=mock_client)}
+        )(),
+    )
 
     sig = await provider.get_signal(123)
     assert not sig.is_vip  # No mapping applied, so default False
@@ -71,7 +79,13 @@ async def test_provider_failure_graceful(base_config):
     mock_db = MockDB({"test_coll": mock_coll})
     mock_client = MockClient({"test_db": mock_db})
 
-    provider = ExternalDirectoryProvider(base_config, client_factory=lambda _: mock_client)
+    provider = ExternalDirectoryProvider(
+        base_config,
+        raw_uri="mock",
+        connection_manager=type(
+            "MockCM", (), {"get_client": AsyncMock(return_value=mock_client)}
+        )(),
+    )
 
     sig = await provider.get_signal(123)
     assert not sig.is_vip
@@ -85,7 +99,13 @@ async def test_provider_caching(base_config):
     mock_db = MockDB({"test_coll": mock_coll})
     mock_client = MockClient({"test_db": mock_db})
 
-    provider = ExternalDirectoryProvider(base_config, client_factory=lambda _: mock_client)
+    provider = ExternalDirectoryProvider(
+        base_config,
+        raw_uri="mock",
+        connection_manager=type(
+            "MockCM", (), {"get_client": AsyncMock(return_value=mock_client)}
+        )(),
+    )
 
     # First call caches it
     await provider.get_signal(123)

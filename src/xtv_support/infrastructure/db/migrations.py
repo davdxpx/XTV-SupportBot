@@ -113,6 +113,11 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
     except OperationFailure as exc:
         log.warning("db.kb_fts_index_failed", error=str(exc))
 
+    # --- Phase 7: External User Directory ----------------------------
+    # The external_directory_config collection only ever contains a single
+    # document with {"_id": "singleton"}. No custom indexes are required
+    # beyond the default _id index.
+
     log.info("db.indexes_ensured")
 
 
