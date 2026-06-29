@@ -22,13 +22,11 @@ import hmac
 import json
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl
 
-from xtv_support.core.logger import get_logger
+from fastapi import Request
 
-if TYPE_CHECKING:  # pragma: no cover
-    from fastapi import Request
+from xtv_support.core.logger import get_logger
 
 _log = get_logger("api.auth_webapp")
 

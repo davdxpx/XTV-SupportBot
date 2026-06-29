@@ -21,7 +21,7 @@ Covered here (Phase 2):
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Any
 
 from xtv_support.core.logger import get_logger
 
@@ -145,7 +145,7 @@ def build_router() -> APIRouter:
     # ------------------------------------------------------------------
     @router.get("/projects")
     async def my_projects(
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         db=Depends(get_db),
     ) -> dict:
         del user  # auth only — every Telegram user can see the intake list
@@ -168,7 +168,7 @@ def build_router() -> APIRouter:
     # ------------------------------------------------------------------
     @router.get("/tickets")
     async def my_tickets(
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         db=Depends(get_db),
         status: str | None = Query(
             default=None,
@@ -196,7 +196,7 @@ def build_router() -> APIRouter:
     @router.get("/tickets/{ticket_id}")
     async def my_ticket(
         ticket_id: str,
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         db=Depends(get_db),
     ) -> dict:
         doc = await tickets_repo.get(db, ticket_id)
@@ -209,7 +209,7 @@ def build_router() -> APIRouter:
     # ------------------------------------------------------------------
     @router.post("/tickets", status_code=201)
     async def create_my_ticket(
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(...),
         db=Depends(get_db),
     ) -> dict:
@@ -253,7 +253,7 @@ def build_router() -> APIRouter:
     @router.post("/tickets/{ticket_id}/reply")
     async def reply_my_ticket(
         ticket_id: str,
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(...),
         db=Depends(get_db),
     ) -> dict:
@@ -279,7 +279,7 @@ def build_router() -> APIRouter:
     @router.post("/tickets/{ticket_id}/close")
     async def close_my_ticket(
         ticket_id: str,
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(default_factory=dict),
         db=Depends(get_db),
     ) -> dict:
@@ -298,7 +298,7 @@ def build_router() -> APIRouter:
     # ------------------------------------------------------------------
     @router.get("/settings")
     async def my_settings(
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         db=Depends(get_db),
     ) -> dict:
         doc = await users_repo.get(db, user.id) or {}
@@ -313,7 +313,7 @@ def build_router() -> APIRouter:
 
     @router.patch("/settings")
     async def update_my_settings(
-        user: Annotated[TelegramUser, Depends(current_tg_user)],
+        user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(...),
         db=Depends(get_db),
     ) -> dict:
