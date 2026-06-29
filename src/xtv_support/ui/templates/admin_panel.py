@@ -32,6 +32,7 @@ SECTIONS: tuple[tuple[str, str], ...] = (
     ("broadcasts", "📣 Broadcasts"),
     ("analytics", "📈 Analytics"),
     ("settings", "⚙️ Settings"),
+    ("extdir", "🔌 External Directory"),
 )
 
 
@@ -283,8 +284,22 @@ def render_settings_section(flags_snapshot: list[tuple[str, bool]]) -> Panel:
     )
 
 
+
+
+def render_extdir_section() -> Panel:
+    return Panel(
+        title="🔌 External Directory",
+        subtitle="Connect your user database",
+        body=("Setup or manage the External User Directory connection to map custom VIP rules.",),
+        action_rows=(
+            (PanelButton(label="🔌 Manage Connection", callback="cb:v2:admin:extdir:entry"),),
+            (BACK_HOME,),
+        ),
+    )
+
 # ---------------------------------------------------------------------------
-# Backwards-compat — keep legacy ``render_*_tab`` names as thin aliases so
+# Backwards-compat
+# — keep legacy ``render_*_tab`` names as thin aliases so
 # any handler that still imports them (e.g. the tab-switcher callback for
 # users mid-session) still works during the transition.
 # ---------------------------------------------------------------------------
@@ -296,6 +311,7 @@ render_rules_tab = render_rules_section
 render_broadcasts_tab = render_broadcasts_section
 render_analytics_tab = render_analytics_section
 render_settings_tab = render_settings_section
+render_extdir_tab = render_extdir_section
 
 # Older callers imported ``TABS``; expose the new ``SECTIONS`` under that
 # name too to avoid breaking imports during the rename window.

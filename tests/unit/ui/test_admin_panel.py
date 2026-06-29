@@ -26,6 +26,7 @@ def test_sections_cover_all_eight() -> None:
         "broadcasts",
         "analytics",
         "settings",
+        "extdir",
     ]
 
 
@@ -33,10 +34,13 @@ def test_home_renders_2_per_row_grid() -> None:
     stats = OverviewStats(open_tickets=5, sla_at_risk=1, unassigned=2, active_agents=3)
     panel = render_home(stats)
     rows = panel._row_specs()
-    # Eight sections laid out as four rows of two drill-down tiles each.
-    assert len(rows) == 4
-    for row in rows:
-        assert len(row) == 2
+    # Nine sections laid out as five rows (four of two, one of one)
+    assert len(rows) == 5
+    for i, row in enumerate(rows):
+        if i == 4:
+            assert len(row) == 1
+        else:
+            assert len(row) == 2
     # Tile callbacks land on the new ``section:<key>`` routes.
     first_cb = rows[0][0]["callback"]
     assert first_cb.startswith("cb:v2:admin:section:")
