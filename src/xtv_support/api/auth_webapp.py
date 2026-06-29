@@ -27,8 +27,7 @@ from urllib.parse import parse_qsl
 
 from xtv_support.core.logger import get_logger
 
-if TYPE_CHECKING:  # pragma: no cover
-    from fastapi import Request
+from fastapi import Request
 
 _log = get_logger("api.auth_webapp")
 
