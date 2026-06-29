@@ -43,6 +43,9 @@ def build_router() -> APIRouter:
     class NotePayload(BaseModel):
         text: str
 
+    class ReplyPayload(BaseModel):
+        message: str
+
     class BulkActionPayload(BaseModel):
         action: str
         params: dict = Field(default_factory=dict)
@@ -177,6 +180,21 @@ def build_router() -> APIRouter:
             name="add_internal_note",
             ticket_id=ticket_id,
             params={"text": body.text},
+            actor_id=key.created_by,
+        )
+
+    @router.post("/{ticket_id}/reply")
+    async def reply_ticket(
+        ticket_id: str,
+        body: ReplyPayload,
+        db=Depends(get_db),
+        key=Depends(require_scope("tickets:write")),
+    ) -> dict:
+        return await _run(
+            db=db,
+            name="reply",
+            ticket_id=ticket_id,
+            params={"text": body.message},
             actor_id=key.created_by,
         )
 

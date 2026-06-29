@@ -190,6 +190,25 @@ class _AddInternalNoteAction:
         )
         return ActionResult(ok=True, data={"note": note})
 
+class _ReplyAction:
+    name = "reply"
+
+    async def execute(
+        self, ctx: ActionContext, *, ticket: dict | None, params: dict
+    ) -> ActionResult:
+        if ticket is None:
+            return ActionResult(ok=False, detail="ticket_required")
+        text = str(params.get("text") or "").strip()
+        if not text:
+            return ActionResult(ok=False, detail="text_required")
+        await _tickets_repo().append_history(
+            ctx.db,
+            ticket["_id"],
+            sender="admin",
+            text=text,
+        )
+        return ActionResult(ok=True, data={"text": text})
+
 
 def register_builtins(registry: ActionRegistry) -> None:
     """Register every built-in into ``registry`` (idempotent)."""
@@ -201,6 +220,7 @@ def register_builtins(registry: ActionRegistry) -> None:
         _CloseAction(),
         _ReopenAction(),
         _AddInternalNoteAction(),
+        _ReplyAction(),
     ):
         registry.register(action)
 
