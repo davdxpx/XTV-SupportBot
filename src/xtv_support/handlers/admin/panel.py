@@ -9,12 +9,12 @@ callbacks stay registered so existing keyboards (e.g. the teams menu's
 """
 
 from __future__ import annotations
-from pyrogram.errors import MessageNotModified
 
 from datetime import timedelta
 
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
+from pyrogram.errors import MessageNotModified
 from pyrogram.types import CallbackQuery, Message
 
 from xtv_support.core.constants import HandlerGroup
