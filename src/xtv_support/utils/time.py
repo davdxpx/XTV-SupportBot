@@ -1,4 +1,5 @@
 """Time utilities."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -31,6 +32,7 @@ def format_iso(dt: datetime | None) -> str:
         dt = dt.replace(tzinfo=UTC)
     return dt.strftime("%Y-%m-%d %H:%M UTC")
 
+
 def parse_iso(value: str) -> datetime | None:
     try:
         # We use fromisoformat for naive parsing
@@ -40,6 +42,7 @@ def parse_iso(value: str) -> datetime | None:
         return dt
     except ValueError:
         return None
+
 
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global

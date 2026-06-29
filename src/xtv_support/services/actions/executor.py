@@ -190,6 +190,7 @@ class _AddInternalNoteAction:
         )
         return ActionResult(ok=True, data={"note": note})
 
+
 class _ReplyAction:
     name = "reply"
 

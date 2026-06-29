@@ -3,6 +3,7 @@
 This module contains the primary dataclasses and protocols required for the External User
 Directory feature, including enumerations and signal abstractions.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -2,6 +2,7 @@
 
 A pure-function interpreter that resolves a raw user document into a standardized signal.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -24,11 +25,11 @@ def _parse_expiry(value: Any) -> datetime.datetime | None:
         return None
     if isinstance(value, datetime.datetime):
         if value.tzinfo is None:
-            return value.replace(tzinfo=datetime.timezone.utc)
+            return value.replace(tzinfo=datetime.UTC)
         return value
     if isinstance(value, (int, float)):
         try:
-            return datetime.datetime.fromtimestamp(value, tz=datetime.timezone.utc)
+            return datetime.datetime.fromtimestamp(value, tz=datetime.UTC)
         except (ValueError, TypeError, OSError):
             return None
     if isinstance(value, str):
@@ -46,9 +47,9 @@ def resolve_signal(
         return ResolvedUserSignal()
 
     if now is None:
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
     elif now.tzinfo is None:
-        now = now.replace(tzinfo=datetime.timezone.utc)
+        now = now.replace(tzinfo=datetime.UTC)
 
     if config.expiry_field_path:
         expiry_val = walk_doc(raw_doc, config.expiry_field_path)
@@ -80,7 +81,9 @@ def resolve_signal(
                     break
 
             if match is None:
-                log.debug("external_directory.enum_miss", path=mapping.external_field_path, value=str_val)
+                log.debug(
+                    "external_directory.enum_miss", path=mapping.external_field_path, value=str_val
+                )
                 continue
 
             if match.is_vip:
@@ -97,10 +100,17 @@ def resolve_signal(
             try:
                 num_val = float(val) if val is not None else 0.0
             except (ValueError, TypeError):
-                log.debug("external_directory.num_cast_failed", path=mapping.external_field_path, value=val)
+                log.debug(
+                    "external_directory.num_cast_failed",
+                    path=mapping.external_field_path,
+                    value=val,
+                )
                 num_val = 0.0
 
-            if mapping.numeric_vip_threshold is not None and num_val >= mapping.numeric_vip_threshold:
+            if (
+                mapping.numeric_vip_threshold is not None
+                and num_val >= mapping.numeric_vip_threshold
+            ):
                 is_vip = True
 
             score = num_val

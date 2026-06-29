@@ -1,4 +1,5 @@
 import datetime
+
 import pytest
 
 from xtv_support.services.external_directory.interpreter import resolve_signal
@@ -12,7 +13,7 @@ from xtv_support.services.external_directory.model import (
 
 @pytest.fixture
 def now():
-    return datetime.datetime(2025, 1, 1, 12, 0, tzinfo=datetime.timezone.utc)
+    return datetime.datetime(2025, 1, 1, 12, 0, tzinfo=datetime.UTC)
 
 
 def test_resolve_signal_none_doc(now):
@@ -204,9 +205,7 @@ def test_resolve_signal_multiple_mappings(now):
                 local_name="display_badge",
                 external_field_path="tier",
                 kind=FieldKind.ENUM,
-                enum_mapping=(
-                    EnumRankMapping("admin", "Admin Badge", 10, True),
-                )
+                enum_mapping=(EnumRankMapping("admin", "Admin Badge", 10, True),),
             ),
         ),
     )

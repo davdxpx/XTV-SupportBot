@@ -2,6 +2,7 @@
 
 The Motor/Mongo-backed provider that fetches and caches user signals from an external database.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -61,9 +62,7 @@ class ExternalDirectoryProvider:
         coll = db[self._config.collection_name]
 
         query_val = (
-            str(telegram_user_id)
-            if self._config.external_id_is_string
-            else telegram_user_id
+            str(telegram_user_id) if self._config.external_id_is_string else telegram_user_id
         )
 
         return await coll.find_one({self._config.external_id_field: query_val})
@@ -84,7 +83,7 @@ class ExternalDirectoryProvider:
         # Fetch
         try:
             raw_doc = await self._fetch_raw_document(telegram_user_id)
-        except (PyMongoError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, PyMongoError) as exc:
             log.warning(
                 "external_directory.query_failed",
                 database=self._config.database_name,

@@ -2,6 +2,7 @@
 
 The fallback provider that acts as the default system state when external directories are not configured.
 """
+
 from __future__ import annotations
 
 from xtv_support.services.external_directory.model import ResolvedUserSignal
