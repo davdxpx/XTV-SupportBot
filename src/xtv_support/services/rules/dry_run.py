@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from xtv_support.services.external_directory.model import ResolvedUserSignal
 from xtv_support.services.rules.model import Rule, condition_matches
 
 
@@ -22,10 +23,15 @@ class DryRunResult:
     conditions: tuple[ConditionEvaluation, ...]
 
 
-def dry_run(rule: Rule, ticket: dict) -> DryRunResult:
+def dry_run(
+    rule: Rule, ticket: dict, *, user_signal: ResolvedUserSignal | None = None
+) -> DryRunResult:
     evals = tuple(
         ConditionEvaluation(
-            field=c.field, op=c.op, value=c.value, matched=condition_matches(c, ticket)
+            field=c.field,
+            op=c.op,
+            value=c.value,
+            matched=condition_matches(c, ticket, user_signal=user_signal),
         )
         for c in rule.conditions
     )

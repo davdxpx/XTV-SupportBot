@@ -16,6 +16,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Any
 
+from xtv_support.core.container import Container
 from xtv_support.core.events import EventBus
 from xtv_support.core.logger import get_logger
 from xtv_support.domain.events.rules import RuleExecuted, RuleSkipped
@@ -29,6 +30,7 @@ from xtv_support.domain.events.tickets import (
     TicketTagged,
 )
 from xtv_support.services.actions.executor import ActionContext, ActionExecutor
+from xtv_support.services.external_directory.model import DirectoryProviderLike
 from xtv_support.services.rules.cooldown import can_fire, mark_fired
 from xtv_support.services.rules.model import Rule, all_conditions_match
 from xtv_support.services.rules.repository import list_rules
@@ -60,11 +62,13 @@ class RuleEvaluator:
         db: AsyncIOMotorDatabase,
         bus: EventBus,
         actions: ActionExecutor,
+        container: Container,
         client: Client | None = None,
     ) -> None:
         self._db = db
         self._bus = bus
         self._actions = actions
+        self._container = container
         self._client = client
 
     def attach(self) -> None:
@@ -100,7 +104,15 @@ class RuleEvaluator:
         ticket_id: str | None,
         ticket: dict | None,
     ) -> None:
-        if ticket is not None and not all_conditions_match(rule.conditions, ticket):
+        user_signal = None
+        if ticket is not None:
+            user_id = ticket.get("user_id")
+            if user_id:
+                provider = self._container.resolve(DirectoryProviderLike)
+                user_signal = await provider.get_signal(user_id)
+        if ticket is not None and not all_conditions_match(
+            rule.conditions, ticket, user_signal=user_signal
+        ):
             await self._bus.publish(
                 RuleSkipped(
                     rule_id=rule.id,
