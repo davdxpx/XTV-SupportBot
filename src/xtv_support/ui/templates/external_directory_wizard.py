@@ -51,12 +51,16 @@ def render_entry_card(config_exists: bool, config: dict[str, Any] | None = None)
         action_rows=(
             (
                 PanelButton(label="🔧 Reconfigure", callback="cb:v2:admin:extdir:wizard:start"),
-                PanelButton(label="⏸ Disable" if status == "✅ Enabled" else "▶ Enable", callback="cb:v2:admin:extdir:toggle"),
+                PanelButton(
+                    label="⏸ Disable" if status == "✅ Enabled" else "▶ Enable",
+                    callback="cb:v2:admin:extdir:toggle",
+                ),
             ),
             (PanelButton(label="🗑 Delete entirely", callback="cb:v2:admin:extdir:delete"),),
             (PanelButton(label="◀ Back", callback="cb:v2:admin:section:home"),),
         ),
     )
+
 
 # ---------------------------------------------------------------------------
 # Wizard Steps (1-3): Connection info
@@ -72,6 +76,7 @@ def get_uri_prompt() -> tuple[str, list[list[dict[str, str]]]]:
     )
     return text, [[{"label": "❌ Cancel", "callback": "cb:v2:admin:extdir:wizard:cancel"}]]
 
+
 def get_db_prompt(default_db: str | None) -> tuple[str, list[list[dict[str, str]]]]:
     text = (
         "<b>Step 2/7: Database Name</b>\n"
@@ -81,9 +86,17 @@ def get_db_prompt(default_db: str | None) -> tuple[str, list[list[dict[str, str]
     )
     kb = []
     if default_db:
-        kb.append([{"label": f"Use default from URI ({default_db})", "callback": f"cb:v2:admin:extdir:wizard:set_db:{default_db}"}])
+        kb.append(
+            [
+                {
+                    "label": f"Use default from URI ({default_db})",
+                    "callback": f"cb:v2:admin:extdir:wizard:set_db:{default_db}",
+                }
+            ]
+        )
     kb.append([{"label": "❌ Cancel", "callback": "cb:v2:admin:extdir:wizard:cancel"}])
     return text, kb
+
 
 def get_collection_prompt() -> tuple[str, list[list[dict[str, str]]]]:
     text = (
@@ -93,8 +106,11 @@ def get_collection_prompt() -> tuple[str, list[list[dict[str, str]]]]:
         "<i>(Typically 'users' or 'accounts')</i>\n\n"
         "Send the collection name as plain text below."
     )
-    return text, [[{"label": "Use 'users'", "callback": "cb:v2:admin:extdir:wizard:set_col:users"}],
-                  [{"label": "❌ Cancel", "callback": "cb:v2:admin:extdir:wizard:cancel"}]]
+    return text, [
+        [{"label": "Use 'users'", "callback": "cb:v2:admin:extdir:wizard:set_col:users"}],
+        [{"label": "❌ Cancel", "callback": "cb:v2:admin:extdir:wizard:cancel"}],
+    ]
+
 
 # ---------------------------------------------------------------------------
 # Step 4: Connection testing
@@ -109,24 +125,45 @@ def render_connection_test_failure(error_msg: str) -> Panel:
             "Please check your credentials, network access, and collection name.",
         ),
         action_rows=(
-            (PanelButton(label="🔗 Try a different URI", callback="cb:v2:admin:extdir:wizard:restart"),),
-            (PanelButton(label="🗄 Try a different DB name", callback="cb:v2:admin:extdir:wizard:step2"),),
-            (PanelButton(label="📂 Try a different collection name", callback="cb:v2:admin:extdir:wizard:step3"),),
+            (
+                PanelButton(
+                    label="🔗 Try a different URI", callback="cb:v2:admin:extdir:wizard:restart"
+                ),
+            ),
+            (
+                PanelButton(
+                    label="🗄 Try a different DB name", callback="cb:v2:admin:extdir:wizard:step2"
+                ),
+            ),
+            (
+                PanelButton(
+                    label="📂 Try a different collection name",
+                    callback="cb:v2:admin:extdir:wizard:step3",
+                ),
+            ),
             (PanelButton(label="❌ Cancel Setup", callback="cb:v2:admin:extdir:wizard:cancel"),),
         ),
     )
 
+
 # ---------------------------------------------------------------------------
 # Step 5: Telegram ID field selection
 # ---------------------------------------------------------------------------
-def render_field_picker(step_num: int, title: str, subtitle: str, fields: list[tuple[str, str]], page: int = 1, total_pages: int = 1) -> Panel:
+def render_field_picker(
+    step_num: int,
+    title: str,
+    subtitle: str,
+    fields: list[tuple[str, str]],
+    page: int = 1,
+    total_pages: int = 1,
+) -> Panel:
     """Generic field picker used for ID, expiry, and mapping steps."""
     body_lines = [
         f"<b>{title}</b>",
         f"<i>{subtitle}</i>",
         "",
         "We fetched a sample document. Which field should we use?",
-        ""
+        "",
     ]
 
     rows = []
@@ -138,17 +175,30 @@ def render_field_picker(step_num: int, title: str, subtitle: str, fields: list[t
     for f_path, f_type in fields[start_idx:end_idx]:
         label = f"{f_path} ({f_type})"
         # Callbacks must be short. Use a generic 'pick_field' and stash context in state.
-        rows.append((PanelButton(label=label, callback=f"cb:v2:admin:extdir:wizard:pick:{f_path}"),))
+        rows.append(
+            (PanelButton(label=label, callback=f"cb:v2:admin:extdir:wizard:pick:{f_path}"),)
+        )
 
     nav_row = []
     if page > 1:
-        nav_row.append(PanelButton(label="◀ Prev", callback=f"cb:v2:admin:extdir:wizard:page:{page-1}"))
+        nav_row.append(
+            PanelButton(label="◀ Prev", callback=f"cb:v2:admin:extdir:wizard:page:{page - 1}")
+        )
     if page < total_pages:
-        nav_row.append(PanelButton(label="Next ▶", callback=f"cb:v2:admin:extdir:wizard:page:{page+1}"))
+        nav_row.append(
+            PanelButton(label="Next ▶", callback=f"cb:v2:admin:extdir:wizard:page:{page + 1}")
+        )
     if nav_row:
         rows.append(tuple(nav_row))
 
-    rows.append((PanelButton(label="⌨️ Type custom field path instead", callback="cb:v2:admin:extdir:wizard:custom_field"),))
+    rows.append(
+        (
+            PanelButton(
+                label="⌨️ Type custom field path instead",
+                callback="cb:v2:admin:extdir:wizard:custom_field",
+            ),
+        )
+    )
     rows.append((PanelButton(label="❌ Cancel", callback="cb:v2:admin:extdir:wizard:cancel"),))
 
     return Panel(
@@ -157,8 +207,9 @@ def render_field_picker(step_num: int, title: str, subtitle: str, fields: list[t
         body=tuple(body_lines),
         action_rows=tuple(rows),
         page=page if total_pages > 1 else None,
-        total_pages=total_pages if total_pages > 1 else None
+        total_pages=total_pages if total_pages > 1 else None,
     )
+
 
 # ---------------------------------------------------------------------------
 # Step 6: Expiry field
@@ -180,6 +231,7 @@ def render_expiry_prompt() -> Panel:
         ),
     )
 
+
 # ---------------------------------------------------------------------------
 # Step 7: Field Mappings
 # ---------------------------------------------------------------------------
@@ -194,13 +246,26 @@ def render_mapping_kind_prompt(field_path: str, sample_val: str, py_type: str) -
         ),
         action_rows=(
             (
-                PanelButton(label="✅ Yes/No flag", callback="cb:v2:admin:extdir:wizard:kind:boolean"),
-                PanelButton(label="🏷 Category/tier name", callback="cb:v2:admin:extdir:wizard:kind:enum"),
-                PanelButton(label="🔢 Number/score", callback="cb:v2:admin:extdir:wizard:kind:numeric_threshold"),
+                PanelButton(
+                    label="✅ Yes/No flag", callback="cb:v2:admin:extdir:wizard:kind:boolean"
+                ),
+                PanelButton(
+                    label="🏷 Category/tier name", callback="cb:v2:admin:extdir:wizard:kind:enum"
+                ),
+                PanelButton(
+                    label="🔢 Number/score",
+                    callback="cb:v2:admin:extdir:wizard:kind:numeric_threshold",
+                ),
             ),
-            (PanelButton(label="◀ Back to field selection", callback="cb:v2:admin:extdir:wizard:mapping_loop"),),
+            (
+                PanelButton(
+                    label="◀ Back to field selection",
+                    callback="cb:v2:admin:extdir:wizard:mapping_loop",
+                ),
+            ),
         ),
     )
+
 
 def render_boolean_vip_prompt(field_path: str) -> Panel:
     return Panel(
@@ -213,11 +278,14 @@ def render_boolean_vip_prompt(field_path: str) -> Panel:
         action_rows=(
             (
                 PanelButton(label="True = VIP", callback="cb:v2:admin:extdir:wizard:bool_vip:true"),
-                PanelButton(label="False = VIP", callback="cb:v2:admin:extdir:wizard:bool_vip:false"),
+                PanelButton(
+                    label="False = VIP", callback="cb:v2:admin:extdir:wizard:bool_vip:false"
+                ),
             ),
             (PanelButton(label="◀ Back", callback="cb:v2:admin:extdir:wizard:kind_back"),),
         ),
     )
+
 
 def render_boolean_local_prompt() -> Panel:
     return Panel(
@@ -226,12 +294,18 @@ def render_boolean_local_prompt() -> Panel:
         body=("Which local SupportBot concept does this boolean control?"),
         action_rows=(
             (
-                PanelButton(label="vip_status", callback="cb:v2:admin:extdir:wizard:bool_local:vip_status"),
-                PanelButton(label="display_badge", callback="cb:v2:admin:extdir:wizard:bool_local:display_badge"),
+                PanelButton(
+                    label="vip_status", callback="cb:v2:admin:extdir:wizard:bool_local:vip_status"
+                ),
+                PanelButton(
+                    label="display_badge",
+                    callback="cb:v2:admin:extdir:wizard:bool_local:display_badge",
+                ),
             ),
             (PanelButton(label="◀ Back", callback="cb:v2:admin:extdir:wizard:bool_vip_back"),),
         ),
     )
+
 
 def render_enum_too_many_prompt(count: int) -> Panel:
     return Panel(
@@ -245,11 +319,18 @@ def render_enum_too_many_prompt(count: int) -> Panel:
         ),
         action_rows=(
             (
-                PanelButton(label="✅ Yes, continue anyway", callback="cb:v2:admin:extdir:wizard:enum_continue"),
-                PanelButton(label="❌ No, pick a different field", callback="cb:v2:admin:extdir:wizard:mapping_loop"),
+                PanelButton(
+                    label="✅ Yes, continue anyway",
+                    callback="cb:v2:admin:extdir:wizard:enum_continue",
+                ),
+                PanelButton(
+                    label="❌ No, pick a different field",
+                    callback="cb:v2:admin:extdir:wizard:mapping_loop",
+                ),
             ),
         ),
     )
+
 
 def get_enum_order_prompt(distinct_values: list[str]) -> tuple[str, list[list[dict[str, str]]]]:
     vals = "\n".join(f"• <code>{v}</code>" for v in distinct_values)
@@ -262,13 +343,29 @@ def get_enum_order_prompt(distinct_values: list[str]) -> tuple[str, list[list[di
     )
     return text, [[{"label": "◀ Back", "callback": "cb:v2:admin:extdir:wizard:kind_back"}]]
 
+
 def render_enum_vip_prompt(ordered_values: list[str]) -> Panel:
     rows = []
     for val in ordered_values:
-        rows.append((PanelButton(label=f"From {val} and up", callback=f"cb:v2:admin:extdir:wizard:enum_vip:{val}"),))
+        rows.append(
+            (
+                PanelButton(
+                    label=f"From {val} and up", callback=f"cb:v2:admin:extdir:wizard:enum_vip:{val}"
+                ),
+            )
+        )
 
-    rows.append((PanelButton(label="None are VIP, just track tier", callback="cb:v2:admin:extdir:wizard:enum_vip:NONE"),))
-    rows.append((PanelButton(label="◀ Back", callback="cb:v2:admin:extdir:wizard:enum_order_back"),))
+    rows.append(
+        (
+            PanelButton(
+                label="None are VIP, just track tier",
+                callback="cb:v2:admin:extdir:wizard:enum_vip:NONE",
+            ),
+        )
+    )
+    rows.append(
+        (PanelButton(label="◀ Back", callback="cb:v2:admin:extdir:wizard:enum_order_back"),)
+    )
 
     return Panel(
         title="VIP Threshold",
@@ -277,7 +374,10 @@ def render_enum_vip_prompt(ordered_values: list[str]) -> Panel:
         action_rows=tuple(rows),
     )
 
-def render_numeric_info_prompt(field_path: str, min_val: float, max_val: float) -> tuple[str, list[list[dict[str, str]]]]:
+
+def render_numeric_info_prompt(
+    field_path: str, min_val: float, max_val: float
+) -> tuple[str, list[list[dict[str, str]]]]:
     text = (
         f"<b>Numeric Mapping</b>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -286,6 +386,7 @@ def render_numeric_info_prompt(field_path: str, min_val: float, max_val: float) 
         "Reply with the threshold number below."
     )
     return text, [[{"label": "◀ Back", "callback": "cb:v2:admin:extdir:wizard:kind_back"}]]
+
 
 def render_numeric_warning_prompt(thresh: float, min_val: float, max_val: float) -> Panel:
     return Panel(
@@ -297,11 +398,18 @@ def render_numeric_warning_prompt(thresh: float, min_val: float, max_val: float)
         ),
         action_rows=(
             (
-                PanelButton(label="✅ Yes, continue anyway", callback="cb:v2:admin:extdir:wizard:num_continue"),
-                PanelButton(label="🔢 Pick a different number", callback="cb:v2:admin:extdir:wizard:num_retry"),
+                PanelButton(
+                    label="✅ Yes, continue anyway",
+                    callback="cb:v2:admin:extdir:wizard:num_continue",
+                ),
+                PanelButton(
+                    label="🔢 Pick a different number",
+                    callback="cb:v2:admin:extdir:wizard:num_retry",
+                ),
             ),
         ),
     )
+
 
 def render_field_summary(configured_count: int, summary_text: str) -> Panel:
     return Panel(
@@ -309,11 +417,20 @@ def render_field_summary(configured_count: int, summary_text: str) -> Panel:
         subtitle=f"{configured_count} field(s) mapped",
         body=(summary_text,),
         action_rows=(
-            (PanelButton(label="➕ Add another field", callback="cb:v2:admin:extdir:wizard:mapping_loop"),),
-            (PanelButton(label="✅ I'm done, review & save", callback="cb:v2:admin:extdir:wizard:review"),),
+            (
+                PanelButton(
+                    label="➕ Add another field", callback="cb:v2:admin:extdir:wizard:mapping_loop"
+                ),
+            ),
+            (
+                PanelButton(
+                    label="✅ I'm done, review & save", callback="cb:v2:admin:extdir:wizard:review"
+                ),
+            ),
             (PanelButton(label="❌ Cancel Setup", callback="cb:v2:admin:extdir:wizard:cancel"),),
         ),
     )
+
 
 # ---------------------------------------------------------------------------
 # Step 8: Final Review
@@ -332,9 +449,15 @@ def render_final_review(config_summary: str) -> Panel:
         action_rows=(
             (PanelButton(label="💾 Save & enable", callback="cb:v2:admin:extdir:wizard:save"),),
             (PanelButton(label="🔄 Start over", callback="cb:v2:admin:extdir:wizard:start"),),
-            (PanelButton(label="❌ Cancel, discard everything", callback="cb:v2:admin:extdir:wizard:cancel"),),
+            (
+                PanelButton(
+                    label="❌ Cancel, discard everything",
+                    callback="cb:v2:admin:extdir:wizard:cancel",
+                ),
+            ),
         ),
     )
+
 
 # ---------------------------------------------------------------------------
 # Step 9: Success & Testing
@@ -349,11 +472,22 @@ def render_success(admin_id: int) -> Panel:
             "You can test the lookup right now to verify it works.",
         ),
         action_rows=(
-            (PanelButton(label="🔎 Test lookup for my own Telegram ID", callback=f"cb:v2:admin:extdir:wizard:test_id:{admin_id}"),),
-            (PanelButton(label="🔎 Test with a different Telegram ID", callback="cb:v2:admin:extdir:wizard:test_custom"),),
+            (
+                PanelButton(
+                    label="🔎 Test lookup for my own Telegram ID",
+                    callback=f"cb:v2:admin:extdir:wizard:test_id:{admin_id}",
+                ),
+            ),
+            (
+                PanelButton(
+                    label="🔎 Test with a different Telegram ID",
+                    callback="cb:v2:admin:extdir:wizard:test_custom",
+                ),
+            ),
             (PanelButton(label="◀ Back to Admin panel", callback="cb:v2:admin:section:home"),),
         ),
     )
+
 
 def render_test_result(admin_id: int, result_str: str) -> Panel:
     return Panel(
@@ -362,10 +496,15 @@ def render_test_result(admin_id: int, result_str: str) -> Panel:
         body=(
             result_str,
             "",
-            "<i>Note: If looking up your own ID, 'not found' or 'not VIP' is expected unless your account exists there with VIP status.</i>"
+            "<i>Note: If looking up your own ID, 'not found' or 'not VIP' is expected unless your account exists there with VIP status.</i>",
         ),
         action_rows=(
-            (PanelButton(label="🔎 Test with a different Telegram ID", callback="cb:v2:admin:extdir:wizard:test_custom"),),
+            (
+                PanelButton(
+                    label="🔎 Test with a different Telegram ID",
+                    callback="cb:v2:admin:extdir:wizard:test_custom",
+                ),
+            ),
             (PanelButton(label="◀ Back to Admin panel", callback="cb:v2:admin:section:home"),),
         ),
     )

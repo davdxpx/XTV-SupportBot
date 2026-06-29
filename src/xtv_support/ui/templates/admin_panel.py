@@ -284,8 +284,6 @@ def render_settings_section(flags_snapshot: list[tuple[str, bool]]) -> Panel:
     )
 
 
-
-
 def render_extdir_section() -> Panel:
     return Panel(
         title="🔌 External Directory",
@@ -296,6 +294,7 @@ def render_extdir_section() -> Panel:
             (BACK_HOME,),
         ),
     )
+
 
 # ---------------------------------------------------------------------------
 # Backwards-compat

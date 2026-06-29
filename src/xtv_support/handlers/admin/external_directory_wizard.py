@@ -30,7 +30,6 @@ from xtv_support.ui.templates import external_directory_wizard as tpl
 from xtv_support.utils.time import utcnow
 
 if TYPE_CHECKING:
-
     from xtv_support.core.context import HandlerContext
 
 log = get_logger("admin.extdir_wizard")
@@ -44,16 +43,29 @@ log = get_logger("admin.extdir_wizard")
 async def _edit_panel(client: Client, user_id: int, message_id: int | None, panel: Any) -> None:
     from pyrogram.enums import ParseMode
     from pyrogram.errors import MessageNotModified
+
     text, kb = panel.render()
     if message_id:
         try:
-            await client.edit_message_text(chat_id=user_id, message_id=message_id, text=text, parse_mode=ParseMode.HTML, reply_markup=kb, disable_web_page_preview=True)
+            await client.edit_message_text(
+                chat_id=user_id,
+                message_id=message_id,
+                text=text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=kb,
+                disable_web_page_preview=True,
+            )
         except MessageNotModified:
             pass
     else:
-        await client.send_message(user_id, text, parse_mode=ParseMode.HTML, reply_markup=kb, disable_web_page_preview=True)
+        await client.send_message(
+            user_id, text, parse_mode=ParseMode.HTML, reply_markup=kb, disable_web_page_preview=True
+        )
 
-async def _send_or_edit_panel(client: Client, message: Message | None, cq: CallbackQuery | None, panel: Any) -> None:
+
+async def _send_or_edit_panel(
+    client: Client, message: Message | None, cq: CallbackQuery | None, panel: Any
+) -> None:
     from pyrogram.enums import ParseMode
     from pyrogram.errors import MessageNotModified
 
@@ -79,11 +91,14 @@ async def _send_or_edit_panel(client: Client, message: Message | None, cq: Callb
             disable_web_page_preview=True,
         )
 
+
 # Base StateMachine state
 WIZARD_STATE = "extdir_wizard"
 
+
 def is_admin(user_id: int) -> bool:
     return user_id in settings.ADMIN_IDS
+
 
 async def reload_provider(ctx: HandlerContext) -> None:
     """Hot-reload the DirectoryProvider in the dependency container."""
@@ -91,6 +106,7 @@ async def reload_provider(ctx: HandlerContext) -> None:
         DirectoryProviderLike,
         build_provider,
     )
+
     provider = await build_provider(ctx.db)
     ctx.container.register_instance(DirectoryProviderLike, provider, override=True)
 
@@ -102,7 +118,10 @@ handlers = []
 # Callbacks
 # ---------------------------------------------------------------------------
 
-@Client.on_callback_query(filters.regex(r"^cb:v2:admin:extdir:(?!wizard:)(.*?)$"), group=HandlerGroup.COMMAND)
+
+@Client.on_callback_query(
+    filters.regex(r"^cb:v2:admin:extdir:(?!wizard:)(.*?)$"), group=HandlerGroup.COMMAND
+)
 async def extdir_callback(client: Client, cq: CallbackQuery) -> None:
     if not cq.from_user or not is_admin(cq.from_user.id):
         await cq.answer("Admin only.", show_alert=True)
@@ -117,6 +136,7 @@ async def extdir_callback(client: Client, cq: CallbackQuery) -> None:
         config = await get_config(ctx.db)
         if config:
             from dataclasses import asdict
+
             panel = tpl.render_entry_card(True, asdict(config))
         else:
             panel = tpl.render_entry_card(False)
@@ -137,10 +157,12 @@ async def extdir_callback(client: Client, cq: CallbackQuery) -> None:
         config = await get_config(ctx.db)
         if config:
             from dataclasses import replace
+
             new_config = replace(config, enabled=not config.enabled)
             await save_config(ctx.db, new_config)
             await reload_provider(ctx)
             from dataclasses import asdict
+
             panel = tpl.render_entry_card(True, asdict(new_config))
             await _edit_panel(client, user_id, cq.message.id if cq.message else None, panel)
             await cq.answer(f"Config {'enabled' if new_config.enabled else 'disabled'}.")
@@ -150,6 +172,7 @@ async def extdir_callback(client: Client, cq: CallbackQuery) -> None:
     if data == "wizard:cancel":
         await ctx.state.clear(user_id)
         from xtv_support.ui.templates.admin_panel import OverviewStats, render_home
+
         panel = render_home(OverviewStats())
         await _edit_panel(client, user_id, cq.message.id if cq.message else None, panel)
         return
@@ -166,7 +189,7 @@ async def extdir_callback(client: Client, cq: CallbackQuery) -> None:
             text=text,
             context="extdir_uri",
             args={},
-            keyboard=None, # Will render below
+            keyboard=None,  # Will render below
             edit_message_id=cq.message.id if cq.message else None,
         )
         return
@@ -175,11 +198,13 @@ async def extdir_callback(client: Client, cq: CallbackQuery) -> None:
     # Not using standard panel render here since ask() needs text and markup separately.
     pass
 
+
 # Note: We need a small helper to convert row_specs to InlineKeyboardMarkup
 def _make_kb(specs):
     if not specs:
         return None
     from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
     rows = []
     for row in specs:
         r = []
@@ -190,7 +215,9 @@ def _make_kb(specs):
 
 
 # Replace the start handler with proper kb
-@Client.on_callback_query(filters.regex(r"^cb:v2:admin:extdir:wizard:(.*?)$"), group=HandlerGroup.COMMAND)
+@Client.on_callback_query(
+    filters.regex(r"^cb:v2:admin:extdir:wizard:(.*?)$"), group=HandlerGroup.COMMAND
+)
 async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
     if not cq.from_user or not is_admin(cq.from_user.id):
         return
@@ -210,18 +237,37 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
             return
 
         import urllib.parse
+
         parsed = urllib.parse.urlparse(uri)
         default_db = parsed.path.lstrip("/") if parsed.path else None
 
         text, kb_spec = tpl.get_db_prompt(default_db)
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_db", keyboard=_make_kb(kb_spec), edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_db",
+            keyboard=_make_kb(kb_spec),
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     if cmd.startswith("set_db:"):
         db_name = cmd.split(":", 1)[1]
         await ctx.state.merge_data(user_id, extdir_db=db_name)
         text, kb_spec = tpl.get_collection_prompt()
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_col", keyboard=_make_kb(kb_spec), edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_col",
+            keyboard=_make_kb(kb_spec),
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     # -----------------------------------------------------------------------
@@ -229,7 +275,16 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
     # -----------------------------------------------------------------------
     if cmd == "step3":
         text, kb_spec = tpl.get_collection_prompt()
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_col", keyboard=_make_kb(kb_spec), edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_col",
+            keyboard=_make_kb(kb_spec),
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     if cmd.startswith("set_col:"):
@@ -243,7 +298,9 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
     # Step 5: Telegram ID field (invoked after connection test success)
     # -----------------------------------------------------------------------
     if cmd == "step5":
-        await _render_field_picker_for_step(client, cq.message.id if cq.message else None, ctx, user_id, step="id")
+        await _render_field_picker_for_step(
+            client, cq.message.id if cq.message else None, ctx, user_id, step="id"
+        )
         return
 
     if cmd.startswith("pick:"):
@@ -266,7 +323,9 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
         elif current_step == "expiry":
             await ctx.state.merge_data(user_id, extdir_expiry_field=field_path)
             # Go to step 7 (Mapping loop)
-            await _render_field_summary_step(client, cq.message.id if cq.message else None, ctx, user_id)
+            await _render_field_summary_step(
+                client, cq.message.id if cq.message else None, ctx, user_id
+            )
 
         elif current_step == "mapping":
             await ctx.state.merge_data(user_id, current_mapping_field=field_path)
@@ -290,7 +349,16 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
     # -----------------------------------------------------------------------
     if cmd == "custom_field":
         text = "Please send the exact field path (e.g., `user.telegram.id`)."
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_custom_field", args={}, edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_custom_field",
+            args={},
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     # -----------------------------------------------------------------------
@@ -300,16 +368,22 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
         ans = cmd.split(":", 1)[1]
         if ans == "no":
             await ctx.state.merge_data(user_id, extdir_expiry_field=None)
-            await _render_field_summary_step(client, cq.message.id if cq.message else None, ctx, user_id)
+            await _render_field_summary_step(
+                client, cq.message.id if cq.message else None, ctx, user_id
+            )
         else:
-            await _render_field_picker_for_step(client, cq.message.id if cq.message else None, ctx, user_id, step="expiry")
+            await _render_field_picker_for_step(
+                client, cq.message.id if cq.message else None, ctx, user_id, step="expiry"
+            )
         return
 
     # -----------------------------------------------------------------------
     # Step 7: Mapping Loop
     # -----------------------------------------------------------------------
     if cmd == "mapping_loop":
-        await _render_field_picker_for_step(client, cq.message.id if cq.message else None, ctx, user_id, step="mapping")
+        await _render_field_picker_for_step(
+            client, cq.message.id if cq.message else None, ctx, user_id, step="mapping"
+        )
         return
 
     if cmd == "kind_back":
@@ -354,13 +428,15 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
             "local_name": local_name,
             "external_field_path": field_path,
             "kind": "boolean",
-            "boolean_true_means_vip": is_vip
+            "boolean_true_means_vip": is_vip,
         }
 
         mappings = list(fsm_data.get("extdir_mappings", []))
         mappings.append(mapping)
         await ctx.state.merge_data(user_id, extdir_mappings=mappings)
-        await _render_field_summary_step(client, cq.message.id if cq.message else None, ctx, user_id)
+        await _render_field_summary_step(
+            client, cq.message.id if cq.message else None, ctx, user_id
+        )
         return
 
     # ENUM
@@ -373,14 +449,32 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
         fsm_data = await ctx.state.data(user_id)
         distinct_vals = fsm_data.get("temp_enum_vals", [])
         text, kb_spec = tpl.get_enum_order_prompt(distinct_vals)
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_enum_order", keyboard=_make_kb(kb_spec), edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_enum_order",
+            keyboard=_make_kb(kb_spec),
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     if cmd == "enum_order_back":
         fsm_data = await ctx.state.data(user_id)
         distinct_vals = fsm_data.get("temp_enum_vals", [])
         text, kb_spec = tpl.get_enum_order_prompt(distinct_vals)
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_enum_order", keyboard=_make_kb(kb_spec), edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_enum_order",
+            keyboard=_make_kb(kb_spec),
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     if cmd.startswith("enum_vip:"):
@@ -394,24 +488,28 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
         for i, val in enumerate(ordered_vals):
             if val == vip_thresh:
                 is_vip_flag = True
-            enum_mappings.append({
-                "raw_value": val,
-                "rank_label": val.capitalize(),
-                "rank_order": i,
-                "is_vip": is_vip_flag if vip_thresh != "NONE" else False
-            })
+            enum_mappings.append(
+                {
+                    "raw_value": val,
+                    "rank_label": val.capitalize(),
+                    "rank_order": i,
+                    "is_vip": is_vip_flag if vip_thresh != "NONE" else False,
+                }
+            )
 
         mapping = {
             "local_name": "tier_label",
             "external_field_path": field_path,
             "kind": "enum",
-            "enum_mapping": enum_mappings
+            "enum_mapping": enum_mappings,
         }
 
         mappings = list(fsm_data.get("extdir_mappings", []))
         mappings.append(mapping)
         await ctx.state.merge_data(user_id, extdir_mappings=mappings)
-        await _render_field_summary_step(client, cq.message.id if cq.message else None, ctx, user_id)
+        await _render_field_summary_step(
+            client, cq.message.id if cq.message else None, ctx, user_id
+        )
         return
 
     # NUMERIC
@@ -425,7 +523,16 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
         min_val = fsm_data.get("temp_num_min", 0)
         max_val = fsm_data.get("temp_num_max", 0)
         text, kb_spec = tpl.render_numeric_info_prompt(field_path, min_val, max_val)
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_numeric_thresh", keyboard=_make_kb(kb_spec), edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_numeric_thresh",
+            keyboard=_make_kb(kb_spec),
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
     if cmd == "num_continue":
@@ -437,13 +544,15 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
             "local_name": "priority_score",
             "external_field_path": field_path,
             "kind": "numeric_threshold",
-            "numeric_vip_threshold": thresh
+            "numeric_vip_threshold": thresh,
         }
 
         mappings = list(fsm_data.get("extdir_mappings", []))
         mappings.append(mapping)
         await ctx.state.merge_data(user_id, extdir_mappings=mappings)
-        await _render_field_summary_step(client, cq.message.id if cq.message else None, ctx, user_id)
+        await _render_field_summary_step(
+            client, cq.message.id if cq.message else None, ctx, user_id
+        )
         return
 
     # -----------------------------------------------------------------------
@@ -464,16 +573,22 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
             f"<b>Telegram ID Field:</b> {id_field}",
             f"<b>Expiry Field:</b> {expiry if expiry else 'None'}",
             "",
-            "<b>Field Mappings:</b>"
+            "<b>Field Mappings:</b>",
         ]
 
         for i, m in enumerate(mappings):
             if m["kind"] == "boolean":
-                lines.append(f"{i+1}. <code>{m['external_field_path']}</code> (Boolean) ➡️ <code>{m['local_name']}</code> (True = VIP: {m['boolean_true_means_vip']})")
+                lines.append(
+                    f"{i + 1}. <code>{m['external_field_path']}</code> (Boolean) ➡️ <code>{m['local_name']}</code> (True = VIP: {m['boolean_true_means_vip']})"
+                )
             elif m["kind"] == "enum":
-                lines.append(f"{i+1}. <code>{m['external_field_path']}</code> (Enum) ➡️ <code>{m['local_name']}</code> ({len(m['enum_mapping'])} tiers)")
+                lines.append(
+                    f"{i + 1}. <code>{m['external_field_path']}</code> (Enum) ➡️ <code>{m['local_name']}</code> ({len(m['enum_mapping'])} tiers)"
+                )
             elif m["kind"] == "numeric_threshold":
-                lines.append(f"{i+1}. <code>{m['external_field_path']}</code> (Numeric) ➡️ <code>{m['local_name']}</code> (VIP Threshold: {m['numeric_vip_threshold']})")
+                lines.append(
+                    f"{i + 1}. <code>{m['external_field_path']}</code> (Numeric) ➡️ <code>{m['local_name']}</code> (VIP Threshold: {m['numeric_vip_threshold']})"
+                )
 
         if not mappings:
             lines.append("<i>No additional mappings configured.</i>")
@@ -498,29 +613,36 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
             if rm["kind"] == "enum":
                 er_mappings = []
                 for em in rm.get("enum_mapping", []):
-                    er_mappings.append(EnumRankMapping(
-                        raw_value=em["raw_value"],
-                        rank_label=em["rank_label"],
-                        rank_order=em["rank_order"],
-                        is_vip=em["is_vip"]
-                    ))
-                mappings.append(FieldMapping(
-                    local_name=rm["local_name"],
-                    external_field_path=rm["external_field_path"],
-                    kind=FieldKind(rm["kind"]),
-                    enum_mapping=tuple(er_mappings)
-                ))
+                    er_mappings.append(
+                        EnumRankMapping(
+                            raw_value=em["raw_value"],
+                            rank_label=em["rank_label"],
+                            rank_order=em["rank_order"],
+                            is_vip=em["is_vip"],
+                        )
+                    )
+                mappings.append(
+                    FieldMapping(
+                        local_name=rm["local_name"],
+                        external_field_path=rm["external_field_path"],
+                        kind=FieldKind(rm["kind"]),
+                        enum_mapping=tuple(er_mappings),
+                    )
+                )
             else:
-                mappings.append(FieldMapping(
-                    local_name=rm["local_name"],
-                    external_field_path=rm["external_field_path"],
-                    kind=FieldKind(rm["kind"]),
-                    numeric_vip_threshold=rm.get("numeric_vip_threshold"),
-                    boolean_true_means_vip=rm.get("boolean_true_means_vip", True)
-                ))
+                mappings.append(
+                    FieldMapping(
+                        local_name=rm["local_name"],
+                        external_field_path=rm["external_field_path"],
+                        kind=FieldKind(rm["kind"]),
+                        numeric_vip_threshold=rm.get("numeric_vip_threshold"),
+                        boolean_true_means_vip=rm.get("boolean_true_means_vip", True),
+                    )
+                )
 
         # We must generate a URI ref and store it via Prompt 2's store_secret_uri
         import uuid
+
         ref = f"extdir_mongo_{uuid.uuid4().hex[:8]}"
         await store_secret_uri(ctx.db, ref, uri)
 
@@ -534,7 +656,7 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
             expiry_field_path=expiry,
             field_mappings=tuple(mappings),
             last_verified_at=utcnow(),
-            last_verification_error=None
+            last_verification_error=None,
         )
 
         await save_config(ctx.db, config)
@@ -553,6 +675,7 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
         tid = int(cmd.split(":", 1)[1])
         # Call provider directly
         from xtv_support.services.external_directory.factory import DirectoryProviderLike
+
         provider = ctx.container.resolve(DirectoryProviderLike)
         try:
             signal = await provider.get_signal(tid)
@@ -573,7 +696,16 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
 
     if cmd == "test_custom":
         text = "Please send the Telegram ID you wish to test as a number."
-        await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_test_id", args={}, edit_message_id=cq.message.id if cq.message else None)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=user_id,
+            user_id=user_id,
+            text=text,
+            context="extdir_test_id",
+            args={},
+            edit_message_id=cq.message.id if cq.message else None,
+        )
         return
 
 
@@ -581,7 +713,10 @@ async def extdir_wizard_callback(client: Client, cq: CallbackQuery) -> None:
 # Helper functions for heavy queries
 # ---------------------------------------------------------------------------
 
-async def _run_test_connection(client: Client, message_id: int | None, ctx: HandlerContext, user_id: int):
+
+async def _run_test_connection(
+    client: Client, message_id: int | None, ctx: HandlerContext, user_id: int
+):
     """Step 4 execution."""
     fsm_data = await ctx.state.data(user_id)
     uri = fsm_data.get("extdir_uri")
@@ -613,6 +748,7 @@ async def _run_test_connection(client: Client, message_id: int | None, ctx: Hand
 
     # Store doc
     from bson import ObjectId
+
     # Clean up for json storage
     clean_doc = {}
     for k, v in doc.items():
@@ -626,7 +762,15 @@ async def _run_test_connection(client: Client, message_id: int | None, ctx: Hand
     # Go to step 5
     await _render_field_picker_for_step(client, message_id, ctx, user_id, step="id")
 
-async def _render_field_picker_for_step(client: Client, message_id: int | None, ctx: HandlerContext, user_id: int, step: str, page: int = 1):
+
+async def _render_field_picker_for_step(
+    client: Client,
+    message_id: int | None,
+    ctx: HandlerContext,
+    user_id: int,
+    step: str,
+    page: int = 1,
+):
     fsm_data = await ctx.state.data(user_id)
     await ctx.state.merge_data(user_id, current_step=step)
 
@@ -650,7 +794,9 @@ async def _render_field_picker_for_step(client: Client, message_id: int | None, 
         id_field = fsm_data.get("extdir_id_field")
         expiry_field = fsm_data.get("extdir_expiry_field")
         used = [m["external_field_path"] for m in fsm_data.get("extdir_mappings", [])]
-        fields = [f for f in fields if f[0] != id_field and f[0] != expiry_field and f[0] not in used]
+        fields = [
+            f for f in fields if f[0] != id_field and f[0] != expiry_field and f[0] not in used
+        ]
     elif step == "expiry":
         id_field = fsm_data.get("extdir_id_field")
         fields = [f for f in fields if f[0] != id_field and (f[1] in ("int", "float", "str"))]
@@ -660,7 +806,7 @@ async def _render_field_picker_for_step(client: Client, message_id: int | None, 
     titles = {
         "id": ("Telegram ID Field", "Which field in your collection holds the Telegram user ID?"),
         "expiry": ("Expiry Field", "Which field holds the user's expiration date or timestamp?"),
-        "mapping": ("Field Mappings", "Which field would you like to map to SupportBot?")
+        "mapping": ("Field Mappings", "Which field would you like to map to SupportBot?"),
     }
 
     panel = tpl.render_field_picker(
@@ -669,13 +815,15 @@ async def _render_field_picker_for_step(client: Client, message_id: int | None, 
         subtitle=titles[step][1],
         fields=fields,
         page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
     )
 
     await _edit_panel(client, user_id, message_id, panel)
 
 
-async def _render_field_summary_step(client: Client, message_id: int | None, ctx: HandlerContext, user_id: int):
+async def _render_field_summary_step(
+    client: Client, message_id: int | None, ctx: HandlerContext, user_id: int
+):
     fsm_data = await ctx.state.data(user_id)
     mappings = fsm_data.get("extdir_mappings", [])
 
@@ -695,7 +843,10 @@ async def _render_field_summary_step(client: Client, message_id: int | None, ctx
 
     await _edit_panel(client, user_id, message_id, panel)
 
-async def _run_enum_distinct_query(client: Client, message_id: int | None, ctx: HandlerContext, user_id: int):
+
+async def _run_enum_distinct_query(
+    client: Client, message_id: int | None, ctx: HandlerContext, user_id: int
+):
     fsm_data = await ctx.state.data(user_id)
     uri = fsm_data.get("extdir_uri")
     db_name = fsm_data.get("extdir_db")
@@ -716,9 +867,21 @@ async def _run_enum_distinct_query(client: Client, message_id: int | None, ctx: 
     await ctx.state.merge_data(user_id, temp_enum_vals=vals)
 
     text, kb_spec = tpl.get_enum_order_prompt(vals)
-    await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_enum_order", keyboard=_make_kb(kb_spec), edit_message_id=message_id)
+    await akc.ask(
+        client,
+        ctx.db,
+        chat_id=user_id,
+        user_id=user_id,
+        text=text,
+        context="extdir_enum_order",
+        keyboard=_make_kb(kb_spec),
+        edit_message_id=message_id,
+    )
 
-async def _run_numeric_minmax_query(client: Client, message_id: int | None, ctx: HandlerContext, user_id: int):
+
+async def _run_numeric_minmax_query(
+    client: Client, message_id: int | None, ctx: HandlerContext, user_id: int
+):
     fsm_data = await ctx.state.data(user_id)
     uri = fsm_data.get("extdir_uri")
     db_name = fsm_data.get("extdir_db")
@@ -729,7 +892,13 @@ async def _run_numeric_minmax_query(client: Client, message_id: int | None, ctx:
     client_db = cm.get_db(uri, db_name)
 
     pipeline = [
-        {"$group": {"_id": None, "min": {"$min": f"${field_path}"}, "max": {"$max": f"${field_path}"}}}
+        {
+            "$group": {
+                "_id": None,
+                "min": {"$min": f"${field_path}"},
+                "max": {"$max": f"${field_path}"},
+            }
+        }
     ]
     cursor = client_db[col_name].aggregate(pipeline)
     docs = await cursor.to_list(length=1)
@@ -748,12 +917,24 @@ async def _run_numeric_minmax_query(client: Client, message_id: int | None, ctx:
     await ctx.state.merge_data(user_id, temp_num_min=float(min_v), temp_num_max=float(max_v))
 
     text, kb_spec = tpl.render_numeric_info_prompt(field_path, float(min_v), float(max_v))
-    await akc.ask(client, ctx.db, chat_id=user_id, user_id=user_id, text=text, context="extdir_numeric_thresh", keyboard=_make_kb(kb_spec), edit_message_id=message_id)
+    await akc.ask(
+        client,
+        ctx.db,
+        chat_id=user_id,
+        user_id=user_id,
+        text=text,
+        context="extdir_numeric_thresh",
+        keyboard=_make_kb(kb_spec),
+        edit_message_id=message_id,
+    )
+
 
 # ---------------------------------------------------------------------------
 # Handlers logic for ask and confirm inputs
 # ---------------------------------------------------------------------------
-async def _on_extdir_db(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+async def _on_extdir_db(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
@@ -768,14 +949,37 @@ async def _on_extdir_db(ctx: HandlerContext, client: Client, message: Message, a
 
     await ctx.state.merge_data(user_id, extdir_db=db_name)
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text="Captured DB.", clear_state=False)
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text="Captured DB.",
+            clear_state=False,
+        )
 
     text, kb_spec = tpl.get_collection_prompt()
-    await akc.ask(client, ctx.db, chat_id=message.chat.id, user_id=user_id, text=text, context="extdir_col", keyboard=_make_kb(kb_spec), edit_message_id=state_obj.prompt_msg_id if state_obj else None)
+    await akc.ask(
+        client,
+        ctx.db,
+        chat_id=message.chat.id,
+        user_id=user_id,
+        text=text,
+        context="extdir_col",
+        keyboard=_make_kb(kb_spec),
+        edit_message_id=state_obj.prompt_msg_id if state_obj else None,
+    )
 
-async def _on_extdir_col(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+
+async def _on_extdir_col(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
@@ -789,13 +993,27 @@ async def _on_extdir_col(ctx: HandlerContext, client: Client, message: Message, 
 
     await ctx.state.merge_data(user_id, extdir_col=col_name)
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text="Captured Collection. Testing connection...", clear_state=False)
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text="Captured Collection. Testing connection...",
+            clear_state=False,
+        )
 
     await _run_test_connection(client, state_obj.prompt_msg_id if state_obj else None, ctx, user_id)
 
-async def _on_extdir_custom_field(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+
+async def _on_extdir_custom_field(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
@@ -809,11 +1027,20 @@ async def _on_extdir_custom_field(ctx: HandlerContext, client: Client, message: 
     fsm_data = await ctx.state.data(user_id)
     current_step = fsm_data.get("current_step")
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text=f"Captured custom field {field_path}.", clear_state=False)
-
-
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text=f"Captured custom field {field_path}.",
+            clear_state=False,
+        )
 
     if current_step == "id":
         await ctx.state.merge_data(user_id, extdir_id_field=field_path, extdir_id_is_string=True)
@@ -821,13 +1048,18 @@ async def _on_extdir_custom_field(ctx: HandlerContext, client: Client, message: 
         await _edit_panel(client, user_id, state_obj.prompt_msg_id if state_obj else None, panel)
     elif current_step == "expiry":
         await ctx.state.merge_data(user_id, extdir_expiry_field=field_path)
-        await _render_field_summary_step(client, state_obj.prompt_msg_id if state_obj else None, ctx, user_id)
+        await _render_field_summary_step(
+            client, state_obj.prompt_msg_id if state_obj else None, ctx, user_id
+        )
     elif current_step == "mapping":
         await ctx.state.merge_data(user_id, current_mapping_field=field_path)
         panel = tpl.render_mapping_kind_prompt(field_path, "custom", "Unknown")
         await _edit_panel(client, user_id, state_obj.prompt_msg_id if state_obj else None, panel)
 
-async def _on_extdir_enum_order(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+
+async def _on_extdir_enum_order(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
@@ -842,14 +1074,28 @@ async def _on_extdir_enum_order(ctx: HandlerContext, client: Client, message: Me
 
     await ctx.state.merge_data(user_id, temp_ordered_vals=vals)
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text="Captured ordered values.", clear_state=False)
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text="Captured ordered values.",
+            clear_state=False,
+        )
 
     panel = tpl.render_enum_vip_prompt(vals)
     await _edit_panel(client, user_id, state_obj.prompt_msg_id if state_obj else None, panel)
 
-async def _on_extdir_numeric_thresh(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+
+async def _on_extdir_numeric_thresh(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
@@ -862,16 +1108,37 @@ async def _on_extdir_numeric_thresh(ctx: HandlerContext, client: Client, message
     try:
         thresh = float(message.text.strip())
     except ValueError:
-        state = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+        state = akc.extract(
+            await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+        )
         if state:
-            await akc.fail(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state, error_text="Must be a valid number.\nTry again or /cancel.")
+            await akc.fail(
+                client,
+                ctx.db,
+                user_id=user_id,
+                reply_chat_id=message.chat.id,
+                reply_msg_id=message.id,
+                state=state,
+                error_text="Must be a valid number.\nTry again or /cancel.",
+            )
         return
 
     await ctx.state.merge_data(user_id, temp_num_thresh=thresh)
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text="Captured threshold.", clear_state=False)
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text="Captured threshold.",
+            clear_state=False,
+        )
 
     fsm_data = await ctx.state.data(user_id)
     min_val = fsm_data.get("temp_num_min", 0)
@@ -887,15 +1154,20 @@ async def _on_extdir_numeric_thresh(ctx: HandlerContext, client: Client, message
             "local_name": "priority_score",
             "external_field_path": field_path,
             "kind": "numeric_threshold",
-            "numeric_vip_threshold": thresh
+            "numeric_vip_threshold": thresh,
         }
 
         mappings = list(fsm_data.get("extdir_mappings", []))
         mappings.append(mapping)
         await ctx.state.merge_data(user_id, extdir_mappings=mappings)
-        await _render_field_summary_step(client, state_obj.prompt_msg_id if state_obj else None, ctx, user_id)
+        await _render_field_summary_step(
+            client, state_obj.prompt_msg_id if state_obj else None, ctx, user_id
+        )
 
-async def _on_extdir_test_id(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+
+async def _on_extdir_test_id(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
@@ -908,16 +1180,38 @@ async def _on_extdir_test_id(ctx: HandlerContext, client: Client, message: Messa
     try:
         tid = int(message.text.strip())
     except ValueError:
-        state = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+        state = akc.extract(
+            await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+        )
         if state:
-            await akc.fail(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state, error_text="Must be a valid integer ID.\nTry again or /cancel.")
+            await akc.fail(
+                client,
+                ctx.db,
+                user_id=user_id,
+                reply_chat_id=message.chat.id,
+                reply_msg_id=message.id,
+                state=state,
+                error_text="Must be a valid integer ID.\nTry again or /cancel.",
+            )
         return
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text="Running lookup...", clear_state=True)
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text="Running lookup...",
+            clear_state=True,
+        )
 
     from xtv_support.services.external_directory.factory import DirectoryProviderLike
+
     provider = ctx.container.resolve(DirectoryProviderLike)
     try:
         signal = await provider.get_signal(tid)
@@ -935,6 +1229,7 @@ async def _on_extdir_test_id(ctx: HandlerContext, client: Client, message: Messa
     panel = tpl.render_test_result(user_id, res)
     await _edit_panel(client, user_id, state_obj.prompt_msg_id if state_obj else None, panel)
 
+
 akc.register("extdir_db", _on_extdir_db)
 akc.register("extdir_col", _on_extdir_col)
 akc.register("extdir_custom_field", _on_extdir_custom_field)
@@ -943,16 +1238,28 @@ akc.register("extdir_numeric_thresh", _on_extdir_numeric_thresh)
 akc.register("extdir_test_id", _on_extdir_test_id)
 
 
-async def _on_extdir_uri(ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]) -> None:
+async def _on_extdir_uri(
+    ctx: HandlerContext, client: Client, message: Message, args: dict[str, Any]
+) -> None:
     user_id = message.from_user.id
     if not is_admin(user_id):
         return
 
     uri = message.text.strip()
     if not uri.startswith("mongodb"):
-        state = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+        state = akc.extract(
+            await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+        )
         if state:
-            await akc.fail(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state, error_text="URI must start with mongodb:// or mongodb+srv://\nTry again or /cancel.")
+            await akc.fail(
+                client,
+                ctx.db,
+                user_id=user_id,
+                reply_chat_id=message.chat.id,
+                reply_msg_id=message.id,
+                state=state,
+                error_text="URI must start with mongodb:// or mongodb+srv://\nTry again or /cancel.",
+            )
         return
 
     # Delete message for security
@@ -961,14 +1268,35 @@ async def _on_extdir_uri(ctx: HandlerContext, client: Client, message: Message, 
     except Exception:
         pass
 
-    state_obj = akc.extract(await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1}))
+    state_obj = akc.extract(
+        await ctx.db.users.find_one({"user_id": user_id}, projection={"state": 1, "data": 1})
+    )
     if state_obj:
-        await akc.confirm(client, ctx.db, user_id=user_id, reply_chat_id=message.chat.id, reply_msg_id=message.id, state=state_obj, confirmation_text="Captured URI.", clear_state=False)
+        await akc.confirm(
+            client,
+            ctx.db,
+            user_id=user_id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state_obj,
+            confirmation_text="Captured URI.",
+            clear_state=False,
+        )
 
     # Store uri, go to step 2
     await ctx.state.merge_data(user_id, extdir_uri=uri)
 
     text, kb_spec = tpl.get_db_prompt(None)
-    await akc.ask(client, ctx.db, chat_id=message.chat.id, user_id=user_id, text=text, context="extdir_db", keyboard=_make_kb(kb_spec), edit_message_id=state_obj.prompt_msg_id if state_obj else None)
+    await akc.ask(
+        client,
+        ctx.db,
+        chat_id=message.chat.id,
+        user_id=user_id,
+        text=text,
+        context="extdir_db",
+        keyboard=_make_kb(kb_spec),
+        edit_message_id=state_obj.prompt_msg_id if state_obj else None,
+    )
+
 
 akc.register("extdir_uri", _on_extdir_uri)

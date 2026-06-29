@@ -19,6 +19,7 @@ def mock_ctx():
     ctx.state = StateMachine(store)
     return ctx
 
+
 @pytest.fixture
 def mock_client():
     client = MagicMock()
@@ -26,6 +27,7 @@ def mock_client():
     client.edit_message_text = AsyncMock()
     client.delete_messages = AsyncMock()
     return client
+
 
 @pytest.mark.asyncio
 async def test_admin_only_filter(mock_client, mock_ctx):
@@ -35,13 +37,18 @@ async def test_admin_only_filter(mock_client, mock_ctx):
     cq.data = "cb:v2:admin:extdir:entry"
     cq.answer = AsyncMock()
 
-    with patch("xtv_support.handlers.admin.external_directory_wizard.get_context", return_value=mock_ctx), \
-         patch("xtv_support.handlers.admin.external_directory_wizard.is_admin", return_value=False):
-
+    with (
+        patch(
+            "xtv_support.handlers.admin.external_directory_wizard.get_context",
+            return_value=mock_ctx,
+        ),
+        patch("xtv_support.handlers.admin.external_directory_wizard.is_admin", return_value=False),
+    ):
         await extdir_callback(mock_client, cq)
 
         cq.answer.assert_called_once_with("Admin only.", show_alert=True)
         mock_client.send_message.assert_not_called()
+
 
 @pytest.mark.asyncio
 async def test_extdir_wizard_cancel_clears_state(mock_client, mock_ctx):
@@ -61,9 +68,13 @@ async def test_extdir_wizard_cancel_clears_state(mock_client, mock_ctx):
     # Pre-set state to simulate active wizard
     await mock_ctx.state.set(user_id, "extdir_wizard", data={"extdir_db": "test"})
 
-    with patch("xtv_support.handlers.admin.external_directory_wizard.get_context", return_value=mock_ctx), \
-         patch("xtv_support.handlers.admin.external_directory_wizard.is_admin", return_value=True):
-
+    with (
+        patch(
+            "xtv_support.handlers.admin.external_directory_wizard.get_context",
+            return_value=mock_ctx,
+        ),
+        patch("xtv_support.handlers.admin.external_directory_wizard.is_admin", return_value=True),
+    ):
         await extdir_callback(mock_client, cq)
 
         # State should be cleared
