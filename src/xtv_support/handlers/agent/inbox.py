@@ -23,10 +23,10 @@ from xtv_support.core.context import get_context
 from xtv_support.core.filters import is_private
 from xtv_support.core.logger import get_logger
 from xtv_support.services.actions import ActionContext
+from xtv_support.services.external_directory.accessors import get_user_signal_for
 from xtv_support.ui.primitives.panel import Panel
 from xtv_support.ui.templates.agent_inbox import InboxRow, render_inbox
 from xtv_support.utils.time import utcnow
-from xtv_support.services.external_directory.accessors import get_user_signal_for
 
 log = get_logger("agent.inbox")
 

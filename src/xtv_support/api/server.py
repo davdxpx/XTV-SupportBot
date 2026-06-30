@@ -10,7 +10,7 @@ as they arrive.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from xtv_support.core.logger import get_logger
 from xtv_support.version import __version__

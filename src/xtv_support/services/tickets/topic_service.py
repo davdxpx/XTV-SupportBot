@@ -12,10 +12,10 @@ from pyrogram.errors import RPCError
 
 from xtv_support.config.settings import settings
 from xtv_support.core.context import get_context
-from xtv_support.services.external_directory.accessors import get_user_signal_for
 from xtv_support.core.errors import TopicCreationError, TopicsNotSupported
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.services.external_directory.accessors import get_user_signal_for
 from xtv_support.ui.primitives.card import edit_card, send_card
 from xtv_support.ui.templates.ticket_header import render as render_header
 from xtv_support.utils.ids import short_ticket_id
