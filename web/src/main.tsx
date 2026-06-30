@@ -24,8 +24,13 @@ import { Access } from '@/pages/admin/Access';
 import { ApiKeys } from '@/pages/admin/ApiKeys';
 import { Content } from '@/pages/admin/Content';
 import { Broadcasts } from '@/pages/admin/Broadcasts';
+import { Account } from '@/pages/admin/Account';
 import { ApiError, getMe } from '@/lib/api';
 import { bootTelegram, isInsideTelegram } from '@/lib/telegram';
+import { bootTheme } from '@/lib/theme';
+
+// Apply the saved theme before first paint to avoid a flash.
+bootTheme();
 
 // Tell Telegram we're ready + expand the viewport so the Mini-App
 // renders full-height. No-op outside Telegram.
@@ -122,6 +127,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="keys" element={<ApiKeys />} />
             <Route path="content" element={<Content />} />
             <Route path="broadcasts" element={<Broadcasts />} />
+            <Route path="account" element={<Account />} />
           </Route>
 
           <Route path="/" element={<Root />}>

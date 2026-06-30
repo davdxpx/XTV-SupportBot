@@ -96,6 +96,26 @@ and decodes the `user` JSON into a typed `TelegramUser`. See
 The shared FastAPI dependency `current_principal` resolves the caller in
 precedence order: `initData` → session cookie → bearer key.
 
+## Account & profile menu
+
+The admin console footer is an **account chip** — avatar (Telegram photo
+when available, otherwise coloured initials; a key glyph for legacy
+API-key sessions), display name, and role. Clicking it opens a dropdown
+with a **theme switch** (Auto / Light / Dark, persisted in
+`localStorage` and applied before first paint), **Account settings**,
+quick links to Accounts and API Keys (admins only), and **Log out**.
+
+The **Account** page (`/admin/account`) shows the caller's identity and
+theme preference and — for username/password logins — a **change
+password** form. Changing the password verifies the current one and
+signs out every other device (`POST /api/v1/auth/change-password`).
+
+On phones the left rail is replaced by a **bottom navigation bar** —
+the primary destinations (Overview · Queue · Projects), a **MENU**
+button that opens a full-navigation sheet with every section, and the
+profile chip on the right. The bottom bar respects the iOS safe-area
+inset.
+
 ## `/api/v1/me` — user-scoped endpoints
 
 Every route below is scoped to **the caller** — a user can never
@@ -103,7 +123,7 @@ read or mutate another user's ticket.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/v1/me` | Profile, `is_admin`, `ui_mode`, brand strings |
+| `GET` | `/api/v1/me` | Profile, `is_admin`, `role`, `auth_method` (`telegram`/`account`/`apikey`), `ui_mode`, brand strings |
 | `GET` | `/api/v1/me/projects` | Active projects available for intake |
 | `GET` | `/api/v1/me/tickets?status=…` | Caller's tickets with filter |
 | `GET` | `/api/v1/me/tickets/{id}` | Ticket + history (internal notes stripped) |

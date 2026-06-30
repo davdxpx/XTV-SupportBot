@@ -91,6 +91,7 @@ status.
 | `GET` | `/api/v1/auth/check-username` | Live availability check (UX) |
 | `POST` | `/api/v1/auth/login` | Username/password → session cookie |
 | `POST` | `/api/v1/auth/logout` | Revoke the session + clear the cookie |
+| `POST` | `/api/v1/auth/change-password` | Change own password (verifies current, revokes all other sessions, re-issues the caller's) |
 | `GET` | `/api/v1/auth/accounts` | List accounts (admin/owner) |
 | `POST` | `/api/v1/auth/accounts/{id}/disable` | Disable + kill sessions |
 | `POST` | `/api/v1/auth/accounts/{id}/enable` | Re-enable |
