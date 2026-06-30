@@ -44,21 +44,23 @@ export function Projects() {
   if (isError) {
     const isForbidden = String(queryError).includes('403') || String(queryError).includes('insufficient_scope');
     return (
-      <div className="stack stack-lg">
-        <h1 className="heading">Projects</h1>
-        <div className="pill pill-danger">
-          {isForbidden ? 'You do not have the required permissions (projects:read) to view this page.' : String(queryError)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <h1 className="heading">SYSTEM ARCHITECTURE</h1>
+        <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+          ERROR: {isForbidden ? 'INSUFFICIENT PERMISSIONS (projects:read)' : String(queryError)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="stack stack-lg">
-      <div className="heading-row">
-        <h1 className="heading">Projects</h1>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="heading-row" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>
+        <div>
+          <h1 className="heading">SYSTEM ARCHITECTURE</h1>
+        </div>
         <button type="button" onClick={() => setShowCreate(true)} className="btn btn-primary">
-          + Create
+          PROVISION NEW
         </button>
       </div>
 
@@ -67,38 +69,41 @@ export function Projects() {
       <table className="data-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Slug</th>
-            <th>Type</th>
-            <th>Active</th>
-            <th>Tickets</th>
-            <th>Actions</th>
+            <th>PROJECT COMPONENT</th>
+            <th>IDENTIFIER</th>
+            <th>ARCHITECTURE</th>
+            <th style={{ width: 100 }}>STATUS</th>
+            <th style={{ width: 100, textAlign: 'right' }}>VOLUME</th>
+            <th style={{ width: 100 }}>ACTION</th>
           </tr>
         </thead>
         <tbody>
           {data?.items.map((p) => (
             <tr key={p._id}>
               <td>
-                <strong>{p.name}</strong>
+                <strong style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</strong>
                 {p.description && (
-                  <div className="muted" style={{ fontSize: 12 }}>
+                  <div style={{ fontSize: 12, color: 'var(--tg-text-dim)', marginTop: 2 }}>
                     {p.description.slice(0, 80)}
                   </div>
                 )}
               </td>
-              <td><code>{p.slug ?? '—'}</code></td>
-              <td>{p.type ?? '—'}</td>
-              <td>{p.active ? '✅' : '⬜'}</td>
-              <td>{p.ticket_count ?? 0}</td>
+              <td className="mono">{p.slug ?? '--'}</td>
+              <td className="mono">{p.type ?? '--'}</td>
+              <td className="mono" style={{ color: p.active ? 'var(--tg-success)' : 'var(--tg-text-dim)' }}>
+                {p.active ? 'ONLINE' : 'OFFLINE'}
+              </td>
+              <td className="mono right">{p.ticket_count ?? 0}</td>
               <td>
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Delete ${p.name}?`)) deleteMut.mutate(p._id);
+                    if (confirm(`Confirm destruction of ${p.name}? This action cannot be undone.`)) deleteMut.mutate(p._id);
                   }}
-                  className="btn btn-danger btn-sm"
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)', clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)' }}
                 >
-                  Delete
+                  PURGE
                 </button>
               </td>
             </tr>
@@ -135,65 +140,79 @@ function CreateProjectDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal stack" onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ margin: 0 }}>Create project</h2>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>PROVISION ARCHITECTURE</h2>
 
-        <div>
-          <label className="label">Slug</label>
-          <input
-            type="text"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="billing"
-            className="input"
-          />
-        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label className="label">SYSTEM IDENTIFIER (SLUG)</label>
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder="billing"
+              className="input"
+              style={{ fontFamily: 'IBM Plex Mono, monospace' }}
+            />
+          </div>
 
-        <div>
-          <label className="label">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Billing & Payments"
-            className="input"
-          />
-        </div>
+          <div>
+            <label className="label">DISPLAY NAME</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Billing & Payments"
+              className="input"
+            />
+          </div>
 
-        <div>
-          <label className="label">Template (optional)</label>
-          <div className="tiles">
-            {TEMPLATES.map((t) => {
-              const active = template === t.slug;
-              return (
-                <button
-                  key={t.slug}
-                  type="button"
-                  onClick={() => setTemplate(active ? null : t.slug)}
-                  className={`tile${active ? ' tile-active' : ''}`}
-                >
-                  {active ? '✅ ' : '· '}
-                  {t.label}
-                </button>
-              );
-            })}
+          <div>
+            <label className="label">BASE TOPOLOGY (OPTIONAL)</label>
+            <div className="tiles">
+              {TEMPLATES.map((t) => {
+                const active = template === t.slug;
+                return (
+                  <button
+                    key={t.slug}
+                    type="button"
+                    onClick={() => setTemplate(active ? null : t.slug)}
+                    className={`tile${active ? ' tile-active' : ''}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12 }}
+                  >
+                    {active ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" style={{ color: 'var(--tg-accent)' }}>
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    ) : (
+                      <span style={{ width: 14 }} />
+                    )}
+                    <span style={{ fontSize: 13 }}>{t.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {error && <div className="pill pill-danger" style={{ padding: 10 }}>{error}</div>}
+        {error && (
+          <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+            ERROR: {error}
+          </div>
+        )}
 
-        <div className="row">
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button
             type="button"
             onClick={() => create.mutate()}
             disabled={!slug.trim() || !name.trim() || create.isPending}
             className="btn btn-primary"
-            style={{ flex: 1 }}
+            style={{ flex: 1, padding: '14px', fontSize: 14 }}
           >
-            {create.isPending ? 'Creating…' : 'Create'}
+            {create.isPending ? 'PROVISIONING...' : 'PROVISION'}
           </button>
-          <button type="button" onClick={onClose} className="btn btn-ghost">
-            Cancel
+          <button type="button" onClick={onClose} className="btn btn-ghost" style={{ padding: '14px 20px' }}>
+            ABORT
           </button>
         </div>
       </div>

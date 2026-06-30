@@ -55,8 +55,10 @@ export function NewTicket() {
   const canSubmit = !!projectId && message.trim().length > 0 && !submit.isPending;
 
   return (
-    <div className="stack stack-lg">
-      <h2 className="heading">📮 New ticket</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <header>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>NEW REQUEST</h2>
+      </header>
 
       {projects.isLoading && (
         <div className="tiles">
@@ -65,21 +67,23 @@ export function NewTicket() {
         </div>
       )}
       {projects.isError && (
-        <div className="pill pill-danger" style={{ padding: 10 }}>
-          Error loading intake areas.
+        <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+          ERROR: INTAKE_AREAS_UNREACHABLE
         </div>
       )}
       {projects.data && projects.data.items.length === 0 && (
-        <div className="card muted" style={{ textAlign: 'center' }}>
-          No intake areas available yet. Ask an admin to create one.
+        <div style={{ padding: 32, textAlign: 'center', border: '1px dashed var(--tg-border)' }}>
+          <div style={{ color: 'var(--tg-text-dim)', fontFamily: 'IBM Plex Mono, monospace', textTransform: 'uppercase' }}>
+            No intake areas available. Please contact an administrator.
+          </div>
         </div>
       )}
       {projects.data && projects.data.items.length > 0 && (
         <section>
-          <p className="section-title">
-            Pick an area <span style={{ color: 'var(--tg-danger)' }}>*</span>
-          </p>
-          <div className="tiles">
+          <label className="label">
+            ROUTING AREA <span style={{ color: 'var(--tg-accent)' }}>*</span>
+          </label>
+          <div className="tiles" style={{ marginTop: 8 }}>
             {projects.data.items.map((p) => {
               const active = p.id === projectId;
               return (
@@ -89,7 +93,7 @@ export function NewTicket() {
                   onClick={() => setProjectId(active ? null : p.id)}
                   className={`tile${active ? ' tile-active' : ''}`}
                 >
-                  <div className="tile-title">📂 {p.name}</div>
+                  <div className="tile-title">{p.name}</div>
                   {p.description && (
                     <div className="tile-desc">{p.description.slice(0, 80)}</div>
                   )}
@@ -101,24 +105,30 @@ export function NewTicket() {
       )}
 
       {!!projectId && (
-        <section>
-          <label className="label" htmlFor="new-msg">Your message</label>
+        <section className="fade-in">
+          <label className="label" htmlFor="new-msg">INITIAL MESSAGE <span style={{ color: 'var(--tg-accent)' }}>*</span></label>
           <textarea
             id="new-msg"
             className="textarea"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={6}
-            placeholder="Describe your issue — photo, voice note, or document works too."
+            placeholder="Describe the issue. Detailed information reduces resolution time."
+            style={{ marginTop: 8 }}
           />
-          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-            {message.length} / 4000
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--tg-text-dim)' }}>
+              TEXT REQUIRED
+            </span>
+            <span style={{ fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--tg-text-dim)' }}>
+              {message.length} / 4000
+            </span>
           </div>
         </section>
       )}
 
       {error && (
-        <div className="pill pill-danger" style={{ padding: 10 }}>
+        <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
           {error}
         </div>
       )}
@@ -128,13 +138,14 @@ export function NewTicket() {
         onClick={() => submit.mutate()}
         disabled={!canSubmit}
         className="btn btn-primary"
+        style={{ padding: '16px', fontSize: 16, width: '100%', marginTop: projectId ? 0 : 24 }}
       >
         {submit.isPending && <span className="spinner" />}
         {submit.isPending
-          ? 'Sending…'
+          ? 'TRANSMITTING...'
           : !projectId
-            ? 'Pick an area first'
-            : 'Send ticket'}
+            ? 'SELECT AREA TO CONTINUE'
+            : 'SUBMIT REQUEST'}
       </button>
     </div>
   );

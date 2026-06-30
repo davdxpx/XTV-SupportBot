@@ -40,8 +40,10 @@ export function MyTickets() {
   });
 
   return (
-    <div className="stack stack-lg">
-      <h2 className="heading">🗂 My tickets</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <header>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>TICKETS</h2>
+      </header>
 
       <div className="chips">
         {FILTERS.map((f) => (
@@ -57,8 +59,8 @@ export function MyTickets() {
       </div>
 
       {isError && (
-        <div className="pill pill-danger" style={{ padding: 10 }}>
-          Error loading tickets: {String(error)}
+        <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+          ERROR: {String(error)}
         </div>
       )}
 
@@ -76,48 +78,59 @@ export function MyTickets() {
       )}
 
       {data && data.items.length === 0 && (
-        <div className="muted" style={{ padding: 24, textAlign: 'center' }}>
-          No tickets in this view.
-          <br />
-          <Link to="/new">Open a new one →</Link>
+        <div style={{ padding: 32, textAlign: 'center', border: '1px dashed var(--tg-border)' }}>
+          <div style={{ color: 'var(--tg-text-dim)', marginBottom: 12, fontFamily: 'IBM Plex Mono, monospace', textTransform: 'uppercase' }}>
+            No records found
+          </div>
+          <Link to="/new" className="btn btn-primary btn-sm">
+            Start a new request
+          </Link>
         </div>
       )}
 
       <ul className="ticket-list">
-        {data?.items.map((t) => (
-          <li key={t.id}>
-            <Link to={`/tickets/${t.id}`} className="ticket-item">
-              <div className="ticket-meta">
-                <StatusBadge status={t.status} />
-                {t.priority && <span>· {t.priority}</span>}
-                {t.updated_at && (
-                  <span className="ticket-date">
-                    {new Date(t.updated_at).toLocaleDateString()}
+        {data?.items.map((t) => {
+          const isOpen = t.status === 'open';
+          const isWaiting = isOpen && t.last_admin_msg_at !== null;
+          return (
+            <li key={t.id}>
+              <Link
+                to={`/tickets/${t.id}`}
+                className="ticket-item"
+                style={{
+                  borderLeftColor: isWaiting ? 'var(--tg-accent)' : (isOpen ? 'var(--tg-success)' : 'var(--tg-border)')
+                }}
+              >
+                <div className="ticket-meta">
+                  <span style={{
+                    color: isOpen ? (isWaiting ? 'var(--tg-accent)' : 'var(--tg-success)') : 'var(--tg-text-dim)',
+                    fontWeight: 600
+                  }}>
+                    {isWaiting ? 'ACTION REQUIRED' : t.status.toUpperCase()}
                   </span>
-                )}
-              </div>
-              <div className="ticket-subject">{t.subject || '(no preview)'}</div>
-              {t.tags && t.tags.length > 0 && (
-                <div className="ticket-tags">
-                  {t.tags.map((tag) => (
-                    <span key={tag} className="pill pill-muted">
-                      #{tag}
-                    </span>
-                  ))}
+                  {t.priority && <span>/ {t.priority}</span>}
+                  <span className="ticket-date">
+                    {t.updated_at ? new Date(t.updated_at).toISOString().split('T')[0] : ''}
+                  </span>
                 </div>
-              )}
-            </Link>
-          </li>
-        ))}
+                <div className="ticket-subject">{t.subject || '(untitled)'}</div>
+                {t.tags && t.tags.length > 0 && (
+                  <div className="ticket-tags">
+                    {t.tags.map((tag) => (
+                      <span key={tag} style={{
+                        fontSize: 10, fontFamily: 'IBM Plex Mono, monospace',
+                        padding: '2px 6px', background: 'var(--tg-surface-hi)', color: 'var(--tg-text-dim)'
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    open: 'pill pill-success',
-    closed: 'pill pill-muted',
-  };
-  return <span className={map[status] ?? 'pill pill-warn'}>{status}</span>;
 }

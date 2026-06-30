@@ -72,73 +72,94 @@ export function TicketDetail() {
   const isOpen = data.status === 'open';
 
   return (
-    <div className="stack stack-lg">
-      <Link to="/tickets" className="muted" style={{ fontSize: 14 }}>
-        ← Back to tickets
-      </Link>
-      <header className="stack" style={{ gap: 4 }}>
-        <h2 style={{ margin: 0 }}>{data.subject || 'Ticket'}</h2>
-        <div className="muted" style={{ fontSize: 12 }}>
-          {data.status} · {data.priority ?? 'normal'} ·{' '}
-          {data.created_at ? new Date(data.created_at).toLocaleString() : '—'}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Link to="/tickets" style={{ fontSize: 13, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--tg-text-dim)', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          RETURN TO LIST
+        </Link>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>{data.subject || 'UNTITLED REQUEST'}</h2>
+          <div style={{ fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--tg-text-dim)', textTransform: 'uppercase', marginTop: 8 }}>
+            <span style={{ color: isOpen ? 'var(--tg-success)' : 'var(--tg-text-dim)', fontWeight: isOpen ? 600 : 400 }}>{data.status}</span>
+            <span style={{ margin: '0 8px' }}>/</span>
+            {data.priority ?? 'NORMAL'}
+            <span style={{ margin: '0 8px' }}>/</span>
+            {data.created_at ? new Date(data.created_at).toISOString().replace('T', ' ').slice(0, 16) : '—'}
+          </div>
         </div>
       </header>
 
       <div className="thread">
         {data.history.map((h, i) => (
-          <Bubble key={i} entry={h} />
+          <TapeNode key={i} entry={h} />
         ))}
       </div>
 
       {isOpen ? (
-        <section className="stack">
-          <textarea
-            className="textarea"
-            rows={4}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Write a reply…"
-          />
-          <div className="row">
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label className="label">REPLY</label>
+            <textarea
+              className="textarea"
+              rows={4}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Enter your response here..."
+              style={{ marginTop: 8 }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
               onClick={() => reply.mutate()}
               disabled={!draft.trim() || reply.isPending}
               className="btn btn-primary"
-              style={{ flex: 1 }}
+              style={{ flex: 1, padding: '14px', fontSize: 14 }}
             >
               {reply.isPending && <span className="spinner" />}
-              {reply.isPending ? 'Sending…' : 'Send reply'}
+              {reply.isPending ? 'TRANSMITTING...' : 'SEND MESSAGE'}
             </button>
             <button
               type="button"
               onClick={() => {
-                if (confirm('Close this ticket?')) close.mutate();
+                if (confirm('Are you sure you want to resolve this ticket?')) close.mutate();
               }}
               disabled={close.isPending}
-              className="btn btn-danger"
+              className="btn btn-ghost"
+              style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)', padding: '14px 20px', clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)' }}
             >
-              Close
+              RESOLVE
             </button>
           </div>
         </section>
       ) : (
-        <div className="card muted" style={{ textAlign: 'center' }}>
-          This ticket is closed.
+        <div style={{ padding: 24, textAlign: 'center', border: '1px dashed var(--tg-border)' }}>
+          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, color: 'var(--tg-text-dim)', textTransform: 'uppercase' }}>
+            RECORD RESOLVED AND LOCKED
+          </span>
         </div>
       )}
     </div>
   );
 }
 
-function Bubble({ entry }: { entry: HistoryEntry }) {
+function TapeNode({ entry }: { entry: HistoryEntry }) {
   const fromUser = entry.sender === 'user';
   return (
-    <div className={`bubble ${fromUser ? 'bubble-user' : 'bubble-agent'}`}>
-      <div style={{ whiteSpace: 'pre-wrap' }}>{entry.text}</div>
-      {entry.timestamp && (
-        <div className="bubble-time">{new Date(entry.timestamp).toLocaleString()}</div>
-      )}
+    <div className={`tape-msg ${fromUser ? 'user' : 'agent'}`}>
+      <div className="tape-meta">
+        <span style={{ color: fromUser ? 'var(--tg-text)' : 'var(--tg-accent)', fontWeight: 600 }}>
+          {fromUser ? 'YOU' : 'SUPPORT'}
+        </span>
+        {entry.timestamp && (
+          <span>{new Date(entry.timestamp).toISOString().replace('T', ' ').slice(0, 16)}</span>
+        )}
+      </div>
+      <div className="tape-content">{entry.text}</div>
     </div>
   );
 }

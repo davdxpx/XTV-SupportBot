@@ -35,12 +35,22 @@ export function UserHome() {
 
   return (
     <div className="stack-lg stack">
-      <section className="stack" style={{ gap: 4 }}>
-        <h2 style={{ margin: 0 }}>Hey {me?.first_name ?? 'there'} 👋</h2>
-        {me?.brand_tagline && <p className="muted" style={{ margin: 0 }}>{me.brand_tagline}</p>}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 24 }}>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>
+          Hello, {me?.first_name ?? 'there'}.
+        </h2>
+        <p style={{ margin: 0, color: 'var(--tg-text-dim)', fontSize: 15 }}>
+          {me?.brand_tagline ?? "How can we help you today?"}
+        </p>
       </section>
 
-      <section className="stats-grid">
+      <section style={{ marginBottom: 24 }}>
+        <Link to="/new" className="btn btn-primary" style={{ width: '100%', padding: '16px', fontSize: 16 }}>
+          Start a new request
+        </Link>
+      </section>
+
+      <section className="stats-grid" style={{ marginBottom: 24 }}>
         {ticketsLoading ? (
           <>
             <div className="skeleton skeleton-block" />
@@ -49,24 +59,20 @@ export function UserHome() {
           </>
         ) : (
           <>
-            <Stat label="Open" value={open} />
-            <Stat label="Waiting for you" value={waiting} highlight={waiting > 0} />
-            <Stat label="Closed this month" value={closedThisMonth} />
+            <Stat label="ACTIVE" value={open} />
+            <Stat label="ACTION REQUIRED" value={waiting} highlight={waiting > 0} />
+            <Stat label="RESOLVED" value={closedThisMonth} />
           </>
         )}
       </section>
 
-      <section className="stack" style={{ gap: 10 }}>
-        <Link to="/new" className="btn btn-primary" style={{ textAlign: 'center' }}>
-          📮 Open a new ticket
-        </Link>
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <SecondaryLink
           to="/tickets"
-          icon="🗂"
-          label="My tickets"
-          badge={waiting > 0 ? `${waiting} new` : undefined}
+          label="View my tickets"
+          badge={waiting > 0 ? `${waiting} ACTION REQUIRED` : undefined}
         />
-        <SecondaryLink to="/settings" icon="⚙️" label="Settings" />
+        <SecondaryLink to="/settings" label="Configure preferences" />
       </section>
     </div>
   );
@@ -91,20 +97,20 @@ function Stat({
 
 function SecondaryLink({
   to,
-  icon,
   label,
   badge,
 }: {
   to: string;
-  icon: string;
   label: string;
   badge?: string;
 }) {
   return (
-    <Link to={to} className="ticket-item row" style={{ padding: '14px 16px' }}>
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <span style={{ flex: 1 }}>{label}</span>
-      {badge && <span className="pill pill-warn">{badge}</span>}
+    <Link to={to} className="ticket-item" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <span style={{ flex: 1, fontWeight: 500 }}>{label}</span>
+      {badge && <span className="chip chip-active">{badge}</span>}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
     </Link>
   );
 }

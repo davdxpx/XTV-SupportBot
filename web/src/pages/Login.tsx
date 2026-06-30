@@ -43,34 +43,45 @@ export function Login() {
 
   return (
     <div className="login-shell">
-      <form className="login-card stack" onSubmit={onSubmit}>
-        <div className="login-brand">XTV-SupportBot</div>
-        <div className="login-sub">Admin console</div>
+      <form className="login-card stack" onSubmit={onSubmit} style={{ gap: 24, padding: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div className="login-brand" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--tg-accent)" strokeWidth="3" strokeLinecap="square">
+              <line x1="4" y1="4" x2="20" y2="20"></line>
+              <line x1="20" y1="4" x2="4" y2="20"></line>
+            </svg>
+            <span>XTV-SupportBot</span>
+          </div>
+          <div className="login-sub" style={{ textTransform: 'uppercase' }}>Admin Console</div>
+        </div>
 
-        <label className="label" htmlFor="api-key-input">
-          API key
-        </label>
-        <input
-          id="api-key-input"
-          type="password"
-          className="input"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="xtv_…"
-          autoFocus
-          autoComplete="off"
-        />
+        <div className="stack" style={{ gap: 8 }}>
+          <label className="label" htmlFor="api-key-input">
+            API KEY CREDENTIAL
+          </label>
+          <input
+            id="api-key-input"
+            type="password"
+            className="input"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="xtv_..."
+            autoFocus
+            autoComplete="off"
+          />
+        </div>
         <button
           type="submit"
           disabled={!value.trim() || busy}
           className="btn btn-primary"
+          style={{ width: '100%', padding: '14px', fontSize: 15 }}
         >
           {busy && <span className="spinner" />}
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? 'AUTHENTICATING...' : 'AUTHENTICATE'}
         </button>
 
-        <p className="muted" style={{ fontSize: 13, textAlign: 'center', margin: 0 }}>
-          Generate a key in the bot with <code>/apikey create admin:full</code>.
+        <p style={{ fontSize: 12, textAlign: 'center', margin: 0, color: 'var(--tg-text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+          GENERATE KEY: <code>/apikey create admin:full</code>
         </p>
       </form>
     </div>
