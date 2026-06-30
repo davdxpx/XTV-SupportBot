@@ -108,6 +108,8 @@ read or mutate another user's ticket.
 | `GET` | `/api/v1/me/tickets?status=…` | Caller's tickets with filter |
 | `GET` | `/api/v1/me/tickets/{id}` | Ticket + history (internal notes stripped) |
 | `POST` | `/api/v1/me/tickets` | Create a new ticket (creates the admin-supergroup forum topic, same as the bot) |
+| `POST` | `/api/v1/me/tickets/{id}/attach` | Upload an image/file attachment (stored via the bot in the supergroup) |
+| `GET` | `/api/v1/me/tickets/{id}/attachments/{index}` | Stream one of the caller's own attachments |
 | `POST` | `/api/v1/me/tickets/{id}/reply` | Add a user reply |
 | `POST` | `/api/v1/me/tickets/{id}/close` | Self-close |
 | `GET` | `/api/v1/me/settings` | Language + notification prefs + `ui_pref` |

@@ -3,12 +3,14 @@ import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Attachment } from '@/components/Attachment';
 
 interface HistoryEntry {
   sender: 'user' | 'admin' | string;
   text: string;
   type: string;
   timestamp: string | null;
+  attachment_index?: number;
 }
 
 interface TicketDetail {
@@ -98,7 +100,7 @@ export function TicketDetail() {
 
       <div className="thread">
         {data.history.map((h, i) => (
-          <TapeNode key={i} entry={h} />
+          <TapeNode key={i} entry={h} ticketId={ticketId!} />
         ))}
       </div>
 
@@ -159,8 +161,9 @@ export function TicketDetail() {
   );
 }
 
-function TapeNode({ entry }: { entry: HistoryEntry }) {
+function TapeNode({ entry, ticketId }: { entry: HistoryEntry; ticketId: string }) {
   const fromUser = entry.sender === 'user';
+  const hasAttachment = typeof entry.attachment_index === 'number';
   return (
     <div className={`tape-msg ${fromUser ? 'user' : 'agent'}`}>
       <div className="tape-meta">
@@ -172,6 +175,14 @@ function TapeNode({ entry }: { entry: HistoryEntry }) {
         )}
       </div>
       <div className="tape-content">{entry.text}</div>
+      {hasAttachment && (
+        <div style={{ marginTop: 8 }}>
+          <Attachment
+            path={`/api/v1/me/tickets/${ticketId}/attachments/${entry.attachment_index}`}
+            kind={entry.type === 'photo' ? 'photo' : 'document'}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -20,3 +20,5 @@ httpx>=0.27.0
 # Password hashing for the admin web-console accounts (username/password
 # login). Argon2id — modern, GPU-resistant, constant-time verify built in.
 argon2-cffi>=23.1.0
+# Multipart form parsing for ticket attachment uploads (FastAPI UploadFile).
+python-multipart>=0.0.9

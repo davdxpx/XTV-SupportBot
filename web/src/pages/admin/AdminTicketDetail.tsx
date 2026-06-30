@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { Attachment } from '@/components/Attachment';
 
 interface HistoryEntry {
   sender: string;
   text: string;
   timestamp: string | null;
   type: string;
+  file_id?: string | null;
 }
 
 interface AdminTicket {
@@ -98,7 +100,7 @@ export function AdminTicketDetail() {
 
         <div className="thread" style={{ marginBottom: 32 }}>
           {(data.history ?? []).map((h, i) => (
-            <TapeNode key={i} entry={h} />
+            <TapeNode key={i} entry={h} ticketId={data._id} index={i} />
           ))}
         </div>
 
@@ -211,7 +213,7 @@ export function AdminTicketDetail() {
   );
 }
 
-function TapeNode({ entry }: { entry: HistoryEntry }) {
+function TapeNode({ entry, ticketId, index }: { entry: HistoryEntry; ticketId: string; index: number }) {
   const fromAgent = entry.sender === 'admin' || entry.sender === 'agent';
   return (
     <div className={`tape-msg ${fromAgent ? 'agent' : 'user'}`}>
@@ -224,6 +226,14 @@ function TapeNode({ entry }: { entry: HistoryEntry }) {
         )}
       </div>
       <div className="tape-content">{entry.text}</div>
+      {entry.file_id && (
+        <div style={{ marginTop: 8 }}>
+          <Attachment
+            path={`/api/v1/tickets/${ticketId}/attachments/${index}`}
+            kind={entry.type === 'photo' ? 'photo' : 'document'}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -187,6 +187,74 @@ async def append_user_reply(
     )
 
 
+async def attach_to_ticket(
+    client: Client,
+    db: AsyncIOMotorDatabase,
+    *,
+    ticket: dict[str, Any],
+    data: bytes,
+    filename: str,
+    content_type: str | None,
+    sender: str = "user",
+    caption: str = "",
+) -> tuple[str, str]:
+    """Upload a file via the bot, post it into the ticket topic, record it.
+
+    Storage IS Telegram: the bot sends the bytes into the admin supergroup
+    (the ticket's topic, or the channel root in fallback) and we persist the
+    returned ``file_id``. Returns ``(media_type, file_id)``.
+    """
+    import io
+
+    bio = io.BytesIO(data)
+    bio.name = filename or "attachment"
+    is_image = bool(content_type and content_type.startswith("image/"))
+    topic_id = ticket.get("topic_id")
+    kwargs: dict[str, Any] = {"message_thread_id": topic_id} if topic_id else {}
+    head = "<b>User</b>" if sender == "user" else "<b>Admin</b>"
+    cap = f"{head}: {escape_html(caption)}" if caption else head
+
+    if is_image:
+        msg = await client.send_photo(
+            settings.ADMIN_CHANNEL_ID, bio, caption=cap, parse_mode=ParseMode.HTML, **kwargs
+        )
+        media_type = "photo"
+        file_id = msg.photo.file_id
+    else:
+        msg = await client.send_document(
+            settings.ADMIN_CHANNEL_ID, bio, caption=cap, parse_mode=ParseMode.HTML, **kwargs
+        )
+        media_type = "document"
+        file_id = msg.document.file_id
+
+    await tickets_repo.append_history(
+        db,
+        ticket["_id"],
+        sender=sender,
+        text=caption or f"({media_type})",
+        message_type=media_type,
+        file_id=file_id,
+    )
+    return media_type, file_id
+
+
+async def download_attachment(
+    client: Client, ticket: dict[str, Any], index: int
+) -> tuple[bytes, str] | None:
+    """Fetch a stored attachment's bytes from Telegram. Returns (data, mime)."""
+    history = ticket.get("history") or []
+    if index < 0 or index >= len(history):
+        return None
+    entry = history[index]
+    file_id = entry.get("file_id")
+    if not file_id:
+        return None
+    bio = await client.download_media(file_id, in_memory=True)
+    data = bio.getvalue() if hasattr(bio, "getvalue") else bytes(bio)
+    mime = "image/jpeg" if entry.get("type") == "photo" else "application/octet-stream"
+    return data, mime
+
+
 async def send_admin_reply_to_user(
     client: Client,
     db: AsyncIOMotorDatabase,

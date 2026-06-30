@@ -28,13 +28,16 @@ from xtv_support.core.logger import get_logger
 if TYPE_CHECKING:  # pragma: no cover
     from fastapi import APIRouter
 
-# Module-level import so the ``request: Request`` annotation on get_me
-# resolves via get_type_hints() — without ``from __future__ import
-# annotations`` would lazy-stringify the hint and FastAPI would treat
-# it as a query parameter (loc=["query","request"] → 422).
-from fastapi import Request
+# Module-level imports so the ``request: Request`` / ``file: UploadFile``
+# annotations resolve via get_type_hints() — under ``from __future__ import
+# annotations`` a locally-imported type stringifies and FastAPI misclassifies
+# the param (request → query 422; UploadFile → PydanticUserError).
+from fastapi import Request, UploadFile
 
 _log = get_logger("api.me")
+
+# Cap uploads so a single attachment can't exhaust memory / Telegram limits.
+_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024  # 10 MiB
 
 
 def _resolve_bot_client(request: Request):
@@ -83,25 +86,28 @@ def _ticket_summary(doc: dict[str, Any]) -> dict[str, Any]:
 def _ticket_detail(doc: dict[str, Any]) -> dict[str, Any]:
     summary = _ticket_summary(doc)
     history = []
-    for entry in doc.get("history") or []:
+    # Enumerate the raw history so ``attachment_index`` lines up with the
+    # stored array — the serve endpoint indexes back into doc["history"][i].
+    for i, entry in enumerate(doc.get("history") or []):
         ts = entry.get("timestamp")
         # Drop internal notes — those are never shown to the ticket owner.
         if entry.get("sender") == "internal":
             continue
-        history.append(
-            {
-                "sender": entry.get("sender"),
-                "text": entry.get("text"),
-                "type": entry.get("type") or "text",
-                "timestamp": ts.isoformat() if ts else None,
-            }
-        )
+        item = {
+            "sender": entry.get("sender"),
+            "text": entry.get("text"),
+            "type": entry.get("type") or "text",
+            "timestamp": ts.isoformat() if ts else None,
+        }
+        if entry.get("file_id"):
+            item["attachment_index"] = i
+        history.append(item)
     summary["history"] = history
     return summary
 
 
 def build_router() -> APIRouter:
-    from fastapi import APIRouter, Body, Depends, HTTPException, Query
+    from fastapi import APIRouter, Body, Depends, File, HTTPException, Query
 
     from xtv_support.api.auth_webapp import TelegramUser, current_tg_user
     from xtv_support.api.deps import current_principal, get_db
@@ -342,6 +348,66 @@ def build_router() -> APIRouter:
         await tickets_repo.close(db, doc["_id"], closed_by=user.id, reason=reason)
         _log.info("api.me.ticket_closed", ticket_id=ticket_id, user_id=user.id)
         return {"ok": True}
+
+    # ------------------------------------------------------------------
+    # Attachments — upload (owner) + serve (owner)
+    # ------------------------------------------------------------------
+    @router.post("/tickets/{ticket_id}/attach", status_code=201)
+    async def attach_my_ticket(
+        request: Request,
+        ticket_id: str,
+        file: UploadFile = File(...),
+        user: TelegramUser = Depends(current_tg_user),
+        db=Depends(get_db),
+    ) -> dict:
+        doc = await tickets_repo.get(db, ticket_id)
+        if doc is None or doc.get("user_id") != user.id:
+            raise HTTPException(status_code=404, detail="ticket_not_found")
+        data = await file.read()
+        if not data:
+            raise HTTPException(status_code=400, detail="empty_file")
+        if len(data) > _MAX_ATTACHMENT_BYTES:
+            raise HTTPException(status_code=413, detail="file_too_large")
+        client = _resolve_bot_client(request)
+        if client is None:
+            raise HTTPException(status_code=503, detail="attachments_unavailable")
+        from xtv_support.services.tickets import service as ticket_service
+
+        media_type, _ = await ticket_service.attach_to_ticket(
+            client,
+            db,
+            ticket=doc,
+            data=data,
+            filename=file.filename or "attachment",
+            content_type=file.content_type,
+            sender="user",
+        )
+        _log.info("api.me.ticket_attached", ticket_id=ticket_id, user_id=user.id, type=media_type)
+        return {"ok": True, "type": media_type}
+
+    @router.get("/tickets/{ticket_id}/attachments/{index}")
+    async def get_my_attachment(
+        request: Request,
+        ticket_id: str,
+        index: int,
+        user: TelegramUser = Depends(current_tg_user),
+        db=Depends(get_db),
+    ):
+        from fastapi import Response
+
+        doc = await tickets_repo.get(db, ticket_id)
+        if doc is None or doc.get("user_id") != user.id:
+            raise HTTPException(status_code=404, detail="ticket_not_found")
+        client = _resolve_bot_client(request)
+        if client is None:
+            raise HTTPException(status_code=503, detail="attachments_unavailable")
+        from xtv_support.services.tickets import service as ticket_service
+
+        result = await ticket_service.download_attachment(client, doc, index)
+        if result is None:
+            raise HTTPException(status_code=404, detail="attachment_not_found")
+        data, mime = result
+        return Response(content=data, media_type=mime)
 
     # ------------------------------------------------------------------
     # Settings
