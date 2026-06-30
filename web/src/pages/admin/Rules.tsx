@@ -2,25 +2,17 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
-interface Condition {
-  field: string;
-  op: string;
-  value: unknown;
-}
-
-interface Action {
-  name: string;
-  params?: Record<string, unknown>;
-}
+type Condition = { field: string; op: string; value: unknown };
+type Action = { name: string; params?: Record<string, unknown> };
 
 interface Rule {
   id: string;
   name: string;
-  enabled: boolean;
   trigger: string;
   conditions: Condition[];
   actions: Action[];
-  cooldown_s?: number;
+  cooldown_s: number;
+  enabled: boolean;
 }
 
 interface RulesResponse {
@@ -38,7 +30,6 @@ const TRIGGERS = [
   'MessagePosted',
   'SlaBreached',
 ];
-
 const CONDITION_FIELDS = ['status', 'priority', 'tags', 'project_id', 'team_id', 'assignee_id'];
 const CONDITION_OPS = ['eq', 'ne', 'in', 'not_in', 'contains'];
 const ACTION_NAMES = [
@@ -46,19 +37,19 @@ const ACTION_NAMES = [
   'tag',
   'untag',
   'set_priority',
-  'apply_macro',
-  'close',
   'reopen',
-  'add_internal_note',
-  'emoji_react',
-  'trigger_webhook',
+  'close',
+  'notify_users',
+  'ai_draft',
+  'auto_reply',
+  'webhook',
 ];
 
 export function Rules() {
   const qc = useQueryClient();
   const [showBuilder, setShowBuilder] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isError, error: queryError } = useQuery({
     queryKey: ['admin-rules'],
     queryFn: () => api<RulesResponse>('/api/v1/rules'),
   });
@@ -77,92 +68,94 @@ export function Rules() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-rules'] }),
   });
 
+  if (isError) {
+    const isForbidden = String(queryError).includes('403') || String(queryError).includes('insufficient_scope');
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <h1 className="heading">AUTOMATION LOGIC</h1>
+        <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+          ERROR: {isForbidden ? 'INSUFFICIENT PERMISSIONS (rules:read)' : String(queryError)}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="stack stack-lg">
-      <div className="heading-row">
-        <h1 className="heading">Automation rules</h1>
-        <button
-          type="button"
-          onClick={() => setShowBuilder(true)}
-          className="btn btn-primary"
-        >
-          + New rule
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="heading-row" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>
+        <div>
+          <h1 className="heading">AUTOMATION LOGIC</h1>
+        </div>
+        <button type="button" onClick={() => setShowBuilder(true)} className="btn btn-primary">
+          DEFINE NEW LOGIC
         </button>
       </div>
 
       {showBuilder && <RuleBuilder onClose={() => setShowBuilder(false)} />}
 
-      {isLoading && (
-        <ul className="ticket-list">
-          {[0, 1].map((i) => (
-            <li key={i} className="card">
-              <div className="skeleton skeleton-line" style={{ width: '30%' }} />
-              <div className="skeleton skeleton-line" style={{ width: '70%' }} />
-            </li>
-          ))}
-        </ul>
-      )}
-      {data && data.items.length === 0 && !isLoading && (
-        <p className="muted">No rules configured yet. Click “New rule” to create one.</p>
-      )}
-
       <ul className="ticket-list">
         {data?.items.map((r) => (
-          <li key={r.id} className="card stack" style={{ gap: 8 }}>
-            <div className="row">
-              <strong>{r.name}</strong>
-              <span className={`pill ${r.enabled ? 'pill-success' : 'pill-muted'}`}>
-                {r.enabled ? 'enabled' : 'disabled'}
-              </span>
-              <span className="muted" style={{ marginLeft: 'auto', fontSize: 12 }}>
-                on {r.trigger}
-              </span>
+          <li key={r.id} className="ticket-item" style={{ display: 'flex', flexDirection: 'column', gap: 12, borderLeftColor: r.enabled ? 'var(--tg-accent)' : 'var(--tg-border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ fontSize: 15 }}>{r.name}</strong>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="mono" style={{ color: 'var(--tg-text-dim)', fontSize: 12 }}>ON {r.trigger.toUpperCase()}</span>
+                <span style={{
+                  fontSize: 10, fontFamily: 'IBM Plex Mono, monospace',
+                  padding: '2px 6px', background: r.enabled ? 'var(--tg-success)' : 'var(--tg-surface-hi)', color: r.enabled ? 'var(--tg-bg)' : 'var(--tg-text-dim)'
+                }}>
+                  {r.enabled ? 'ENABLED' : 'DISABLED'}
+                </span>
+              </div>
             </div>
 
-            {r.conditions.length > 0 && (
-              <div style={{ fontSize: 13 }}>
-                <strong>WHEN</strong>{' '}
-                {r.conditions.map((c, i) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'IBM Plex Mono, monospace', fontSize: 12 }}>
+              {r.conditions.length > 0 && (
+                <div>
+                  <span style={{ color: 'var(--tg-text-dim)', width: 40, display: 'inline-block' }}>IF</span>
+                  {r.conditions.map((c, i) => (
+                    <span key={i}>
+                      {i > 0 && <span style={{ color: 'var(--tg-text-dim)' }}> AND </span>}
+                      <span style={{ background: 'var(--tg-surface-hi)', padding: '2px 4px', border: '1px solid var(--tg-border)' }}>
+                        {c.field} {c.op} {JSON.stringify(c.value)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div>
+                <span style={{ color: 'var(--tg-accent)', width: 40, display: 'inline-block', fontWeight: 600 }}>THEN</span>
+                {r.actions.map((a, i) => (
                   <span key={i}>
-                    {i > 0 && ' AND '}
-                    <code>
-                      {c.field} {c.op} {JSON.stringify(c.value)}
-                    </code>
+                    {i > 0 && <span style={{ color: 'var(--tg-text-dim)' }}> AND </span>}
+                    <span style={{ background: 'var(--tg-accent-soft)', padding: '2px 4px', border: '1px solid var(--tg-accent)', color: 'var(--tg-accent)' }}>
+                      {a.name.toUpperCase()}
+                    </span>
+                    {a.params && Object.keys(a.params).length > 0 && (
+                      <span style={{ color: 'var(--tg-text-dim)', marginLeft: 4 }}>({JSON.stringify(a.params)})</span>
+                    )}
                   </span>
                 ))}
               </div>
-            )}
-            <div style={{ fontSize: 13 }}>
-              <strong>THEN</strong>{' '}
-              {r.actions.map((a, i) => (
-                <span key={i}>
-                  {i > 0 && ', '}
-                  <code>{a.name}</code>
-                  {a.params && Object.keys(a.params).length > 0 && (
-                    <span className="muted">({JSON.stringify(a.params)})</span>
-                  )}
-                </span>
-              ))}
             </div>
 
-            <div className="row" style={{ gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <button
                 type="button"
-                onClick={() =>
-                  toggleMut.mutate({ id: r.id, enabled: !r.enabled })
-                }
+                onClick={() => toggleMut.mutate({ id: r.id, enabled: !r.enabled })}
                 className="btn btn-ghost btn-sm"
               >
-                {r.enabled ? 'Disable' : 'Enable'}
+                {r.enabled ? 'DISABLE' : 'ENABLE'}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm(`Delete rule "${r.name}"?`)) deleteMut.mutate(r.id);
+                  if (confirm(`Confirm destruction of rule "${r.name}"?`)) deleteMut.mutate(r.id);
                 }}
-                className="btn btn-danger btn-sm"
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)', clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)' }}
               >
-                Delete
+                PURGE
               </button>
             </div>
           </li>
@@ -206,209 +199,224 @@ function RuleBuilder({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal stack" onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ margin: 0 }}>New rule</h2>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>DEFINE LOGIC</h2>
 
-        <div>
-          <label className="label">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Escalate billing tickets"
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="label">WHEN — trigger</label>
-          <select
-            value={trigger}
-            onChange={(e) => setTrigger(e.target.value)}
-            className="input"
-          >
-            {TRIGGERS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="label">AND — conditions (optional)</label>
-          <div className="stack" style={{ gap: 6 }}>
-            {conditions.map((c, i) => (
-              <div key={i} className="row" style={{ gap: 6 }}>
-                <select
-                  value={c.field}
-                  onChange={(e) =>
-                    setConditions(conditions.map((x, j) =>
-                      j === i ? { ...x, field: e.target.value } : x,
-                    ))
-                  }
-                  className="input"
-                  style={{ flex: 1 }}
-                >
-                  {CONDITION_FIELDS.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={c.op}
-                  onChange={(e) =>
-                    setConditions(conditions.map((x, j) =>
-                      j === i ? { ...x, op: e.target.value } : x,
-                    ))
-                  }
-                  className="input"
-                  style={{ width: 90 }}
-                >
-                  {CONDITION_OPS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={String(c.value ?? '')}
-                  onChange={(e) =>
-                    setConditions(conditions.map((x, j) =>
-                      j === i ? { ...x, value: e.target.value } : x,
-                    ))
-                  }
-                  placeholder="value"
-                  className="input"
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setConditions(conditions.filter((_, j) => j !== i))
-                  }
-                  className="btn btn-ghost btn-sm"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() =>
-                setConditions([
-                  ...conditions,
-                  { field: CONDITION_FIELDS[0], op: 'eq', value: '' },
-                ])
-              }
-              className="btn btn-ghost btn-sm"
-            >
-              + Add condition
-            </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label className="label">RULE NAME</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Escalate billing tickets"
+              className="input"
+            />
           </div>
-        </div>
 
-        <div>
-          <label className="label">
-            THEN — actions <span style={{ color: 'var(--tg-danger)' }}>*</span>
-          </label>
-          <div className="stack" style={{ gap: 6 }}>
-            {actions.map((a, i) => (
-              <div key={i} className="row" style={{ gap: 6 }}>
-                <select
-                  value={a.name}
-                  onChange={(e) =>
-                    setActions(actions.map((x, j) =>
-                      j === i ? { ...x, name: e.target.value } : x,
-                    ))
-                  }
-                  className="input"
-                  style={{ flex: 1 }}
-                >
-                  {ACTION_NAMES.map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  placeholder='params as JSON, e.g. {"tag":"vip"}'
-                  value={JSON.stringify(a.params ?? {})}
-                  onChange={(e) => {
-                    try {
-                      const parsed = JSON.parse(e.target.value || '{}');
-                      setActions(actions.map((x, j) =>
-                        j === i ? { ...x, params: parsed } : x,
-                      ));
-                    } catch {
-                      /* ignore, user is still typing */
+          <div>
+            <label className="label">TRIGGER (EVENT)</label>
+            <select
+              value={trigger}
+              onChange={(e) => setTrigger(e.target.value)}
+              className="select"
+            >
+              {TRIGGERS.map((t) => (
+                <option key={t} value={t}>
+                  {t.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="label">CONDITIONS (OPTIONAL)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {conditions.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={c.field}
+                    onChange={(e) =>
+                      setConditions(conditions.map((x, j) =>
+                        j === i ? { ...x, field: e.target.value } : x,
+                      ))
                     }
-                  }}
-                  className="input"
-                  style={{ flex: 2 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setActions(actions.filter((_, j) => j !== i))}
-                  className="btn btn-ghost btn-sm"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() =>
-                setActions([...actions, { name: ACTION_NAMES[0], params: {} }])
-              }
-              className="btn btn-ghost btn-sm"
-            >
-              + Add action
-            </button>
+                    className="select"
+                    style={{ flex: 1 }}
+                  >
+                    {CONDITION_FIELDS.map((f) => (
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={c.op}
+                    onChange={(e) =>
+                      setConditions(conditions.map((x, j) =>
+                        j === i ? { ...x, op: e.target.value } : x,
+                      ))
+                    }
+                    className="select"
+                    style={{ width: 80, fontFamily: 'IBM Plex Mono, monospace' }}
+                  >
+                    {CONDITION_OPS.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={String(c.value ?? '')}
+                    onChange={(e) =>
+                      setConditions(conditions.map((x, j) =>
+                        j === i ? { ...x, value: e.target.value } : x,
+                      ))
+                    }
+                    placeholder="value"
+                    className="input"
+                    style={{ flex: 1, fontFamily: 'IBM Plex Mono, monospace' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConditions(conditions.filter((_, j) => j !== i))
+                    }
+                    className="btn btn-ghost btn-icon"
+                    style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  setConditions([
+                    ...conditions,
+                    { field: CONDITION_FIELDS[0], op: 'eq', value: '' },
+                  ])
+                }
+                className="btn btn-ghost btn-sm"
+                style={{ alignSelf: 'flex-start' }}
+              >
+                + ADD CONDITION
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="label">
+              ACTIONS <span style={{ color: 'var(--tg-accent)' }}>*</span>
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {actions.map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={a.name}
+                    onChange={(e) =>
+                      setActions(actions.map((x, j) =>
+                        j === i ? { ...x, name: e.target.value } : x,
+                      ))
+                    }
+                    className="select"
+                    style={{ flex: 1 }}
+                  >
+                    {ACTION_NAMES.map((n) => (
+                      <option key={n} value={n}>
+                        {n.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder='{"key": "value"}'
+                    value={JSON.stringify(a.params ?? {})}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value || '{}');
+                        setActions(actions.map((x, j) =>
+                          j === i ? { ...x, params: parsed } : x,
+                        ));
+                      } catch {
+                        // user still typing
+                      }
+                    }}
+                    className="input"
+                    style={{ flex: 2, fontFamily: 'IBM Plex Mono, monospace' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setActions(actions.filter((_, j) => j !== i))}
+                    className="btn btn-ghost btn-icon"
+                    style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  setActions([...actions, { name: ACTION_NAMES[0], params: {} }])
+                }
+                className="btn btn-ghost btn-sm"
+                style={{ alignSelf: 'flex-start' }}
+              >
+                + ADD ACTION
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="row" style={{ gap: 16 }}>
-          <label className="row" style={{ gap: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={enabled}
               onChange={(e) => setEnabled(e.target.checked)}
+              style={{ accentColor: 'var(--tg-accent)', width: 16, height: 16 }}
             />
-            <span>Enabled on save</span>
+            <span style={{ fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>ENABLE ON SAVE</span>
           </label>
-          <div style={{ flex: 1 }} />
-          <label className="row" style={{ gap: 6 }}>
-            <span className="muted">Cooldown (s):</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--tg-text-dim)' }}>COOLDOWN (S)</span>
             <input
               type="number"
               min={0}
               value={cooldown}
               onChange={(e) => setCooldown(Number(e.target.value) || 0)}
               className="input"
-              style={{ width: 100 }}
+              style={{ width: 80, fontFamily: 'IBM Plex Mono, monospace', padding: '6px 8px' }}
             />
           </label>
         </div>
 
-        {error && <div className="pill pill-danger" style={{ padding: 10 }}>{error}</div>}
+        {error && (
+          <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+            ERROR: {error}
+          </div>
+        )}
 
-        <div className="row">
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button
             type="button"
             onClick={() => create.mutate()}
             disabled={!canSave}
             className="btn btn-primary"
-            style={{ flex: 1 }}
+            style={{ flex: 1, padding: '14px', fontSize: 14 }}
           >
-            {create.isPending && <span className="spinner" />}
-            {create.isPending ? 'Creating…' : 'Create rule'}
+            {create.isPending ? 'COMMITING...' : 'COMMIT LOGIC'}
           </button>
-          <button type="button" onClick={onClose} className="btn btn-ghost">
-            Cancel
+          <button type="button" onClick={onClose} className="btn btn-ghost" style={{ padding: '14px 20px' }}>
+            ABORT
           </button>
         </div>
       </div>

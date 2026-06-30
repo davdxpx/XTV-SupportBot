@@ -17,40 +17,47 @@ export function Overview() {
     tickets.data?.items.filter((t) => t.status === 'open' && !t.assignee_id).length ?? 0;
 
   return (
-    <div className="stack stack-lg">
-      <div className="heading-row">
-        <h1 className="heading">Overview</h1>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <div className="heading-row" style={{ marginBottom: 0 }}>
+        <div>
+          <h1 className="heading">SYSTEM OVERVIEW</h1>
+          <div className="heading-mono" style={{ marginTop: 4 }}>Status & Metrics</div>
+        </div>
       </div>
 
       <section
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 14,
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 16,
         }}
       >
-        <StatCard label="Open tickets" value={String(open)} />
+        <StatCard label="ACTIVE REQUESTS" value={String(open)} />
         <StatCard
-          label="Unassigned"
+          label="UNASSIGNED"
           value={String(unassigned)}
           highlight={unassigned > 0}
         />
-        {analytics.data && (
+        {analytics.data ? (
           <>
-            <StatCard label="7-day tickets" value={String(analytics.data.tickets)} />
+            <StatCard label="VOL (7D)" value={String(analytics.data.tickets)} />
             <StatCard
-              label="SLA compliance"
+              label="SLA COMPLIANCE"
               value={`${Math.round(analytics.data.sla_compliance_ratio * 100)}%`}
               highlight={analytics.data.sla_compliance_ratio < 0.9}
             />
           </>
+        ) : (
+          <>
+            <div className="skeleton skeleton-block" style={{ height: 100 }} />
+            <div className="skeleton skeleton-block" style={{ height: 100 }} />
+          </>
         )}
       </section>
 
-      <section className="row" style={{ flexWrap: 'wrap' }}>
-        <Link to="/admin/inbox" className="btn btn-ghost">Open inbox →</Link>
-        <Link to="/admin/projects" className="btn btn-ghost">Manage projects →</Link>
-        <Link to="/admin/rules" className="btn btn-ghost">Automation rules →</Link>
+      <section style={{ display: 'flex', gap: 16, borderTop: '1px solid var(--tg-border)', paddingTop: 24 }}>
+        <Link to="/admin/inbox" className="btn btn-primary">OPEN TRIAGE QUEUE</Link>
+        <Link to="/admin/projects" className="btn btn-ghost">SYSTEM CONFIGURATION</Link>
       </section>
     </div>
   );
@@ -66,9 +73,29 @@ function StatCard({
   highlight?: boolean;
 }) {
   return (
-    <div className={`card${highlight ? ' stat-highlight' : ''}`}>
-      <div className="muted" style={{ fontSize: 12 }}>{label}</div>
-      <div style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{value}</div>
+    <div style={{
+      padding: 16,
+      border: '1px solid var(--tg-border)',
+      background: highlight ? 'var(--tg-accent-soft)' : 'var(--tg-surface)',
+      borderLeftWidth: 4,
+      borderLeftColor: highlight ? 'var(--tg-accent)' : 'var(--tg-border)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
+    }}>
+      <div style={{
+        fontSize: 11, fontFamily: 'IBM Plex Mono, monospace',
+        color: highlight ? 'var(--tg-accent)' : 'var(--tg-text-dim)',
+        textTransform: 'uppercase'
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 32, fontFamily: 'IBM Plex Mono, monospace',
+        fontWeight: 400, color: 'var(--tg-text)', lineHeight: 1
+      }}>
+        {value}
+      </div>
     </div>
   );
 }

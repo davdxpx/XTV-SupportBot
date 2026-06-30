@@ -57,11 +57,13 @@ export function UserSettings() {
   };
 
   return (
-    <div className="stack stack-lg">
-      <h2 className="heading">⚙️ Settings</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <header>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>Configuration</h2>
+      </header>
 
       <section>
-        <p className="section-title">🌐 Language</p>
+        <p className="section-title">Language</p>
         <div className="tiles">
           {LANGUAGES.map((lang) => {
             const active = lang.code === local.language;
@@ -71,9 +73,16 @@ export function UserSettings() {
                 type="button"
                 onClick={() => patch({ language: lang.code })}
                 className={`tile${active ? ' tile-active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
               >
-                {active ? '✅ ' : '· '}
-                {lang.label}
+                {active ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" style={{ color: 'var(--tg-accent)' }}>
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                ) : (
+                  <span style={{ width: 16 }} />
+                )}
+                <span>{lang.label.replace(/^[^\s]+\s/, '')}</span> {/* Strip emoji flag */}
               </button>
             );
           })}
@@ -81,20 +90,20 @@ export function UserSettings() {
       </section>
 
       <section>
-        <p className="section-title">🔔 Notifications</p>
-        <div className="stack" style={{ gap: 6 }}>
+        <p className="section-title">Notifications</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Toggle
-            label="Notify me on agent replies"
+            label="Agent replies on my tickets"
             value={local.notify_on_reply}
             onChange={(v) => patch({ notify_on_reply: v })}
           />
           <Toggle
-            label="Ask for satisfaction after close"
+            label="Satisfaction prompts on resolution"
             value={local.notify_csat}
             onChange={(v) => patch({ notify_csat: v })}
           />
           <Toggle
-            label="Announcements from the team"
+            label="System announcements"
             value={local.notify_announcements}
             onChange={(v) => patch({ notify_announcements: v })}
           />
@@ -102,14 +111,14 @@ export function UserSettings() {
       </section>
 
       <section>
-        <p className="section-title">🖥 UI preference</p>
-        <div className="stack" style={{ gap: 6 }}>
+        <p className="section-title">Interface Preference</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {(
             [
-              { value: null, label: 'Use server default' },
-              { value: 'chat', label: 'Always use chat buttons' },
-              { value: 'webapp', label: 'Always use the Web App' },
-              { value: 'hybrid', label: 'Show both' },
+              { value: null, label: 'Server Default' },
+              { value: 'chat', label: 'Inline Chat Buttons' },
+              { value: 'webapp', label: 'Launch Web App' },
+              { value: 'hybrid', label: 'Hybrid Mode' },
             ] as const
           ).map((opt) => {
             const active = local.ui_pref === opt.value;
@@ -119,9 +128,16 @@ export function UserSettings() {
                 type="button"
                 onClick={() => patch({ ui_pref: opt.value })}
                 className={`tile${active ? ' tile-active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
               >
-                {active ? '✅ ' : '· '}
-                {opt.label}
+                {active ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" style={{ color: 'var(--tg-accent)' }}>
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                ) : (
+                  <span style={{ width: 16 }} />
+                )}
+                <span>{opt.label}</span>
               </button>
             );
           })}
@@ -144,10 +160,22 @@ function Toggle({
     <button
       type="button"
       onClick={() => onChange(!value)}
-      className="tile row"
+      className={`tile ${value ? 'tile-active' : ''}`}
+      style={{ display: 'flex', alignItems: 'center', gap: 12 }}
     >
-      <span style={{ fontSize: 18 }}>{value ? '✅' : '⬜'}</span>
-      <span>{label}</span>
+      <div style={{
+        width: 18, height: 18, border: '2px solid',
+        borderColor: value ? 'var(--tg-accent)' : 'var(--tg-border)',
+        backgroundColor: value ? 'var(--tg-accent)' : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}>
+        {value && (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tg-accent-text)" strokeWidth="3" strokeLinecap="square">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        )}
+      </div>
+      <span style={{ flex: 1, textAlign: 'left', fontWeight: value ? 500 : 400 }}>{label}</span>
     </button>
   );
 }
