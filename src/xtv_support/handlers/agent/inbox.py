@@ -23,6 +23,7 @@ from xtv_support.core.context import get_context
 from xtv_support.core.filters import is_private
 from xtv_support.core.logger import get_logger
 from xtv_support.services.actions import ActionContext
+from xtv_support.services.external_directory.accessors import get_user_signal_for
 from xtv_support.ui.primitives.panel import Panel
 from xtv_support.ui.templates.agent_inbox import InboxRow, render_inbox
 from xtv_support.utils.time import utcnow
@@ -71,6 +72,9 @@ async def _load_rows(ctx, view: str, actor_id: int, *, page: int) -> tuple[list[
         tid = str(doc.get("_id"))
         message = str(doc.get("message") or "").replace("\n", " ").strip()
         title = message or f"Ticket #{tid[-6:]}"
+        user_id = doc.get("user_id")
+        signal = await get_user_signal_for(ctx, user_id) if user_id else None
+
         rows.append(
             InboxRow(
                 ticket_id=tid,
@@ -81,6 +85,8 @@ async def _load_rows(ctx, view: str, actor_id: int, *, page: int) -> tuple[list[
                 sla_at_risk=bool(doc.get("sla_warned"))
                 or (bool(doc.get("sla_deadline")) and doc.get("sla_deadline") <= soon),
                 selected=tid in selection,
+                is_vip=signal.is_vip if signal else False,
+                display_badge=signal.display_badge if signal else None,
             )
         )
     return rows, total_pages

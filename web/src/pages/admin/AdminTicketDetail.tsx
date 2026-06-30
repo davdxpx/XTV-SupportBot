@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Crown } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
@@ -22,6 +23,9 @@ interface AdminTicket {
   closed_at?: string | null;
   message?: string;
   history?: HistoryEntry[];
+  is_vip?: boolean;
+  tier_label?: string | null;
+  display_badge?: string | null;
 }
 
 export function AdminTicketDetail() {
@@ -133,7 +137,17 @@ export function AdminTicketDetail() {
       <aside className="card stack">
         <h3 style={{ margin: 0 }}>Meta</h3>
         <dl className="stack" style={{ margin: 0, gap: 4, fontSize: 13 }}>
-          <DItem k="User ID" v={String(data.user_id)} />
+          <DItem k="User ID" v={
+            <>
+              {String(data.user_id)}
+              {(data.is_vip || data.display_badge) && (
+                <span className="pill pill-accent" style={{ marginLeft: 8 }}>
+                  <Crown size={12} style={{ marginRight: 4 }} />
+                  {data.display_badge || data.tier_label || 'VIP'}
+                </span>
+              )}
+            </>
+          } />
           <DItem k="Priority" v={data.priority ?? '—'} />
           <DItem k="Assignee" v={data.assignee_id ? String(data.assignee_id) : '—'} />
           <DItem
@@ -189,11 +203,11 @@ function HistoryBubble({ entry }: { entry: HistoryEntry }) {
   );
 }
 
-function DItem({ k, v }: { k: string; v: string }) {
+function DItem({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="row" style={{ justifyContent: 'space-between' }}>
       <dt className="muted">{k}</dt>
-      <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>{v}</dd>
+      <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace', display: 'flex', alignItems: 'center' }}>{v}</dd>
     </div>
   );
 }

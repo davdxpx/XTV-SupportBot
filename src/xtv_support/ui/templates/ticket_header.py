@@ -50,6 +50,7 @@ def render(
     user_name: str,
     username: str | None,
     assignee_name: str | None,
+    user_signal: Any = None,
 ) -> Card:
     ticket_id = str(ticket["_id"])
     short_id = ticket_id[-6:]
@@ -67,6 +68,13 @@ def render(
     username_s = f"@{escape_html(username)}" if username else "—"
     created_fmt = format_iso(ticket.get("created_at"))
 
+    vip_indicator = ""
+    if user_signal:
+        if user_signal.display_badge:
+            vip_indicator = f" [{escape_html(user_signal.display_badge)}]"
+        elif user_signal.is_vip:
+            vip_indicator = " 💎 VIP"
+
     if ticket.get("assignee_id"):
         assignee_label = user_mention(
             ticket["assignee_id"], assignee_name or f"Admin {ticket['assignee_id']}"
@@ -79,7 +87,7 @@ def render(
     sla_pct, sla_status = _sla_progress(ticket)
 
     body: list[str] = [
-        f"👤 <b>User:</b> {mention}  •  <code>{user_id}</code>",
+        f"👤 <b>User:</b> {mention}{vip_indicator}  •  <code>{user_id}</code>",
         f"   <i>handle:</i> {username_s}",
         f"📂 <b>Type:</b> {project_type}  •  {_priority_label(priority)}",
         f"🕒 <b>Status:</b> {status}  •  {created_fmt}",

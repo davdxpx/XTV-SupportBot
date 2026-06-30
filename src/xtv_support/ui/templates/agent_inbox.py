@@ -31,6 +31,8 @@ class InboxRow:
     unassigned: bool = False
     sla_at_risk: bool = False
     selected: bool = False
+    is_vip: bool = False
+    display_badge: str | None = None
 
 
 def _row_label(row: InboxRow) -> str:
@@ -38,8 +40,15 @@ def _row_label(row: InboxRow) -> str:
     risk = " ⏰" if row.sla_at_risk else ""
     unassigned = " 🔓" if row.unassigned else ""
     box = "☑" if row.selected else "☐"
+
+    vip_badge = ""
+    if row.display_badge:
+        vip_badge = f"[{row.display_badge}] "
+    elif row.is_vip:
+        vip_badge = "💎 "
+
     truncated = row.title if len(row.title) <= 42 else row.title[:39] + "…"
-    return f"{box} {prio_icon}{risk}{unassigned} {truncated}"
+    return f"{box} {prio_icon}{risk}{unassigned} {vip_badge}{truncated}"
 
 
 def render_inbox(

@@ -113,6 +113,7 @@ bot in a private chat to test the user flow.
 | **Escalation & CSAT** | escalation rules, business hours & holidays, 1–5★ CSAT after close | [Features index](https://davdxpx.github.io/XTV-SupportBot/#feature-tour) |
 | **Analytics** | FRT / resolution / SLA metrics, agent leaderboard, weekly digest, CSV/JSON exports | [Analytics](https://davdxpx.github.io/XTV-SupportBot/features/analytics/) |
 | **Integrations** | outgoing HMAC-signed webhooks, Discord / Slack bridges, email ingestion scaffolding | [Integrations](https://davdxpx.github.io/XTV-SupportBot/features/integrations/) |
+| **External Auth** | connect an external MongoDB to dynamically resolve user VIP status & metadata | [Architecture overview](https://davdxpx.github.io/XTV-SupportBot/architecture/overview/) |
 | **Anti-spam** | sliding-window cooldown + mute, CAPTCHA plugin, link/phishing scanner | — |
 | **Broadcast** | pausable / cancellable with a live progress card | — |
 | **Compliance** | GDPR export / delete, audit log with TTL, PII-redaction filter | [GDPR](https://davdxpx.github.io/XTV-SupportBot/ops/gdpr/) |

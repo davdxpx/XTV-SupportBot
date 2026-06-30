@@ -10,7 +10,7 @@ as they arrive.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from xtv_support.core.logger import get_logger
 from xtv_support.version import __version__
@@ -28,6 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 def create_app(
     *,
     db: AsyncIOMotorDatabase | None = None,
+    container: Any | None = None,
     title: str = "XTV-SupportBot API",
 ) -> FastAPI:
     """Build a fresh FastAPI instance with the default route set."""
@@ -46,6 +47,7 @@ def create_app(
         openapi_url="/api/v1/openapi.json",
     )
     app.state.db = db
+    app.state.container = container
 
     @app.get("/health", tags=["system"])
     async def health() -> dict:

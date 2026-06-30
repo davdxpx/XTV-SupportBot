@@ -14,14 +14,16 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def build_router() -> APIRouter:
-    from fastapi import APIRouter, Depends, HTTPException, Query
+    from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
     from xtv_support.api.deps import get_db, require_scope
+    from xtv_support.services.external_directory.model import DirectoryProviderLike
 
     router = APIRouter(prefix="/api/v1/tickets", tags=["tickets"])
 
     @router.get("")
     async def list_tickets(
+        request: Request,
         db=Depends(get_db),
         _key=Depends(require_scope("tickets:read")),
         status: str | None = Query(None),
@@ -52,6 +54,7 @@ def build_router() -> APIRouter:
             .sort("created_at", -1)
             .limit(limit)
         )
+        provider = request.app.state.container.resolve(DirectoryProviderLike)
         rows = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
@@ -59,11 +62,19 @@ def build_router() -> APIRouter:
                 doc["project_id"] = str(doc["project_id"])
             if "team_id" in doc and doc["team_id"] is not None:
                 doc["team_id"] = str(doc["team_id"])
+
+            signal = await provider.get_signal(doc["user_id"])
+            if signal.is_vip or signal.display_badge or signal.tier_label:
+                doc["is_vip"] = signal.is_vip
+                doc["tier_label"] = signal.tier_label
+                doc["display_badge"] = signal.display_badge
+
             rows.append(doc)
         return {"items": rows, "count": len(rows)}
 
     @router.get("/{ticket_id}")
     async def get_ticket(
+        request: Request,
         ticket_id: str,
         db=Depends(get_db),
         _key=Depends(require_scope("tickets:read")),
@@ -82,6 +93,14 @@ def build_router() -> APIRouter:
             doc["project_id"] = str(doc["project_id"])
         if "team_id" in doc and doc["team_id"] is not None:
             doc["team_id"] = str(doc["team_id"])
+
+        provider = request.app.state.container.resolve(DirectoryProviderLike)
+        signal = await provider.get_signal(doc["user_id"])
+        if signal.is_vip or signal.display_badge or signal.tier_label:
+            doc["is_vip"] = signal.is_vip
+            doc["tier_label"] = signal.tier_label
+            doc["display_badge"] = signal.display_badge
+
         return doc
 
     return router

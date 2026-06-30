@@ -6,7 +6,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-_No unreleased changes. See v0.9.0 below._
+### Added
+- **External User Directory:** Map user metadata from an external MongoDB database directly into SupportBot. Allows configuring conditional logic based on a user's subscription or VIP tier status dynamically. Includes a full interactive configuration wizard and UI surfacing of user priority levels across the chat interface and the Mini-App.
 
 ## [0.9.0] — 2026-04-23
 

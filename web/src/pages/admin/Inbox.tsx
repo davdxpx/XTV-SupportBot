@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { listTickets, type Ticket } from '@/lib/api';
+import { Crown } from 'lucide-react';
 
 type View = 'open' | 'unassigned' | 'closed' | 'all';
 
@@ -68,7 +69,15 @@ export function Inbox() {
                   <Link to={`/admin/tickets/${t._id}`}>{t.status}</Link>
                 </td>
                 <td>{t.priority ?? '—'}</td>
-                <td>{t.user_id}</td>
+                <td>
+                  {t.user_id}
+                  {(t.is_vip || t.display_badge) && (
+                    <span className="pill pill-accent" style={{ marginLeft: 6 }}>
+                      <Crown size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                      {t.display_badge || t.tier_label || 'VIP'}
+                    </span>
+                  )}
+                </td>
                 <td>
                   {(t.tags ?? []).map((tag) => (
                     <span key={tag} className="pill pill-muted" style={{ marginRight: 4 }}>
