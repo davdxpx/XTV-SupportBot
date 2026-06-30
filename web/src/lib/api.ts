@@ -75,6 +75,9 @@ export interface Ticket {
   created_at?: string;
   closed_at?: string | null;
   assignee_id?: number | null;
+  is_vip?: boolean;
+  tier_label?: string | null;
+  display_badge?: string | null;
 }
 
 export interface TicketsResponse {

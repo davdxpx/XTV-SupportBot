@@ -55,6 +55,9 @@ def _ticket_summary(doc: dict[str, Any]) -> dict[str, Any]:
             doc["last_admin_msg_at"].isoformat() if doc.get("last_admin_msg_at") else None
         ),
         "subject": (doc.get("message") or "")[:80],
+        "is_vip": None,
+        "tier_label": None,
+        "display_badge": None,
     }
 
 

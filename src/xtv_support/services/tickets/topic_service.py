@@ -11,6 +11,8 @@ from pyrogram.enums import ParseMode
 from pyrogram.errors import RPCError
 
 from xtv_support.config.settings import settings
+from xtv_support.core.context import get_context
+from xtv_support.services.external_directory.accessors import get_user_signal_for
 from xtv_support.core.errors import TopicCreationError, TopicsNotSupported
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.db import tickets as tickets_repo
@@ -201,12 +203,15 @@ async def ensure_topic_for_ticket(
         raise
 
     ticket = await tickets_repo.get(db, ticket_id)
+    signal = await get_user_signal_for(get_context(client), ticket["user_id"])
+
     card = render_header(
         ticket,
         project=project,
         user_name=user_name,
         username=username,
         assignee_name=None,
+        user_signal=signal,
     )
     header_msg = await send_card(
         client,
@@ -239,12 +244,16 @@ async def rerender_header(
     header_msg_id = ticket.get("header_msg_id")
     if not header_msg_id:
         return
+
+    signal = await get_user_signal_for(get_context(client), ticket["user_id"])
+
     card = render_header(
         ticket,
         project=project,
         user_name=user_name,
         username=username,
         assignee_name=assignee_name,
+        user_signal=signal,
     )
     try:
         await edit_card(client, settings.ADMIN_CHANNEL_ID, header_msg_id, card)

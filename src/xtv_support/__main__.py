@@ -110,7 +110,7 @@ async def _amain() -> None:
         )
 
         if settings.API_ENABLED:
-            api_server = await _start_api(ctx.db)
+            api_server = await _start_api(ctx)
             log.info(
                 "boot.api_started",
                 host=settings.API_HOST,
@@ -174,7 +174,7 @@ class _UvicornRunner:
         self._task = None
 
 
-async def _start_api(db) -> _UvicornRunner:
+async def _start_api(ctx) -> _UvicornRunner:
     """Build the FastAPI app + spawn uvicorn as a background task."""
     try:
         import uvicorn
@@ -187,7 +187,7 @@ async def _start_api(db) -> _UvicornRunner:
 
     from xtv_support.api.server import create_app
 
-    app = create_app(db=db)
+    app = create_app(db=ctx.db, container=ctx.container)
 
     if settings.cors_origins:
         try:
