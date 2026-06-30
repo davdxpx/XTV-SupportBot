@@ -25,7 +25,7 @@ switches in place (same message id) so your DM stays clean.
 | **Teams** | Browse list → team detail → Rename / Timezone / Members / Delete |
 | **Projects** | Active project count + "Create from template" / "List" / "Blank" |
 | **Rules** | Count + New / Browse (full rule builder lives in `/rules` command for now) |
-| **Broadcasts** | Start a new broadcast; live progress card |
+| **Broadcasts** | Start a new broadcast; live progress card (also in the web console under **Broadcast**) |
 | **Analytics** | SLA compliance over the last 7d + export / digest buttons |
 | **Settings** | Feature-flag grid + 🔑 API keys + 🔒 Rotate secrets |
 

@@ -104,6 +104,8 @@ registration invite instead of a scoped bearer key.
 | `PATCH/DELETE` | `/api/v1/macros/{id}` | admin/owner | Edit body / delete a macro |
 | `GET/POST` | `/api/v1/kb` | admin/owner | List / create KB articles |
 | `PATCH/DELETE` | `/api/v1/kb/{slug}` | admin/owner | Edit / delete a KB article |
+| `GET/POST` | `/api/v1/broadcasts` | admin/owner | List recent broadcasts / start a new one |
+| `POST` | `/api/v1/broadcasts/cancel` | admin/owner | Cancel the running broadcast |
 
 > Project lifecycle routes accept the project `_id` (with a `slug` fallback).
 > `DELETE` permanently removes the project document; existing tickets keep

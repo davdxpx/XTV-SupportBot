@@ -67,6 +67,41 @@ class BroadcastManager:
             await broadcasts_repo.set_state(self._db, bid, "running")
             self._task = asyncio.create_task(self._run(progress_chat_id, progress_msg_id))
 
+    async def start_from_web(self, *, text: str) -> ObjectId | None:
+        """Kick off a broadcast from the admin web console.
+
+        Computes the recipient count, posts the progress card into the admin
+        channel (the same card the bot uses), persists the broadcast, and
+        starts it. Returns the broadcast id, or ``None`` if one is already
+        running.
+        """
+        from xtv_support.ui.primitives.card import send_card
+
+        if self.active:
+            return None
+        total = await users_repo.count(self._db, blocked=False)
+        card = await send_card(
+            self._client,
+            settings.ADMIN_CHANNEL_ID,
+            broadcast_tmpl.running(text, sent=0, failed=0, blocked=0, total=total),
+        )
+        bid = await broadcasts_repo.create(
+            self._db,
+            admin_id=0,
+            text=text,
+            total=total,
+            progress_chat_id=settings.ADMIN_CHANNEL_ID,
+            progress_msg_id=card.id,
+        )
+        await self.start(
+            bid=bid,
+            text=text,
+            total=total,
+            progress_chat_id=settings.ADMIN_CHANNEL_ID,
+            progress_msg_id=card.id,
+        )
+        return bid
+
     async def pause(self) -> None:
         if self._state:
             self._state.paused.set()
