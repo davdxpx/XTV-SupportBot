@@ -108,6 +108,16 @@ class Settings(BaseSettings):
     API_CORS_ORIGINS: str = ""
     API_RATE_LIMIT_PER_MINUTE: int = 120
 
+    # --- Admin web-console sessions ----------------------------------
+    # Real admin accounts (username/password) get a server-side session
+    # backed by the ``sessions`` collection and carried in an httpOnly
+    # cookie. ``SESSION_COOKIE_SECURE`` defaults to True (cookie only sent
+    # over HTTPS) — local HTTP dev must set ``SESSION_COOKIE_SECURE=false``
+    # explicitly, otherwise the browser never returns the cookie.
+    SESSION_COOKIE_NAME: str = "xtv_admin_session"
+    SESSION_TTL_DAYS: int = 30
+    SESSION_COOKIE_SECURE: bool = True
+
     # --- Admin SPA ---
     # When ``WEB_ENABLED=true`` and ``web/dist/`` exists, the FastAPI app
     # mounts the React admin SPA at ``/`` with an ``index.html`` fallback

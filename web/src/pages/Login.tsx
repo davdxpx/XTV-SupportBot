@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { setApiKey } from '@/lib/api';
+import { useNavigate, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { ApiError, login as loginApi, setApiKey } from '@/lib/api';
 import { isInsideTelegram } from '@/lib/telegram';
 
 /**
  * Login screen — admin-only.
  *
- * Auto-bounces to ``/`` when opened inside Telegram, since ``initData``
- * already covers auth. Only desktop browser admins without a stored
- * API key should ever see this form.
+ * Primary: real username/password account (server-side session cookie).
+ * Secondary (demoted, still supported): paste a legacy API key.
+ * Auto-bounces to ``/`` inside Telegram, where ``initData`` covers auth.
  */
 export function Login() {
-  const [value, setValue] = useState('');
-  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [showKey, setShowKey] = useState(false);
+  const [keyValue, setKeyValue] = useState('');
+  const [keyBusy, setKeyBusy] = useState(false);
 
   useEffect(() => {
     if (isInsideTelegram()) navigate('/', { replace: true });
@@ -30,14 +39,32 @@ export function Login() {
     );
   }
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = value.trim();
-    if (!trimmed || busy) return;
+    if (!username.trim() || !password || busy) return;
     setBusy(true);
+    setError(null);
+    try {
+      await loginApi(username.trim(), password);
+      await qc.invalidateQueries({ queryKey: ['me'] });
+      navigate('/', { replace: true });
+    } catch (err) {
+      const status = err instanceof ApiError ? err.status : 0;
+      setError(
+        status === 429
+          ? 'Too many attempts — wait a few minutes and try again.'
+          : 'Invalid username or password.',
+      );
+      setBusy(false);
+    }
+  };
+
+  const onKeySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = keyValue.trim();
+    if (!trimmed || keyBusy) return;
+    setKeyBusy(true);
     setApiKey(trimmed);
-    // Tiny delay so the spinner is perceptible — pure UX,
-    // localStorage write is sync.
     setTimeout(() => navigate('/', { replace: true }), 80);
   };
 
@@ -56,33 +83,90 @@ export function Login() {
         </div>
 
         <div className="stack" style={{ gap: 8 }}>
-          <label className="label" htmlFor="api-key-input">
-            API KEY CREDENTIAL
-          </label>
+          <label className="label" htmlFor="login-username">USERNAME</label>
           <input
-            id="api-key-input"
-            type="password"
+            id="login-username"
+            type="text"
             className="input"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="xtv_..."
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="username"
             autoFocus
-            autoComplete="off"
+            autoComplete="username"
           />
         </div>
+
+        <div className="stack" style={{ gap: 8 }}>
+          <label className="label" htmlFor="login-password">PASSWORD</label>
+          <input
+            id="login-password"
+            type="password"
+            className="input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••••"
+            autoComplete="current-password"
+          />
+        </div>
+
+        {error && (
+          <div style={{ padding: 12, border: '1px solid var(--tg-danger)', background: 'var(--tg-danger-soft)', color: 'var(--tg-text)', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>
+            {error}
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={!value.trim() || busy}
+          disabled={!username.trim() || !password || busy}
           className="btn btn-primary"
           style={{ width: '100%', padding: '14px', fontSize: 15 }}
         >
           {busy && <span className="spinner" />}
-          {busy ? 'AUTHENTICATING...' : 'AUTHENTICATE'}
+          {busy ? 'SIGNING IN...' : 'SIGN IN'}
         </button>
 
-        <p style={{ fontSize: 12, textAlign: 'center', margin: 0, color: 'var(--tg-text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
-          GENERATE KEY: <code>/apikey create admin:full</code>
+        <p style={{ fontSize: 12, textAlign: 'center', margin: 0, color: 'var(--tg-text-dim)' }}>
+          Have an invite key from your admin?{' '}
+          <Link to="/register" style={{ color: 'var(--tg-accent)' }}>Create your account</Link>
         </p>
+
+        <div style={{ borderTop: '1px solid var(--tg-border)', paddingTop: 16, textAlign: 'center' }}>
+          {!showKey ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setShowKey(true)}
+              style={{ fontSize: 12 }}
+            >
+              Log in with an API key instead
+            </button>
+          ) : (
+            <div className="stack" style={{ gap: 8 }} onSubmit={onKeySubmit}>
+              <label className="label" htmlFor="api-key-input" style={{ textAlign: 'left' }}>
+                API KEY CREDENTIAL
+              </label>
+              <input
+                id="api-key-input"
+                type="password"
+                className="input"
+                value={keyValue}
+                onChange={(e) => setKeyValue(e.target.value)}
+                placeholder="xtv_..."
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                onClick={onKeySubmit}
+                disabled={!keyValue.trim() || keyBusy}
+                className="btn btn-ghost"
+                style={{ width: '100%', padding: '12px' }}
+              >
+                {keyBusy && <span className="spinner" />}
+                {keyBusy ? 'AUTHENTICATING...' : 'USE API KEY'}
+              </button>
+            </div>
+          )}
+        </div>
       </form>
     </div>
   );

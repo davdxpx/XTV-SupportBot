@@ -67,9 +67,10 @@ def _kb_key_list(keys: list) -> InlineKeyboardMarkup:
     rows.append(
         [
             InlineKeyboardButton("➕ Create key", callback_data="cb:v2:admin:apikey:new"),
-            InlineKeyboardButton("◀ Back", callback_data=BACK_TO_SETTINGS),
+            InlineKeyboardButton("🎟 Invite admin", callback_data="cb:v2:admin:apikey:invite"),
         ]
     )
+    rows.append([InlineKeyboardButton("◀ Back", callback_data=BACK_TO_SETTINGS)])
     return InlineKeyboardMarkup(rows)
 
 
@@ -281,6 +282,40 @@ async def apikey_cmd(client: Client, message: Message) -> None:
         )
         return
 
+    if sub == "invite":
+        if not bool(getattr(settings, "API_ENABLED", False)):
+            await message.reply(_api_disabled_text())
+            return
+        rest = parts[2].split() if len(parts) == 3 else []
+        target_id: int | None = None
+        fwd = getattr(message, "forward_from", None)
+        if fwd is not None and getattr(fwd, "id", None):
+            target_id = int(fwd.id)
+            label = " ".join(rest) if rest else "invite"
+        elif rest and rest[0].lstrip("-").isdigit():
+            target_id = int(rest[0])
+            label = " ".join(rest[1:]) if len(rest) > 1 else "invite"
+        if target_id is None:
+            await message.reply(
+                "Usage: <code>/apikey invite &lt;telegram_user_id&gt; [label]</code>\n"
+                "or forward a message from the new admin with <code>/apikey invite</code>."
+            )
+            return
+        created = await api_sec.create_key(
+            ctx.db,
+            label=label,
+            scopes=[],
+            created_by=message.from_user.id if message.from_user else 0,
+            allow_registration=True,
+            target_user_id=target_id,
+        )
+        await message.reply(
+            _fmt_new_invite_card(created),
+            parse_mode=ParseMode.HTML,
+            disable_web_page_preview=True,
+        )
+        return
+
     if sub == "revoke":
         if len(parts) < 3:
             await message.reply("Usage: <code>/apikey revoke &lt;key_id&gt;</code>")
@@ -293,6 +328,7 @@ async def apikey_cmd(client: Client, message: Message) -> None:
         "Usage:\n"
         "  <code>/apikey</code>  — open the management menu\n"
         "  <code>/apikey create &lt;scopes&gt; [label]</code>\n"
+        "  <code>/apikey invite &lt;telegram_user_id&gt; [label]</code>\n"
         "  <code>/apikey revoke &lt;key_id&gt;</code>\n"
         "  <code>/apikey list</code>"
     )
@@ -303,12 +339,42 @@ def _fmt_new_key_card(created: api_sec.NewApiKey) -> str:
         f"<b>🔑 API key created</b>\n{HR}\n"
         f"<i>label</i>: <b>{created.meta.label}</b>\n"
         f"<i>scopes</i>: {_fmt_scopes(created.meta.scopes)}\n"
-        f"<i>id</i>: <code>{created.meta.key_id}</code>\n\n"
+        f"<i>id</i>: <code>{created.meta.key_id}</code>\n"
+        "<i>registration</i>: ✗ — bearer key for scripts/webhooks\n\n"
         "<blockquote>⚠️ Save this now — it won't be shown again:</blockquote>\n"
         f"<code>{created.plaintext}</code>\n\n"
         "<blockquote>🔗 Use <code>Authorization: Bearer &lt;key&gt;</code> in requests.</blockquote>\n"
         f"{HR}"
     )
+
+
+def _fmt_new_invite_card(created: api_sec.NewApiKey) -> str:
+    return (
+        f"<b>🎟 Admin invite created</b>\n{HR}\n"
+        f"<i>for Telegram id</i>: <code>{created.meta.target_user_id}</code>\n"
+        f"<i>label</i>: <b>{created.meta.label}</b>\n"
+        f"<i>id</i>: <code>{created.meta.key_id}</code>\n"
+        "<i>registration</i>: ✓ — single-use, creates ONE admin account\n\n"
+        "<blockquote>⚠️ Give this to the new admin now — it won't be shown "
+        "again and works only once:</blockquote>\n"
+        f"<code>{created.plaintext}</code>\n\n"
+        "<blockquote>🔗 They register at the web console’s "
+        "<b>“Create your account”</b> screen with this key. After that the "
+        "key is permanently dead. Their permissions follow their assigned "
+        "role — set it with <code>/role</code> if needed.</blockquote>\n"
+        f"{HR}"
+    )
+
+
+def _parse_invite_target(message: Message) -> int | None:
+    """Pull a target Telegram id from a forwarded message or a numeric arg."""
+    fwd = getattr(message, "forward_from", None)
+    if fwd is not None and getattr(fwd, "id", None):
+        return int(fwd.id)
+    raw = (message.text or "").strip()
+    if raw.lstrip("-").isdigit():
+        return int(raw)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -348,6 +414,31 @@ async def apikey_menu_callback(client: Client, cq: CallbackQuery) -> None:
                 "<i>Send /cancel to abort.</i>"
             ),
             context="apikey:new",
+            edit_message_id=cq.message.id,
+        )
+        await cq.answer()
+        return
+
+    if action == "invite":
+        if not bool(getattr(settings, "API_ENABLED", False)):
+            await cq.answer("API is disabled — set API_ENABLED=true.", show_alert=True)
+            return
+        ctx = get_context(client)
+        await akc.ask(
+            client,
+            ctx.db,
+            chat_id=cq.message.chat.id,
+            user_id=cq.from_user.id,
+            text=(
+                "<b>🎟 Invite a new admin</b>\n\n"
+                "Who is this invite for? Either:\n"
+                "• <b>Forward</b> a message from the new admin, or\n"
+                "• send their <b>numeric Telegram ID</b>.\n\n"
+                "This mints a single-use key they redeem to create their own "
+                "username/password account, bound to their Telegram identity.\n\n"
+                "<i>Send /cancel to abort.</i>"
+            ),
+            context="apikey:invite",
             edit_message_id=cq.message.id,
         )
         await cq.answer()
@@ -448,4 +539,50 @@ async def _on_apikey_new(ctx, client: Client, message: Message, args: dict) -> N
     )
 
 
+async def _on_apikey_invite(ctx, client: Client, message: Message, args: dict) -> None:
+    state = akc.extract(await users_repo.get(ctx.db, message.from_user.id))
+    if state is None:
+        return
+    target_id = _parse_invite_target(message)
+    if target_id is None:
+        await akc.fail(
+            client,
+            ctx.db,
+            user_id=message.from_user.id,
+            reply_chat_id=message.chat.id,
+            reply_msg_id=message.id,
+            state=state,
+            error_text=(
+                "<b>⚠️ Couldn’t read a Telegram id</b>\n\n"
+                "Forward a message from the new admin, or send their numeric "
+                "Telegram ID.\n\n"
+                "Send again, or <code>/cancel</code>.\n\n"
+                "<i>Tip: if forwarding shows no sender, their privacy settings "
+                "hide it — ask them for their numeric ID instead.</i>"
+            ),
+        )
+        return
+    created = await api_sec.create_key(
+        ctx.db,
+        label="invite",
+        scopes=[],
+        created_by=message.from_user.id,
+        allow_registration=True,
+        target_user_id=target_id,
+    )
+    await akc.confirm(
+        client,
+        ctx.db,
+        user_id=message.from_user.id,
+        reply_chat_id=message.chat.id,
+        reply_msg_id=message.id,
+        state=state,
+        confirmation_text=_fmt_new_invite_card(created),
+        keyboard=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("◀ Back to keys", callback_data="cb:v2:admin:apikey:list")]]
+        ),
+    )
+
+
 akc.register("apikey:new", _on_apikey_new)
+akc.register("apikey:invite", _on_apikey_invite)

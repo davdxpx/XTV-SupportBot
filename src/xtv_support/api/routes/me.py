@@ -84,16 +84,13 @@ def _ticket_detail(doc: dict[str, Any]) -> dict[str, Any]:
 def build_router() -> APIRouter:
     from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
-    from xtv_support.api.auth_webapp import (
-        INIT_DATA_HEADER,
-        InvalidInitData,
-        TelegramUser,
-        current_tg_user,
-        verify_init_data,
-    )
-    from xtv_support.api.deps import get_db
-    from xtv_support.api.security import lookup_by_key
+    from xtv_support.api.auth_webapp import TelegramUser, current_tg_user
+    from xtv_support.api.deps import current_principal, get_db
+    from xtv_support.api.security import ApiKey, scope_satisfies
     from xtv_support.config.settings import settings
+    from xtv_support.core.rbac import resolve_role
+    from xtv_support.domain.enums import Role
+    from xtv_support.domain.models.admin_account import AdminAccount
     from xtv_support.infrastructure.db import projects as projects_repo
     from xtv_support.infrastructure.db import tickets as tickets_repo
     from xtv_support.infrastructure.db import users as users_repo
@@ -101,47 +98,60 @@ def build_router() -> APIRouter:
 
     router = APIRouter(prefix="/api/v1/me", tags=["me"])
 
-    @router.get("")
-    async def get_me(request: Request) -> dict:
-        init = request.headers.get(INIT_DATA_HEADER)
-        if init:
-            try:
-                user = verify_init_data(init, bot_token=settings.BOT_TOKEN.get_secret_value())
-            except InvalidInitData as exc:
-                raise HTTPException(401, f"invalid_init_data:{exc}") from exc
-            return {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "username": user.username,
-                "language_code": user.language_code,
-                "is_admin": user.id in set(settings.ADMIN_IDS),
-                "ui_mode": settings.ui_mode.value,
-                "brand_name": settings.BRAND_NAME,
-                "brand_tagline": settings.BRAND_TAGLINE,
-            }
-
-        auth = request.headers.get("Authorization") or ""
-        if not auth.lower().startswith("bearer "):
-            raise HTTPException(401, "missing_credentials")
-        token = auth.split(None, 1)[1].strip()
-        db = getattr(request.app.state, "db", None)
-        if db is None:
-            raise HTTPException(503, "database_unavailable")
-        key = await lookup_by_key(db, token)
-        if key is None:
-            raise HTTPException(401, "invalid_key")
-        return {
-            "id": key.created_by or 0,
-            "first_name": key.label or "Admin",
+    def _envelope(**over: Any) -> dict:
+        base = {
+            "id": 0,
+            "first_name": "",
             "last_name": None,
             "username": None,
             "language_code": None,
-            "is_admin": True,
+            "is_admin": False,
+            "role": None,
             "ui_mode": settings.ui_mode.value,
             "brand_name": settings.BRAND_NAME,
             "brand_tagline": settings.BRAND_TAGLINE,
         }
+        base.update(over)
+        return base
+
+    @router.get("")
+    async def get_me(request: Request) -> dict:
+        principal = await current_principal(request)
+
+        # Telegram Mini-App user — admin flag from ADMIN_IDS (unchanged).
+        if isinstance(principal, TelegramUser):
+            return _envelope(
+                id=principal.id,
+                first_name=principal.first_name,
+                last_name=principal.last_name,
+                username=principal.username,
+                language_code=principal.language_code,
+                is_admin=principal.id in set(settings.ADMIN_IDS),
+            )
+
+        # Real admin account — resolve permissions from the EXISTING Role
+        # system (ADMIN_IDS-aware via resolve_role). AGENT+ may open the SPA.
+        if isinstance(principal, AdminAccount):
+            db = await get_db(request)
+            role = await resolve_role(
+                db, principal.telegram_user_id, legacy_admin_ids=settings.ADMIN_IDS
+            )
+            return _envelope(
+                id=principal.telegram_user_id,
+                first_name=principal.first_name,
+                last_name=principal.last_name,
+                username=principal.display_username,
+                is_admin=role.can(Role.AGENT),
+                role=str(role),
+            )
+
+        # Legacy API-key session — is_admin ONLY when scopes grant admin:full.
+        key: ApiKey = principal
+        return _envelope(
+            id=key.created_by or 0,
+            first_name=key.label or "Admin",
+            is_admin=scope_satisfies(key.scopes, "admin:full"),
+        )
 
     # ------------------------------------------------------------------
     # Projects for intake
