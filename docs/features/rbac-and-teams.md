@@ -48,3 +48,10 @@ fail-closed.
 /queue        # open tickets in any team you're a member of
 /mytickets    # tickets assigned directly to you
 ```
+
+## Web console (Access page)
+
+Roles and teams are also fully manageable from the admin web console's
+**Access** page (owner/admin only) — grant/revoke roles and create/delete
+teams with members — via the `/api/v1/rbac/*` API. It enforces the same
+hierarchy as the bot: you can't grant or revoke a role above your own rank.

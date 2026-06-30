@@ -20,6 +20,7 @@ import { Projects } from '@/pages/admin/Projects';
 import { ProjectDetail } from '@/pages/admin/ProjectDetail';
 import { Rules } from '@/pages/admin/Rules';
 import { Accounts } from '@/pages/admin/Accounts';
+import { Access } from '@/pages/admin/Access';
 import { ApiError, getMe } from '@/lib/api';
 import { bootTelegram, isInsideTelegram } from '@/lib/telegram';
 
@@ -114,6 +115,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="rules" element={<Rules />} />
             <Route path="accounts" element={<Accounts />} />
+            <Route path="access" element={<Access />} />
           </Route>
 
           <Route path="/" element={<Root />}>
