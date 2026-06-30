@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Ticket attachments (images & files):** users can attach files when opening a request from the Mini-App; the bot stores them in the admin supergroup (Telegram `file_id`, no external blob store) and the admin console streams images inline via `GET /api/v1/tickets/{id}/attachments/{index}`. New `POST /api/v1/me/tickets/{id}/attach`.
+- **Single-screen New Ticket:** area selection, message, and attachments are now all on one screen instead of a multi-step flow.
 - **Full project management in the web console:** click a project to open a manage screen with editable fields and a **danger zone** — archive/restore plus a permanent **purge** (hard delete). New `GET/PATCH/POST(archive|restore)/DELETE /api/v1/projects/{id}` routes, all keyed by `_id` (slug fallback).
 - **Reusable in-app confirmation dialog** replacing the browser `confirm()` popup across the console (rule purge, ticket resolve, project purge), with a type-the-name guard for irreversible deletes.
 - **Live ticket stats endpoint** (`GET /api/v1/tickets/stats`): open/closed/unassigned/total/today counts straight from the tickets collection, so the admin console dashboard reflects reality immediately instead of waiting on the nightly analytics roll-up.

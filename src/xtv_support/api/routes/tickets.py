@@ -83,6 +83,33 @@ def build_router() -> APIRouter:
 
         return await tickets_repo.stats(db)
 
+    @router.get("/{ticket_id}/attachments/{index}")
+    async def get_attachment(
+        request: Request,
+        ticket_id: str,
+        index: int,
+        db=Depends(get_db),
+        _key=Depends(require_scope("tickets:read")),
+    ):
+        from fastapi import Response
+        from pyrogram import Client
+
+        from xtv_support.infrastructure.db import tickets as tickets_repo
+        from xtv_support.services.tickets import service as ticket_service
+
+        doc = await tickets_repo.get(db, ticket_id)
+        if doc is None:
+            raise HTTPException(status_code=404, detail="not_found")
+        container = getattr(request.app.state, "container", None)
+        client = container.resolve(Client) if container is not None else None
+        if client is None:
+            raise HTTPException(status_code=503, detail="attachments_unavailable")
+        result = await ticket_service.download_attachment(client, doc, index)
+        if result is None:
+            raise HTTPException(status_code=404, detail="attachment_not_found")
+        data, mime = result
+        return Response(content=data, media_type=mime)
+
     @router.get("/{ticket_id}")
     async def get_ticket(
         request: Request,

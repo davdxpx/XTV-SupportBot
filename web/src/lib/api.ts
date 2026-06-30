@@ -65,6 +65,41 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+/** Auth headers shared by the JSON wrapper and the binary helpers below. */
+function authHeaders(): Headers {
+  const headers = new Headers();
+  const initData = getInitData();
+  if (initData) headers.set('X-Telegram-Init-Data', initData);
+  else {
+    const key = getApiKey();
+    if (key) headers.set('Authorization', `Bearer ${key}`);
+  }
+  return headers;
+}
+
+/** POST a multipart file (no JSON Content-Type — the browser sets the boundary). */
+export async function apiUpload<T>(path: string, file: File): Promise<T> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: authHeaders(),
+    body: form,
+  });
+  const text = await res.text();
+  const body = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new ApiError(res.status, body);
+  return body as T;
+}
+
+/** Fetch a binary attachment as an object URL (so auth headers can be sent). */
+export async function fetchBlobUrl(path: string): Promise<string> {
+  const res = await fetch(path, { credentials: 'include', headers: authHeaders() });
+  if (!res.ok) throw new ApiError(res.status, null);
+  return URL.createObjectURL(await res.blob());
+}
+
 // ---------- Typed endpoints ----------------------------------------------
 export interface Ticket {
   _id: string;
@@ -108,6 +143,9 @@ export interface TicketStats {
 }
 
 export const ticketStats = () => api<TicketStats>('/api/v1/tickets/stats');
+
+export const uploadMyTicketAttachment = (ticketId: string, file: File) =>
+  apiUpload<{ ok: boolean; type: string }>(`/api/v1/me/tickets/${ticketId}/attach`, file);
 
 // ---------- Projects -----------------------------------------------------
 export interface Project {

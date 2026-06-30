@@ -73,6 +73,7 @@ FastAPI auto-generates both a Swagger UI and a ReDoc view:
 | `GET` | `/api/v1/version` | — | Version + service name |
 | `GET` | `/api/v1/tickets` | `tickets:read` | List tickets |
 | `GET` | `/api/v1/tickets/stats` | `tickets:read` | Live ticket counts |
+| `GET` | `/api/v1/tickets/{id}/attachments/{index}` | `tickets:read` | Stream a ticket attachment |
 | `GET` | `/api/v1/tickets/{id}` | `tickets:read` | Fetch a single ticket |
 | `GET` | `/api/v1/projects` | `projects:read` | List projects |
 | `GET` | `/api/v1/projects/{id}` | `projects:read` | Fetch one project (+ live ticket count) |
