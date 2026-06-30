@@ -188,6 +188,7 @@ export interface MeResponse {
   language_code?: string | null;
   is_admin: boolean;
   role?: string | null;
+  auth_method?: 'telegram' | 'account' | 'apikey';
   ui_mode: 'chat' | 'webapp' | 'hybrid';
   brand_name?: string;
   brand_tagline?: string;
@@ -230,6 +231,12 @@ export const register = (payload: RegisterPayload) =>
   });
 
 export const logout = () => api<{ ok: boolean }>('/api/v1/auth/logout', { method: 'POST' });
+
+export const changePassword = (current_password: string, new_password: string) =>
+  api<{ ok: boolean }>('/api/v1/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, new_password }),
+  });
 
 export const checkUsername = (username: string, signal?: AbortSignal) =>
   api<{ available: boolean; reason: 'invalid_format' | 'taken' | null }>(

@@ -166,6 +166,7 @@ def build_router() -> APIRouter:
                 username=principal.username,
                 language_code=principal.language_code,
                 is_admin=principal.id in set(settings.ADMIN_IDS),
+                auth_method="telegram",
             )
 
         # Real admin account — resolve permissions from the EXISTING Role
@@ -182,6 +183,7 @@ def build_router() -> APIRouter:
                 username=principal.display_username,
                 is_admin=role.can(Role.AGENT),
                 role=str(role),
+                auth_method="account",
             )
 
         # Legacy API-key session — is_admin ONLY when scopes grant admin:full.
@@ -190,6 +192,7 @@ def build_router() -> APIRouter:
             id=key.created_by or 0,
             first_name=key.label or "Admin",
             is_admin=scope_satisfies(key.scopes, "admin:full"),
+            auth_method="apikey",
         )
 
     @router.get("/languages")

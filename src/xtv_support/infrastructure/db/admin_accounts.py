@@ -89,6 +89,16 @@ async def set_disabled(db: AsyncIOMotorDatabase, account_id: str, *, disabled: b
     return result.matched_count == 1
 
 
+async def set_password_hash(db: AsyncIOMotorDatabase, account_id: str, password_hash: str) -> bool:
+    oid = safe_objectid(account_id)
+    if oid is None:
+        return False
+    result = await db.admin_accounts.update_one(
+        {"_id": oid}, {"$set": {"password_hash": password_hash}}
+    )
+    return result.matched_count == 1
+
+
 async def touch_last_login(db: AsyncIOMotorDatabase, account_id: str) -> None:
     oid = safe_objectid(account_id)
     if oid is None:

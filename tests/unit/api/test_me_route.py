@@ -63,6 +63,7 @@ def test_me_with_valid_init_data_returns_user(client: TestClient) -> None:
     assert body["id"] == 42
     assert body["first_name"] == "Luca"
     assert body["is_admin"] is True
+    assert body["auth_method"] == "telegram"
 
 
 def test_me_without_credentials_returns_401(client: TestClient) -> None:

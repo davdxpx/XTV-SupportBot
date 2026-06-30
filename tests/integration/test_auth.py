@@ -257,6 +257,88 @@ def test_me_apikey_readonly_is_admin_false(env) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Change password
+# ---------------------------------------------------------------------------
+def test_change_password_happy_then_relogin(env) -> None:
+    client, db = env
+    _register(client, _invite(db, 555), username="real", password="longenoughpw")
+    r = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "longenoughpw", "new_password": "brandnewpw123"},
+    )
+    assert r.status_code == 200, r.text
+    # caller stays logged in on this device (re-issued cookie)
+    assert client.get("/api/v1/me").status_code == 200
+    # old password no longer works, new one does
+    fresh = TestClient(client.app)
+    assert (
+        fresh.post(
+            "/api/v1/auth/login", json={"username": "real", "password": "longenoughpw"}
+        ).status_code
+        == 401
+    )
+    assert (
+        fresh.post(
+            "/api/v1/auth/login", json={"username": "real", "password": "brandnewpw123"}
+        ).status_code
+        == 200
+    )
+
+
+def test_change_password_wrong_current_is_403(env) -> None:
+    client, db = env
+    _register(client, _invite(db, 555), username="real", password="longenoughpw")
+    r = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "wrongpw", "new_password": "brandnewpw123"},
+    )
+    assert r.status_code == 403
+
+
+def test_change_password_weak_new_is_400(env) -> None:
+    client, db = env
+    _register(client, _invite(db, 555), username="real", password="longenoughpw")
+    r = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "longenoughpw", "new_password": "short"},
+    )
+    assert r.status_code == 400
+
+
+def test_change_password_revokes_other_sessions(env) -> None:
+    client, db = env
+    _register(client, _invite(db, 555), username="real", password="longenoughpw")
+    other = TestClient(client.app)
+    assert (
+        other.post(
+            "/api/v1/auth/login", json={"username": "real", "password": "longenoughpw"}
+        ).status_code
+        == 200
+    )
+    assert other.get("/api/v1/me").status_code == 200
+    # change from the first client -> the second device's session dies
+    assert (
+        client.post(
+            "/api/v1/auth/change-password",
+            json={"current_password": "longenoughpw", "new_password": "brandnewpw123"},
+        ).status_code
+        == 200
+    )
+    assert other.get("/api/v1/me").status_code == 401
+
+
+def test_change_password_requires_account_not_apikey(env) -> None:
+    client, db = env
+    key = _run(sec.create_key(db, label="k", scopes=["admin:full"], created_by=7)).plaintext
+    r = client.post(
+        "/api/v1/auth/change-password",
+        headers={"Authorization": f"Bearer {key}"},
+        json={"current_password": "x", "new_password": "brandnewpw123"},
+    )
+    assert r.status_code == 403
+
+
+# ---------------------------------------------------------------------------
 # Account management (owner/admin only)
 # ---------------------------------------------------------------------------
 def test_accounts_disable_kills_session_and_gates_by_role(env) -> None:

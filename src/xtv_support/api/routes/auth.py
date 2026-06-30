@@ -204,4 +204,35 @@ def build_router() -> APIRouter:
         response.delete_cookie(settings.SESSION_COOKIE_NAME, path="/")
         return {"ok": True}
 
+    @router.post("/change-password")
+    async def change_password(
+        request: Request, response: Response, body: dict = Body(...), db=Depends(get_db)
+    ) -> dict:
+        from xtv_support.api.deps import current_principal
+        from xtv_support.api.sessions import revoke_all_sessions_for
+        from xtv_support.domain.models.admin_account import AdminAccount
+
+        principal = await current_principal(request)
+        if not isinstance(principal, AdminAccount):
+            # Only real accounts have a password; api-key / Telegram callers don't.
+            raise HTTPException(403, "not_an_account")
+
+        current = str(body.get("current_password") or "")
+        new = str(body.get("new_password") or "")
+        if not verify_password(principal.password_hash, current):
+            raise HTTPException(403, "wrong_password")
+        if len(new) < PASSWORD_MIN or new.lower() == principal.username.lower():
+            raise HTTPException(400, "weak_password")
+        if new == current:
+            raise HTTPException(400, "password_unchanged")
+
+        await accounts_repo.set_password_hash(db, principal.id, hash_password(new))
+        # Invalidate every session (all devices), then re-issue one for the
+        # caller so they stay logged in on this device.
+        await revoke_all_sessions_for(db, principal.id)
+        raw_session = await create_session(db, principal.id, ttl_days=settings.SESSION_TTL_DAYS)
+        _set_session_cookie(response, raw_session)
+        _log.info("auth.password_changed", account_id=principal.id)
+        return {"ok": True}
+
     return router
