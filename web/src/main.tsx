@@ -23,6 +23,7 @@ import { Accounts } from '@/pages/admin/Accounts';
 import { Access } from '@/pages/admin/Access';
 import { ApiKeys } from '@/pages/admin/ApiKeys';
 import { Content } from '@/pages/admin/Content';
+import { Broadcasts } from '@/pages/admin/Broadcasts';
 import { ApiError, getMe } from '@/lib/api';
 import { bootTelegram, isInsideTelegram } from '@/lib/telegram';
 
@@ -120,6 +121,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="access" element={<Access />} />
             <Route path="keys" element={<ApiKeys />} />
             <Route path="content" element={<Content />} />
+            <Route path="broadcasts" element={<Broadcasts />} />
           </Route>
 
           <Route path="/" element={<Root />}>

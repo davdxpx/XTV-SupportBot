@@ -74,6 +74,7 @@ def create_app(
     from xtv_support.api.routes import analytics as analytics_routes
     from xtv_support.api.routes import apikeys as apikeys_routes
     from xtv_support.api.routes import auth as auth_routes
+    from xtv_support.api.routes import broadcasts as broadcasts_routes
     from xtv_support.api.routes import content as content_routes
     from xtv_support.api.routes import me as me_routes
     from xtv_support.api.routes import projects as projects_routes
@@ -97,6 +98,7 @@ def create_app(
     app.include_router(rbac_routes.build_router())
     app.include_router(apikeys_routes.build_router())
     app.include_router(content_routes.build_router())
+    app.include_router(broadcasts_routes.build_router())
 
     _mount_spa(app)
 

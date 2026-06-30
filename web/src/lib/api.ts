@@ -344,6 +344,29 @@ export const createKb = (slug: string, title: string, body: string) =>
 export const updateKb = (slug: string, patch: { title?: string; body?: string }) =>
   api(`/api/v1/kb/${slug}`, { method: 'PATCH', body: JSON.stringify(patch) });
 export const deleteKb = (slug: string) => api(`/api/v1/kb/${slug}`, { method: 'DELETE' });
+
+// ---------- Broadcasts ---------------------------------------------------
+export interface Broadcast {
+  id: string;
+  text: string;
+  state: string;
+  total: number;
+  sent: number;
+  failed: number;
+  blocked: number;
+  started_at?: string | null;
+  finished_at?: string | null;
+}
+export interface BroadcastsResponse {
+  items: Broadcast[];
+  count: number;
+  active: boolean;
+}
+
+export const listBroadcasts = () => api<BroadcastsResponse>('/api/v1/broadcasts');
+export const createBroadcast = (text: string) =>
+  api<{ ok: boolean; id: string }>('/api/v1/broadcasts', { method: 'POST', body: JSON.stringify({ text }) });
+export const cancelBroadcast = () => api('/api/v1/broadcasts/cancel', { method: 'POST' });
 export const disableAccount = (id: string) =>
   api(`/api/v1/auth/accounts/${id}/disable`, { method: 'POST' });
 export const enableAccount = (id: string) =>

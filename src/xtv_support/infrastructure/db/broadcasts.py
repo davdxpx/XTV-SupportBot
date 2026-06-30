@@ -76,6 +76,12 @@ async def find_active(db: AsyncIOMotorDatabase) -> dict[str, Any] | None:
     return await db.broadcasts.find_one({"state": {"$in": ["queued", "running", "paused"]}})
 
 
+async def list_recent(db: AsyncIOMotorDatabase, *, limit: int = 50) -> list[dict[str, Any]]:
+    """Most-recent broadcasts first — for the admin console history view."""
+    cursor = db.broadcasts.find().sort("started_at", -1).limit(limit)
+    return [doc async for doc in cursor]
+
+
 async def set_progress_msg(
     db: AsyncIOMotorDatabase,
     bid: ObjectId,
