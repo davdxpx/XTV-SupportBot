@@ -190,7 +190,14 @@ async def ensure_topic_for_ticket(
         await tickets_repo.set_topic(db, ticket_id, topic_id=topic_id, fallback=False)
     except RPCError as exc:
         message = getattr(exc, "MESSAGE", str(exc)) or str(exc)
-        log.warning("topic.create_failed", error=message)
+        # ERROR (not WARNING) so a misconfigured admin chat is impossible to
+        # miss in the logs — this is the #1 reason "tickets create no topic".
+        log.error(
+            "topic.create_failed",
+            error=message,
+            admin_channel_id=settings.ADMIN_CHANNEL_ID,
+            hint="check ADMIN_CHANNEL_ID is the forum supergroup and the bot has Manage Topics",
+        )
         if "TOPICS_NOT_AVAILABLE" in message or "TOPICS_DISABLED" in message:
             await tickets_repo.set_topic(db, ticket_id, topic_id=None, fallback=True)
             raise TopicsNotSupported(message) from exc
@@ -198,7 +205,13 @@ async def ensure_topic_for_ticket(
             await tickets_repo.set_topic(db, ticket_id, topic_id=None, fallback=True)
             raise TopicsNotSupported(message) from exc
         raise TopicCreationError(message) from exc
-    except TopicCreationError:
+    except TopicCreationError as exc:
+        log.error(
+            "topic.create_failed",
+            error=str(exc),
+            admin_channel_id=settings.ADMIN_CHANNEL_ID,
+            hint="ADMIN_CHANNEL_ID did not resolve to a supergroup/channel the bot can see",
+        )
         await tickets_repo.set_topic(db, ticket_id, topic_id=None, fallback=True)
         raise
 

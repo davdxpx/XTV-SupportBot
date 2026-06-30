@@ -99,6 +99,16 @@ export interface AnalyticsSummary {
 export const listTickets = (params: URLSearchParams = new URLSearchParams()) =>
   api<TicketsResponse>(`/api/v1/tickets?${params.toString()}`);
 
+export interface TicketStats {
+  open: number;
+  closed: number;
+  unassigned: number;
+  total: number;
+  today: number;
+}
+
+export const ticketStats = () => api<TicketStats>('/api/v1/tickets/stats');
+
 export const analyticsSummary = (days = 7) =>
   api<AnalyticsSummary>(`/api/v1/analytics/summary?days=${days}`);
 
