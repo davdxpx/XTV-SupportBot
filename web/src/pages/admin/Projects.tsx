@@ -1,16 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-
-interface Project {
-  _id: string;
-  slug?: string;
-  name: string;
-  description?: string;
-  type?: string;
-  active?: boolean;
-  ticket_count?: number;
-}
+import { useNavigate } from 'react-router-dom';
+import { api, type Project } from '@/lib/api';
 
 interface ProjectsResponse {
   items: Project[];
@@ -28,17 +19,12 @@ const TEMPLATES = [
 ];
 
 export function Projects() {
-  const qc = useQueryClient();
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
 
   const { data, isError, error: queryError } = useQuery({
     queryKey: ['admin-projects'],
     queryFn: () => api<ProjectsResponse>('/api/v1/projects'),
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: (id: string) => api(`/api/v1/projects/${id}`, { method: 'DELETE' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-projects'] }),
   });
 
   if (isError) {
@@ -66,50 +52,45 @@ export function Projects() {
 
       {showCreate && <CreateProjectDialog onClose={() => setShowCreate(false)} />}
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>PROJECT COMPONENT</th>
-            <th>IDENTIFIER</th>
-            <th>ARCHITECTURE</th>
-            <th style={{ width: 100 }}>STATUS</th>
-            <th style={{ width: 100, textAlign: 'right' }}>VOLUME</th>
-            <th style={{ width: 100 }}>ACTION</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.items.map((p) => (
-            <tr key={p._id}>
-              <td>
-                <strong style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</strong>
-                {p.description && (
-                  <div style={{ fontSize: 12, color: 'var(--tg-text-dim)', marginTop: 2 }}>
-                    {p.description.slice(0, 80)}
-                  </div>
-                )}
-              </td>
-              <td className="mono">{p.slug ?? '--'}</td>
-              <td className="mono">{p.type ?? '--'}</td>
-              <td className="mono" style={{ color: p.active ? 'var(--tg-success)' : 'var(--tg-text-dim)' }}>
-                {p.active ? 'ONLINE' : 'OFFLINE'}
-              </td>
-              <td className="mono right">{p.ticket_count ?? 0}</td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`Confirm destruction of ${p.name}? This action cannot be undone.`)) deleteMut.mutate(p._id);
-                  }}
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)', clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)' }}
-                >
-                  PURGE
-                </button>
-              </td>
+      <div className="table-scroll">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>PROJECT COMPONENT</th>
+              <th>IDENTIFIER</th>
+              <th>ARCHITECTURE</th>
+              <th style={{ width: 100 }}>STATUS</th>
+              <th style={{ width: 100, textAlign: 'right' }}>VOLUME</th>
+              <th style={{ width: 90 }}></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data?.items.map((p) => (
+              <tr
+                key={p._id}
+                onClick={() => navigate(`/admin/projects/${p._id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td>
+                  <strong style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</strong>
+                  {p.description && (
+                    <div style={{ fontSize: 12, color: 'var(--tg-text-dim)', marginTop: 2 }}>
+                      {p.description.slice(0, 80)}
+                    </div>
+                  )}
+                </td>
+                <td className="mono">{p.slug ?? '--'}</td>
+                <td className="mono">{p.type ?? '--'}</td>
+                <td className="mono" style={{ color: p.active ? 'var(--tg-success)' : 'var(--tg-text-dim)' }}>
+                  {p.active ? 'ONLINE' : 'OFFLINE'}
+                </td>
+                <td className="mono right">{p.ticket_count ?? 0}</td>
+                <td className="mono" style={{ color: 'var(--tg-text-dim)', textAlign: 'right' }}>MANAGE ›</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

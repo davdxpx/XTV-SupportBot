@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface HistoryEntry {
   sender: 'user' | 'admin' | string;
@@ -25,6 +26,7 @@ export function TicketDetail() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const qc = useQueryClient();
   const [draft, setDraft] = useState('');
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['me-ticket', ticketId],
@@ -55,6 +57,7 @@ export function TicketDetail() {
       qc.invalidateQueries({ queryKey: ['me-ticket', ticketId] });
       qc.invalidateQueries({ queryKey: ['my-tickets'] });
     },
+    onSettled: () => setConfirmClose(false),
   });
 
   if (isLoading) {
@@ -125,9 +128,7 @@ export function TicketDetail() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (confirm('Are you sure you want to resolve this ticket?')) close.mutate();
-              }}
+              onClick={() => setConfirmClose(true)}
               disabled={close.isPending}
               className="btn btn-ghost"
               style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)', padding: '14px 20px', clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)' }}
@@ -143,6 +144,17 @@ export function TicketDetail() {
           </span>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmClose}
+        danger
+        title="Resolve this ticket?"
+        body="Marking it resolved closes the request. You can always open a new one."
+        confirmLabel="RESOLVE"
+        busy={close.isPending}
+        onConfirm={() => close.mutate()}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>
   );
 }

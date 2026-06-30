@@ -278,6 +278,14 @@ async def find_stale(db: AsyncIOMotorDatabase, *, threshold: timedelta) -> list[
     return [doc async for doc in cursor]
 
 
+async def count_by_project(db: AsyncIOMotorDatabase, project_id: str | ObjectId) -> int:
+    """How many tickets reference a project (for the manage/danger-zone view)."""
+    oid = safe_objectid(project_id)
+    if oid is None:
+        return 0
+    return await db.tickets.count_documents({"project_id": oid})
+
+
 async def stats(db: AsyncIOMotorDatabase) -> dict[str, int]:
     """Live ticket counts for the admin console (open/closed/unassigned/total/today)."""
     start_of_day = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)

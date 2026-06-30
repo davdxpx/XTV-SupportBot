@@ -611,6 +611,11 @@ code {
   .admin-link span:not(.icon) { display: none; }
   .admin-link { padding: 12px; justify-content: center; }
   .admin-main { padding: 16px; }
+  /* Stack title + action so the header never crowds on a phone. */
+  .heading-row { flex-wrap: wrap; }
+  .heading-row .btn { margin-left: 0; }
+  /* Bump small controls toward a comfortable tap target. */
+  .btn-sm { padding: 9px 14px; }
 }
 .admin-side {
   padding: 16px 12px;
@@ -654,6 +659,21 @@ code {
 .admin-main {
   padding: 24px 32px;
   overflow-y: auto;
+  min-width: 0; /* let children (tables) shrink instead of forcing overflow */
+}
+
+/* Responsive admin stat grid — reflows from 4-up to 2-up to 1-up. */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+/* Wrap wide data tables so they scroll horizontally instead of breaking
+   the page layout on narrow screens. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Split Console */

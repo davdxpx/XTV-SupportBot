@@ -26,13 +26,7 @@ export function Overview() {
         </div>
       </div>
 
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 16,
-        }}
-      >
+      <section className="admin-stats">
         <StatCard label="ACTIVE REQUESTS" value={String(open)} />
         <StatCard
           label="UNASSIGNED"

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 type Condition = { field: string; op: string; value: unknown };
 type Action = { name: string; params?: Record<string, unknown> };
@@ -48,6 +49,7 @@ const ACTION_NAMES = [
 export function Rules() {
   const qc = useQueryClient();
   const [showBuilder, setShowBuilder] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Rule | null>(null);
 
   const { data, isError, error: queryError } = useQuery({
     queryKey: ['admin-rules'],
@@ -66,6 +68,7 @@ export function Rules() {
   const deleteMut = useMutation({
     mutationFn: (id: string) => api(`/api/v1/rules/${id}`, { method: 'DELETE' }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-rules'] }),
+    onSettled: () => setPendingDelete(null),
   });
 
   if (isError) {
@@ -92,6 +95,21 @@ export function Rules() {
       </div>
 
       {showBuilder && <RuleBuilder onClose={() => setShowBuilder(false)} />}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        danger
+        title="Purge rule?"
+        body={
+          <>
+            This permanently deletes <strong>{pendingDelete?.name}</strong>. This cannot be undone.
+          </>
+        }
+        confirmLabel="PURGE"
+        busy={deleteMut.isPending}
+        onConfirm={() => pendingDelete && deleteMut.mutate(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
 
       <ul className="ticket-list">
         {data?.items.map((r) => (
@@ -149,9 +167,7 @@ export function Rules() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (confirm(`Confirm destruction of rule "${r.name}"?`)) deleteMut.mutate(r.id);
-                }}
+                onClick={() => setPendingDelete(r)}
                 className="btn btn-ghost btn-sm"
                 style={{ color: 'var(--tg-danger)', borderColor: 'var(--tg-danger)', clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)' }}
               >
