@@ -59,6 +59,20 @@ def _resolve_bot_client(request: Request):
         return None
 
 
+def _resolve_cooldown(request: Request):
+    """Return the shared CooldownService from the container, or None."""
+    container = getattr(request.app.state, "container", None)
+    if container is None:
+        return None
+    try:
+        from xtv_support.services.cooldown.service import CooldownService
+
+        return container.resolve(CooldownService)
+    except Exception as exc:  # noqa: BLE001 — degrade to "no limit" if unavailable
+        _log.debug("api.me.cooldown_unavailable", error=str(exc))
+        return None
+
+
 # Dispatcher-friendly projection — keeps documents slim on the wire.
 def _ticket_summary(doc: dict[str, Any]) -> dict[str, Any]:
     return {
@@ -178,6 +192,17 @@ def build_router() -> APIRouter:
             is_admin=scope_satisfies(key.scopes, "admin:full"),
         )
 
+    @router.get("/languages")
+    async def list_languages() -> dict:
+        """Supported UI languages (auto-discovered from the bundled locales)."""
+        from xtv_support.config.i18n import list_supported, load_locales
+
+        items = [
+            {"code": code, "name": native, "flag": flag}
+            for code, native, flag in list_supported(load_locales())
+        ]
+        return {"items": items, "count": len(items)}
+
     # ------------------------------------------------------------------
     # Projects for intake
     # ------------------------------------------------------------------
@@ -257,6 +282,16 @@ def build_router() -> APIRouter:
             raise HTTPException(status_code=400, detail="empty_message")
         if len(message) > 4000:
             raise HTTPException(status_code=400, detail="message_too_long")
+        # Anti-spam: the same sliding-window limiter the bot uses, so a user
+        # can't flood tickets via the Mini-App either.
+        cooldown = _resolve_cooldown(request)
+        if cooldown is not None:
+            decision = await cooldown.check(user.id)
+            if not decision.allowed:
+                raise HTTPException(
+                    status_code=429,
+                    detail={"error": "cooldown", "retry_after": decision.retry_after},
+                )
         project_raw = body.get("project_id") or body.get("project_slug")
         proj = None
         if project_raw:

@@ -7,6 +7,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **German language** (`de`) added to the bundled locales, plus a `GET /api/v1/me/languages` endpoint so the Mini-App language picker is driven by the locales that actually exist (no more dead options). Settings now show clear saving/saved feedback with a brief lockout after each change.
 - **Ticket attachments (images & files):** users can attach files when opening a request from the Mini-App; the bot stores them in the admin supergroup (Telegram `file_id`, no external blob store) and the admin console streams images inline via `GET /api/v1/tickets/{id}/attachments/{index}`. New `POST /api/v1/me/tickets/{id}/attach`.
 - **Single-screen New Ticket:** area selection, message, and attachments are now all on one screen instead of a multi-step flow.
 - **Full project management in the web console:** click a project to open a manage screen with editable fields and a **danger zone** — archive/restore plus a permanent **purge** (hard delete). New `GET/PATCH/POST(archive|restore)/DELETE /api/v1/projects/{id}` routes, all keyed by `_id` (slug fallback).
@@ -16,6 +17,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **External User Directory:** Map user metadata from an external MongoDB database directly into SupportBot. Allows configuring conditional logic based on a user's subscription or VIP tier status dynamically. Includes a full interactive configuration wizard and UI surfacing of user priority levels across the chat interface and the Mini-App.
 
 ### Fixed
+- **Mini-App ticket creation had no spam protection:** the web/Mini-App `POST /api/v1/me/tickets` path is now rate-limited by the same sliding-window cooldown the bot uses (returns `429` with `retry_after` when exceeded).
 - **Project delete returned 404 for admins:** the SPA sent the project `_id` but the route keyed on `slug` (and template/bot-created projects have no slug). Project routes are now `_id`-keyed with a slug fallback, so delete/edit/archive work for every project.
 - **Admin console not usable on mobile:** the Overview stat grid now reflows (4→2→1 columns), wide data tables scroll instead of breaking the layout, the header wraps, and small buttons get larger tap targets on phone widths.
 - **Web tickets created no forum topic:** the Mini-App / web `POST /api/v1/me/tickets` path inserted a bare ticket document and never created the admin-supergroup forum topic + header card. Bot and web now share one ticket-creation service, so both produce an identical ticket; the web path degrades gracefully (still persists the ticket) when no bot client is available. Topic-creation failures are now logged at ERROR with the admin channel id and the real Telegram cause, instead of being silently swallowed.
