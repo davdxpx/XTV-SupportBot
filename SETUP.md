@@ -99,6 +99,27 @@ ADMIN_CHANNEL_ID=-1001234567890
 
 The remaining values (SLA, cooldown, broadcast, log level, ...) have sensible defaults — override only if needed. See `.env.example` for every option.
 
+### Admin web console (optional)
+
+To use the username/password admin console set `API_ENABLED=true` (and
+`WEB_ENABLED=true`, the default). Admin accounts are created invite-only:
+an `ADMIN_IDS` member runs `/apikey invite <user_id>` in the bot, then the
+invitee registers with that key at the console's "Create your account"
+screen. See [Admin accounts](docs/features/admin-accounts.md).
+
+Sessions ride in an httpOnly cookie. The cookie defaults to **secure
+(HTTPS-only)**:
+
+```env
+SESSION_COOKIE_SECURE=true   # production default
+```
+
+**For local HTTP development you must set `SESSION_COOKIE_SECURE=false`**,
+otherwise the browser silently refuses to send the cookie over `http://`
+and login appears to do nothing. `SESSION_COOKIE_NAME` (default
+`xtv_admin_session`) and `SESSION_TTL_DAYS` (default `30`) are also
+configurable.
+
 ---
 
 ## 5. Run

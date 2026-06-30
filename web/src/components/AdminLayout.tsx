@@ -1,10 +1,18 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { clearApiKey } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearApiKey, logout as logoutApi } from '@/lib/api';
 
 export function AdminLayout() {
   const navigate = useNavigate();
-  const logout = () => {
+  const qc = useQueryClient();
+  const logout = async () => {
+    try {
+      await logoutApi();
+    } catch {
+      // best-effort — clear locally regardless
+    }
     clearApiKey();
+    qc.clear();
     navigate('/login');
   };
 
@@ -30,6 +38,14 @@ export function AdminLayout() {
     { to: '/admin/rules', label: 'RULES', icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" className="icon">
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+    )},
+    { to: '/admin/accounts', label: 'ACCOUNTS', icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" className="icon">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
       </svg>
     )},
   ];

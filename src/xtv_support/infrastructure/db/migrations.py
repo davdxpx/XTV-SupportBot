@@ -9,7 +9,7 @@ from xtv_support.core.logger import get_logger
 
 log = get_logger("migrations")
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 
 async def _safe_drop_index(coll, name: str) -> None:
@@ -117,6 +117,22 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
     # The external_directory_config collection only ever contains a single
     # document with {"_id": "singleton"}. No custom indexes are required
     # beyond the default _id index.
+
+    # --- Phase 8: Admin accounts + web sessions ----------------------
+    # Usernames are stored lowercase, so a plain unique index is enough
+    # to enforce case-insensitive uniqueness (no collation needed).
+    await db.admin_accounts.create_index(
+        [("username", ASCENDING)], unique=True, name="ux_admin_username"
+    )
+    await db.admin_accounts.create_index([("telegram_user_id", ASCENDING)], name="ix_admin_tg_user")
+    await db.sessions.create_index(
+        [("session_hash", ASCENDING)], unique=True, name="ux_session_hash"
+    )
+    await db.sessions.create_index([("account_id", ASCENDING)], name="ix_session_account")
+    # Native TTL reaper — Mongo deletes the doc once ``expires_at`` passes.
+    await db.sessions.create_index(
+        [("expires_at", ASCENDING)], name="ix_session_ttl", expireAfterSeconds=0
+    )
 
     log.info("db.indexes_ensured")
 

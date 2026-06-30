@@ -75,9 +75,13 @@ So a misconfigured deploy never emits a broken keyboard.
 ## Authentication
 
 ### Desktop admin
-`Authorization: Bearer xtv_<40-char-key>`. Keys are created via
-`/apikey create admin:full` in the bot and persisted SHA-256 at
-rest; plaintext is shown **once**. See
+The primary login is a **username/password account** with a server-side
+session cookie — see [Admin accounts](admin-accounts.md). A logged-in
+account's permissions are resolved from the existing Role system.
+
+The legacy `Authorization: Bearer xtv_<40-char-key>` login still works as
+a secondary path; keys are created via `/apikey create` in the bot and
+persisted SHA-256 at rest, plaintext shown **once**. See
 [API auth](../reference/api-auth.md) for the full key lifecycle.
 
 ### Telegram Mini-App
@@ -89,8 +93,8 @@ validates the signature, rejects `auth_date` older than 24 hours,
 and decodes the `user` JSON into a typed `TelegramUser`. See
 `src/xtv_support/api/auth_webapp.py` for the implementation.
 
-The shared FastAPI dependency `current_tg_user_or_apikey` picks
-whichever is present: `initData` wins if both are on the request.
+The shared FastAPI dependency `current_principal` resolves the caller in
+precedence order: `initData` → session cookie → bearer key.
 
 ## `/api/v1/me` — user-scoped endpoints
 

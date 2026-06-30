@@ -1,8 +1,18 @@
 # API authentication
 
-XTV-SupportBot uses long-lived **API keys** with **scopes**. Keys are
-minted from the Telegram bot (there is no HTTP signup / password flow),
-stored SHA-256-hashed at rest, and carried as `Authorization: Bearer`.
+XTV-SupportBot accepts three authentication mechanisms, resolved in this
+precedence order:
+
+1. **Telegram Mini-App `initData`** (`X-Telegram-Init-Data` header) — end users.
+2. **Admin session cookie** — a logged-in username/password account. See
+   [Admin accounts](../features/admin-accounts.md) for the registration +
+   login flow; this page covers the API-key model below.
+3. **API key** (`Authorization: Bearer`) — scripts, webhooks, and the
+   legacy desktop login.
+
+This page documents the **API keys** described in (3): long-lived keys
+with **scopes**, minted from the Telegram bot, stored SHA-256-hashed at
+rest, and carried as `Authorization: Bearer`.
 
 ## Key format
 
@@ -39,6 +49,7 @@ Other admin commands:
 | Command | Purpose |
 |---|---|
 | `/apikey list` | Show every key (label, scopes, last-used, revoked status) |
+| `/apikey invite <user_id> [label]` | Mint a **single-use registration key** for a new admin account (see [Admin accounts](../features/admin-accounts.md)). Also available by forwarding a message from the invitee, or via the 🎟 Invite admin button |
 | `/apikey revoke <key_id>` | Immediately invalidate a key |
 
 ## Scopes

@@ -7,6 +7,7 @@ import '@/styles/theme.css';
 import { AdminLayout } from '@/components/AdminLayout';
 import { UserLayout } from '@/components/UserLayout';
 import { Login } from '@/pages/Login';
+import { Register } from '@/pages/Register';
 import { UserHome } from '@/pages/user/Home';
 import { NewTicket } from '@/pages/user/NewTicket';
 import { MyTickets } from '@/pages/user/MyTickets';
@@ -17,7 +18,8 @@ import { Inbox } from '@/pages/admin/Inbox';
 import { AdminTicketDetail } from '@/pages/admin/AdminTicketDetail';
 import { Projects } from '@/pages/admin/Projects';
 import { Rules } from '@/pages/admin/Rules';
-import { ApiError, getMe, hasCredentials } from '@/lib/api';
+import { Accounts } from '@/pages/admin/Accounts';
+import { ApiError, getMe } from '@/lib/api';
 import { bootTelegram, isInsideTelegram } from '@/lib/telegram';
 
 // Tell Telegram we're ready + expand the viewport so the Mini-App
@@ -43,15 +45,14 @@ const queryClient = new QueryClient({
  */
 function Root() {
   const inTelegram = isInsideTelegram();
-  const hasKey = !!hasCredentials();
 
+  // Always attempt /me: the admin session lives in an httpOnly cookie the
+  // SPA can't read, so we optimistically ask the server and let a 401
+  // bounce us to /login (handled below).
   const me = useQuery({
     queryKey: ['me'],
     queryFn: getMe,
-    enabled: inTelegram || hasKey,
   });
-
-  if (!inTelegram && !hasKey) return <Navigate to="/login" replace />;
 
   if (me.isLoading) {
     return (
@@ -102,6 +103,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Overview />} />
@@ -109,6 +111,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="tickets/:ticketId" element={<AdminTicketDetail />} />
             <Route path="projects" element={<Projects />} />
             <Route path="rules" element={<Rules />} />
+            <Route path="accounts" element={<Accounts />} />
           </Route>
 
           <Route path="/" element={<Root />}>

@@ -82,6 +82,18 @@ See also [API quickstart](api-quickstart.md),
 [API authentication](api-auth.md), and the dedicated
 [Railway guide](../ops/railway.md).
 
+## Admin web sessions
+
+Real admin accounts (username/password) get a server-side session backed
+by the `sessions` collection and carried in an httpOnly cookie. See
+[Admin accounts](../features/admin-accounts.md).
+
+| Variable | Default | Notes |
+|---|---|---|
+| `SESSION_COOKIE_NAME` | `xtv_admin_session` | Name of the session cookie |
+| `SESSION_TTL_DAYS` | `30` | Session lifetime; a native TTL index reaps expired docs |
+| `SESSION_COOKIE_SECURE` | `true` | Only send the cookie over HTTPS. **Local HTTP dev must set this to `false`**, otherwise the browser never returns the cookie and login appears to "do nothing" |
+
 ## Admin SPA
 
 | Variable | Default | Notes |

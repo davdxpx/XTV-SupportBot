@@ -70,7 +70,9 @@ def create_app(
 
     # Mount core routers lazily so a user importing ``create_app`` in a
     # test environment that stubs out the routes doesn't pay for them.
+    from xtv_support.api.routes import accounts as accounts_routes
     from xtv_support.api.routes import analytics as analytics_routes
+    from xtv_support.api.routes import auth as auth_routes
     from xtv_support.api.routes import me as me_routes
     from xtv_support.api.routes import projects as projects_routes
     from xtv_support.api.routes import projects_write as projects_write_routes
@@ -87,6 +89,8 @@ def create_app(
     app.include_router(rules_routes.build_router())
     app.include_router(webhooks_routes.build_router())
     app.include_router(me_routes.build_router())
+    app.include_router(auth_routes.build_router())
+    app.include_router(accounts_routes.build_router())
 
     _mount_spa(app)
 

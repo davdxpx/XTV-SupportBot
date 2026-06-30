@@ -56,7 +56,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (!headers.has('Content-Type') && init?.body) {
     headers.set('Content-Type', 'application/json');
   }
-  const res = await fetch(path, { ...init, headers });
+  // ``credentials: include`` so the httpOnly admin session cookie rides
+  // along — same-origin in prod, through the vite proxy in dev.
+  const res = await fetch(path, { credentials: 'include', ...init, headers });
   const text = await res.text();
   const body = text ? JSON.parse(text) : null;
   if (!res.ok) throw new ApiError(res.status, body);
@@ -100,7 +102,7 @@ export const listTickets = (params: URLSearchParams = new URLSearchParams()) =>
 export const analyticsSummary = (days = 7) =>
   api<AnalyticsSummary>(`/api/v1/analytics/summary?days=${days}`);
 
-// ---------- /me (WebApp-auth) --------------------------------------------
+// ---------- /me ----------------------------------------------------------
 export interface MeResponse {
   id: number;
   first_name: string;
@@ -108,9 +110,63 @@ export interface MeResponse {
   username?: string | null;
   language_code?: string | null;
   is_admin: boolean;
+  role?: string | null;
   ui_mode: 'chat' | 'webapp' | 'hybrid';
   brand_name?: string;
   brand_tagline?: string;
 }
 
 export const getMe = () => api<MeResponse>('/api/v1/me');
+
+// ---------- Admin accounts (username/password auth) ----------------------
+export interface AdminAccountProfile {
+  id: string;
+  username: string;
+  display_username: string;
+  first_name: string;
+  last_name?: string | null;
+  telegram_user_id: number;
+  role?: string | null;
+  created_at?: string | null;
+  last_login_at?: string | null;
+  disabled_at?: string | null;
+}
+
+export interface RegisterPayload {
+  username: string;
+  first_name: string;
+  last_name?: string | null;
+  password: string;
+  api_key: string;
+}
+
+export const login = (username: string, password: string) =>
+  api<{ account: AdminAccountProfile }>('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+
+export const register = (payload: RegisterPayload) =>
+  api<{ account: AdminAccountProfile }>('/api/v1/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const logout = () => api<{ ok: boolean }>('/api/v1/auth/logout', { method: 'POST' });
+
+export const checkUsername = (username: string, signal?: AbortSignal) =>
+  api<{ available: boolean; reason: 'invalid_format' | 'taken' | null }>(
+    `/api/v1/auth/check-username?username=${encodeURIComponent(username)}`,
+    { signal },
+  );
+
+export interface AccountsResponse {
+  items: AdminAccountProfile[];
+  count: number;
+}
+
+export const listAccounts = () => api<AccountsResponse>('/api/v1/auth/accounts');
+export const disableAccount = (id: string) =>
+  api(`/api/v1/auth/accounts/${id}/disable`, { method: 'POST' });
+export const enableAccount = (id: string) =>
+  api(`/api/v1/auth/accounts/${id}/enable`, { method: 'POST' });

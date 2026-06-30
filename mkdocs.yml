@@ -42,6 +42,7 @@ nav:
       - architecture/action-executor.md
   - Features:
       - features/admin-menu.md
+      - features/admin-accounts.md
       - features/rbac-and-teams.md
       - features/macros-and-kb.md
       - features/project-templates.md
