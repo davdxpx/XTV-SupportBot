@@ -10,19 +10,11 @@ interface UserSettings {
   notify_announcements: boolean;
 }
 
-const LANGUAGES: { code: string; label: string }[] = [
-  { code: 'bn', label: '🇧🇩 বাংলা' },
-  { code: 'en', label: '🇬🇧 English' },
-  { code: 'es', label: '🇪🇸 Español' },
-  { code: 'gu', label: '🇮🇳 ગુજરાતી' },
-  { code: 'hi', label: '🇮🇳 हिन्दी' },
-  { code: 'mr', label: '🇮🇳 मराठी' },
-  { code: 'pa', label: '🇮🇳 ਪੰਜਾਬੀ' },
-  { code: 'ru', label: '🇷🇺 Русский' },
-  { code: 'ta', label: '🇮🇳 தமிழ்' },
-  { code: 'te', label: '🇮🇳 తెలుగు' },
-  { code: 'ur', label: '🇵🇰 اردو' },
-];
+interface Language {
+  code: string;
+  name: string;
+  flag: string;
+}
 
 export function UserSettings() {
   const qc = useQueryClient();
@@ -30,7 +22,15 @@ export function UserSettings() {
     queryKey: ['me-settings'],
     queryFn: () => api<UserSettings>('/api/v1/me/settings'),
   });
+  const languages = useQuery({
+    queryKey: ['languages'],
+    queryFn: () => api<{ items: Language[] }>('/api/v1/me/languages'),
+    staleTime: 5 * 60_000,
+  });
   const [local, setLocal] = useState<UserSettings | null>(null);
+  // Brief lockout after a change: gives clear "saving → saved" feedback and
+  // discourages rapid-fire toggling.
+  const [cooling, setCooling] = useState(false);
 
   useEffect(() => {
     if (data && !local) setLocal(data);
@@ -51,26 +51,47 @@ export function UserSettings() {
   if (isError) return <div className="pill pill-danger">Error: {String(error)}</div>;
   if (!local) return null;
 
+  const busy = save.isPending || cooling;
+
   const patch = (p: Partial<UserSettings>) => {
+    if (busy) return;
     setLocal({ ...local, ...p });
-    save.mutate(p);
+    setCooling(true);
+    save.mutate(p, { onSettled: () => setTimeout(() => setCooling(false), 1200) });
   };
 
+  const status = save.isPending
+    ? { text: 'SAVING…', spinner: true, color: 'var(--tg-text-dim)' }
+    : save.isError
+      ? { text: 'SAVE FAILED', spinner: false, color: 'var(--tg-danger)' }
+      : cooling
+        ? { text: '✓ SAVED', spinner: false, color: 'var(--tg-success)' }
+        : null;
+
+  const langItems: Language[] = languages.data?.items ?? [];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-      <header>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32, opacity: busy ? 0.85 : 1 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>Configuration</h2>
+        {status && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', color: status.color }}>
+            {status.spinner && <span className="spinner" />}
+            {status.text}
+          </span>
+        )}
       </header>
 
       <section>
         <p className="section-title">Language</p>
         <div className="tiles">
-          {LANGUAGES.map((lang) => {
+          {langItems.map((lang) => {
             const active = lang.code === local.language;
             return (
               <button
                 key={lang.code}
                 type="button"
+                disabled={busy}
                 onClick={() => patch({ language: lang.code })}
                 className={`tile${active ? ' tile-active' : ''}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
@@ -82,31 +103,20 @@ export function UserSettings() {
                 ) : (
                   <span style={{ width: 16 }} />
                 )}
-                <span>{lang.label.replace(/^[^\s]+\s/, '')}</span> {/* Strip emoji flag */}
+                <span>{lang.flag} {lang.name}</span>
               </button>
             );
           })}
+          {langItems.length === 0 && <span className="muted">Loading languages…</span>}
         </div>
       </section>
 
       <section>
         <p className="section-title">Notifications</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Toggle
-            label="Agent replies on my tickets"
-            value={local.notify_on_reply}
-            onChange={(v) => patch({ notify_on_reply: v })}
-          />
-          <Toggle
-            label="Satisfaction prompts on resolution"
-            value={local.notify_csat}
-            onChange={(v) => patch({ notify_csat: v })}
-          />
-          <Toggle
-            label="System announcements"
-            value={local.notify_announcements}
-            onChange={(v) => patch({ notify_announcements: v })}
-          />
+          <Toggle label="Agent replies on my tickets" value={local.notify_on_reply} disabled={busy} onChange={(v) => patch({ notify_on_reply: v })} />
+          <Toggle label="Satisfaction prompts on resolution" value={local.notify_csat} disabled={busy} onChange={(v) => patch({ notify_csat: v })} />
+          <Toggle label="System announcements" value={local.notify_announcements} disabled={busy} onChange={(v) => patch({ notify_announcements: v })} />
         </div>
       </section>
 
@@ -126,6 +136,7 @@ export function UserSettings() {
               <button
                 key={String(opt.value)}
                 type="button"
+                disabled={busy}
                 onClick={() => patch({ ui_pref: opt.value })}
                 className={`tile${active ? ' tile-active' : ''}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
@@ -151,14 +162,17 @@ function Toggle({
   label,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: boolean;
   onChange: (next: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={() => onChange(!value)}
       className={`tile ${value ? 'tile-active' : ''}`}
       style={{ display: 'flex', alignItems: 'center', gap: 12 }}

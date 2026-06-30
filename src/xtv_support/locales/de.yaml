@@ -1,0 +1,77 @@
+# =============================================================================
+# German — full coverage. Mirrors en.yaml; anything omitted falls back to en.
+# =============================================================================
+
+meta:
+  code: de
+  name: German
+  native_name: Deutsch
+  flag: "\U0001F1E9\U0001F1EA"   # 🇩🇪
+
+# ---- User-facing (DM) ------------------------------------------------------
+user:
+  welcome: "👋 Willkommen! Sende /start, um ein Ticket zu öffnen."
+  welcome_back: "👋 Willkommen zurück, {name}."
+  pick_project: "Wähle ein Projekt:"
+  project_not_found: "Dieses Projekt existiert nicht mehr."
+  blocked: "⛔ Du wurdest für die Nutzung dieses Bots gesperrt."
+  cooldown: "⏱️ Bitte langsamer — du kannst in {seconds}s wieder schreiben."
+  ticket_created: "🎫 Ticket #{ticket_id} erstellt. Das Team antwortet hier."
+  ticket_closed: "✅ Dein Ticket wurde geschlossen. Sende /start für ein neues."
+  ticket_reopened: "🔓 Dein Ticket wurde wieder geöffnet."
+  reply_received: "💬 Antwort vom Support erhalten."
+  unknown_command: "Diesen Befehl kenne ich nicht. Versuch es mit /start."
+  language_changed: "🌐 Sprache auf {lang} gesetzt."
+  language_list_header: "Wähle deine Sprache:"
+  no_active_ticket: "Du hast kein aktives Ticket. Sende /start, um eins zu öffnen."
+  thanks_for_feedback: "🙏 Danke für dein Feedback!"
+
+# ---- Admin-facing (DM dashboard + topic) -----------------------------------
+admin:
+  dashboard: "Admin-Dashboard"
+  no_permission: "🚫 Diese Aktion erfordert Admin-Rechte."
+  assigned_to_you: "📌 Ticket #{ticket_id} wurde dir zugewiesen."
+  ticket_reassigned: "🔁 Ticket #{ticket_id} ist jetzt {assignee} zugewiesen."
+  ticket_untagged: "🏷️ Tag #{tag} vom Ticket entfernt."
+  ticket_tagged: "🏷️ Tag #{tag} zum Ticket hinzugefügt."
+  broadcast_started: "📣 Broadcast gestartet — {count} Empfänger."
+  broadcast_finished: "📣 Broadcast beendet: {delivered} zugestellt, {failed} fehlgeschlagen."
+  topic_created_fallback: "⚠️ Konnte kein Forum-Thema erstellen; poste stattdessen in den Kanal."
+
+# ---- Topic messages (admin-side inside a ticket topic) ---------------------
+topic:
+  sla_warning: "⚠️ SLA-Warnung — dieses Ticket wartet seit {minutes}m."
+  sla_breach: "🔥 SLA-Verletzung — dieses Ticket wartet seit {minutes}m."
+  autoclosed: "⌛ Automatisch geschlossen nach {days}T Inaktivität."
+
+# ---- System / fallbacks ----------------------------------------------------
+system:
+  service_unavailable: "Dienst vorübergehend nicht verfügbar. Bitte in einer Minute erneut versuchen."
+  internal_error: "Etwas ist schiefgelaufen. Die Admins wurden benachrichtigt."
+  feature_disabled: "Diese Funktion ist auf dieser Instanz deaktiviert."
+
+# ---- Ticket value labels (priority, status, tags) --------------------------
+ticket:
+  count_one: "1 Ticket"
+  count_other: "{count} Tickets"
+  priority:
+    low: Niedrig
+    normal: Normal
+    high: Hoch
+    urgent: Dringend
+  status:
+    open: Offen
+    pending: Wartend
+    closed: Geschlossen
+  tag_self_service: "Self-Service"
+  tag_billing: "Abrechnung"
+  tag_bug: "Fehler"
+  tag_question: "Frage"
+
+# ---- CSAT survey (Phase 8) -------------------------------------------------
+csat:
+  prompt: "🌟 Wie bewertest du deine Erfahrung mit diesem Ticket?"
+  thanks: "Danke für deine Bewertung — dein Feedback hilft uns, besser zu werden."
+  comment_prompt: "Möchtest du noch etwas ergänzen? (optional)"
+  star_one: "1 Stern"
+  star_other: "{count} Sterne"
