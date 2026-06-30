@@ -39,3 +39,9 @@ inline buttons with an escape hatch:
 
 - Click an article → view the body, click ✅ or 🙋 *I still need help*.
 - `/humanplease` — bypass the gate for the next message.
+
+## Web console (Content page)
+
+Macros and KB articles are also manageable from the admin web console's
+**Content** page (owner/admin only) — create, edit, and delete — via the
+`/api/v1/macros/*` and `/api/v1/kb/*` routes.

@@ -101,6 +101,12 @@ async def list_visible(
     return [_macro_from_doc(d) async for d in cursor]
 
 
+async def list_all(db: AsyncIOMotorDatabase) -> list[Macro]:
+    """Every macro (global + all teams) — for the admin content console."""
+    cursor = db.macros.find().sort("name", 1)
+    return [_macro_from_doc(d) async for d in cursor]
+
+
 async def update_body(
     db: AsyncIOMotorDatabase,
     macro_id: str,
