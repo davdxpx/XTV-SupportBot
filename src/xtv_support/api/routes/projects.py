@@ -9,9 +9,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def build_router() -> APIRouter:
-    from fastapi import APIRouter, Depends, Query
+    from fastapi import APIRouter, Depends, HTTPException, Query
 
     from xtv_support.api.deps import get_db, require_scope
+    from xtv_support.infrastructure.db import projects as projects_repo
+    from xtv_support.infrastructure.db import tickets as tickets_repo
 
     router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
 
@@ -30,5 +32,19 @@ def build_router() -> APIRouter:
             doc["_id"] = str(doc.get("_id"))
             rows.append(doc)
         return {"items": rows, "count": len(rows)}
+
+    @router.get("/{project_id}")
+    async def get_project(
+        project_id: str,
+        db=Depends(get_db),
+        _key=Depends(require_scope("projects:read")),
+    ) -> dict:
+        doc = await projects_repo.get_by_id_or_slug(db, project_id)
+        if doc is None:
+            raise HTTPException(status_code=404, detail="not_found")
+        doc["_id"] = str(doc["_id"])
+        # Live ticket count for the manage / danger-zone view.
+        doc["ticket_count"] = await tickets_repo.count_by_project(db, doc["_id"])
+        return doc
 
     return router

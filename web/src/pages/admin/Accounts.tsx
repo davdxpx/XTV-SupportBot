@@ -45,6 +45,7 @@ export function Accounts() {
         </span>
       </div>
 
+      <div className="table-scroll">
       <table className="data-table">
         <thead>
           <tr>
@@ -92,6 +93,7 @@ export function Accounts() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -75,7 +75,17 @@ FastAPI auto-generates both a Swagger UI and a ReDoc view:
 | `GET` | `/api/v1/tickets/stats` | `tickets:read` | Live ticket counts |
 | `GET` | `/api/v1/tickets/{id}` | `tickets:read` | Fetch a single ticket |
 | `GET` | `/api/v1/projects` | `projects:read` | List projects |
+| `GET` | `/api/v1/projects/{id}` | `projects:read` | Fetch one project (+ live ticket count) |
+| `POST` | `/api/v1/projects` | `projects:write` | Create (blank or from template) |
+| `PATCH` | `/api/v1/projects/{id}` | `projects:write` | Edit name/description/type/flags |
+| `POST` | `/api/v1/projects/{id}/archive` | `projects:write` | Archive (hide from intake) |
+| `POST` | `/api/v1/projects/{id}/restore` | `projects:write` | Un-archive |
+| `DELETE` | `/api/v1/projects/{id}` | `projects:write` | **Hard delete** (tickets kept, unlinked) |
 | `GET` | `/api/v1/analytics/summary` | `analytics:read` | SLA + ticket roll-ups |
+
+> Project lifecycle routes accept the project `_id` (with a `slug` fallback).
+> `DELETE` permanently removes the project document; existing tickets keep
+> their `project_id` backreference (no destructive cascade).
 
 ---
 

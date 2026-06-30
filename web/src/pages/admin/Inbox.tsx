@@ -59,6 +59,7 @@ export function Inbox() {
       )}
 
       {items.length > 0 && (
+        <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
@@ -116,6 +117,7 @@ export function Inbox() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

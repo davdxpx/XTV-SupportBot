@@ -78,6 +78,35 @@ async def set_active(
     return result.matched_count == 1
 
 
+_EDITABLE_FIELDS = ("name", "description", "type", "has_rating", "has_text")
+
+
+async def update(
+    db: AsyncIOMotorDatabase,
+    project_id: str | ObjectId,
+    patch: dict[str, Any],
+) -> bool:
+    """Update a whitelisted subset of editable project fields."""
+    oid = safe_objectid(project_id)
+    if oid is None:
+        return False
+    clean = {k: v for k, v in patch.items() if k in _EDITABLE_FIELDS}
+    if not clean:
+        return False
+    result = await db.projects.update_one({"_id": oid}, {"$set": clean})
+    return result.matched_count == 1
+
+
+async def get_by_id_or_slug(db: AsyncIOMotorDatabase, key: str) -> dict[str, Any] | None:
+    """Resolve a project by ObjectId, falling back to its slug."""
+    oid = safe_objectid(key)
+    if oid is not None:
+        doc = await db.projects.find_one({"_id": oid})
+        if doc is not None:
+            return doc
+    return await db.projects.find_one({"slug": key})
+
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

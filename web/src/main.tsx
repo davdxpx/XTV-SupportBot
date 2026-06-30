@@ -17,6 +17,7 @@ import { Overview } from '@/pages/admin/Overview';
 import { Inbox } from '@/pages/admin/Inbox';
 import { AdminTicketDetail } from '@/pages/admin/AdminTicketDetail';
 import { Projects } from '@/pages/admin/Projects';
+import { ProjectDetail } from '@/pages/admin/ProjectDetail';
 import { Rules } from '@/pages/admin/Rules';
 import { Accounts } from '@/pages/admin/Accounts';
 import { ApiError, getMe } from '@/lib/api';
@@ -110,6 +111,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="inbox" element={<Inbox />} />
             <Route path="tickets/:ticketId" element={<AdminTicketDetail />} />
             <Route path="projects" element={<Projects />} />
+            <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="rules" element={<Rules />} />
             <Route path="accounts" element={<Accounts />} />
           </Route>

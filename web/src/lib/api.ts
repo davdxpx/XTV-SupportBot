@@ -109,6 +109,35 @@ export interface TicketStats {
 
 export const ticketStats = () => api<TicketStats>('/api/v1/tickets/stats');
 
+// ---------- Projects -----------------------------------------------------
+export interface Project {
+  _id: string;
+  slug?: string;
+  name: string;
+  description?: string;
+  type?: string;
+  active?: boolean;
+  has_rating?: boolean;
+  has_text?: boolean;
+  ticket_count?: number;
+  created_at?: string | null;
+  archived_at?: string | null;
+}
+
+export const getProject = (id: string) => api<Project>(`/api/v1/projects/${id}`);
+
+export const updateProject = (id: string, patch: Partial<Project>) =>
+  api(`/api/v1/projects/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+
+export const archiveProject = (id: string) =>
+  api(`/api/v1/projects/${id}/archive`, { method: 'POST' });
+
+export const restoreProject = (id: string) =>
+  api(`/api/v1/projects/${id}/restore`, { method: 'POST' });
+
+export const deleteProject = (id: string) =>
+  api(`/api/v1/projects/${id}`, { method: 'DELETE' });
+
 export const analyticsSummary = (days = 7) =>
   api<AnalyticsSummary>(`/api/v1/analytics/summary?days=${days}`);
 
