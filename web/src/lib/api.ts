@@ -311,6 +311,39 @@ export const createApiKey = (payload: {
 }) => api<NewApiKeyResult>('/api/v1/apikeys', { method: 'POST', body: JSON.stringify(payload) });
 export const revokeApiKey = (keyId: string) =>
   api(`/api/v1/apikeys/${keyId}`, { method: 'DELETE' });
+
+// ---------- Content: macros & KB -----------------------------------------
+export interface Macro {
+  id: string;
+  name: string;
+  body: string;
+  team_id?: string | null;
+  tags: string[];
+  usage_count: number;
+}
+export interface KbArticle {
+  id: string;
+  slug: string;
+  title: string;
+  body: string;
+  lang: string;
+  tags: string[];
+  views: number;
+}
+
+export const listMacros = () => api<{ items: Macro[] }>('/api/v1/macros');
+export const createMacro = (name: string, body: string) =>
+  api('/api/v1/macros', { method: 'POST', body: JSON.stringify({ name, body }) });
+export const updateMacro = (id: string, body: string) =>
+  api(`/api/v1/macros/${id}`, { method: 'PATCH', body: JSON.stringify({ body }) });
+export const deleteMacro = (id: string) => api(`/api/v1/macros/${id}`, { method: 'DELETE' });
+
+export const listKb = () => api<{ items: KbArticle[] }>('/api/v1/kb');
+export const createKb = (slug: string, title: string, body: string) =>
+  api('/api/v1/kb', { method: 'POST', body: JSON.stringify({ slug, title, body }) });
+export const updateKb = (slug: string, patch: { title?: string; body?: string }) =>
+  api(`/api/v1/kb/${slug}`, { method: 'PATCH', body: JSON.stringify(patch) });
+export const deleteKb = (slug: string) => api(`/api/v1/kb/${slug}`, { method: 'DELETE' });
 export const disableAccount = (id: string) =>
   api(`/api/v1/auth/accounts/${id}/disable`, { method: 'POST' });
 export const enableAccount = (id: string) =>

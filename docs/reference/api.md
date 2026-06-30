@@ -100,6 +100,11 @@ revoke a role above their own rank.
 `allow_registration: true` + `target_user_id` to mint a single-use
 registration invite instead of a scoped bearer key.
 
+| `GET/POST` | `/api/v1/macros` | admin/owner | List / create macros |
+| `PATCH/DELETE` | `/api/v1/macros/{id}` | admin/owner | Edit body / delete a macro |
+| `GET/POST` | `/api/v1/kb` | admin/owner | List / create KB articles |
+| `PATCH/DELETE` | `/api/v1/kb/{slug}` | admin/owner | Edit / delete a KB article |
+
 > Project lifecycle routes accept the project `_id` (with a `slug` fallback).
 > `DELETE` permanently removes the project document; existing tickets keep
 > their `project_id` backreference (no destructive cascade).

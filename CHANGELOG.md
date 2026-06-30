@@ -7,6 +7,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Macros & Knowledge-Base management in the web console:** a new **Content** page (owner/admin only) to create/edit/delete canned macros and KB articles, via new `/api/v1/macros/*` and `/api/v1/kb/*` routes reusing the existing repositories.
 - **API-key management in the web console:** a new **Keys** page (owner/admin only) to list, mint (scoped bearer keys or single-use registration invites), and revoke API keys — bringing the bot's `/apikey` surface to the admin SPA via new `/api/v1/apikeys/*` routes. The plaintext key is shown exactly once at creation.
 - **RBAC management in the web console:** a new **Access** page (owner/admin only) to grant/revoke user roles and create/delete teams + manage members — bringing the bot's `/role` and `/team` surfaces to the admin SPA, backed by new `/api/v1/rbac/*` routes that reuse the existing roles/teams repositories. A caller can never grant a role above their own rank.
 - **German language** (`de`) added to the bundled locales, plus a `GET /api/v1/me/languages` endpoint so the Mini-App language picker is driven by the locales that actually exist (no more dead options). Settings now show clear saving/saved feedback with a brief lockout after each change.
