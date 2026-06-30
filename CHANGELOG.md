@@ -7,6 +7,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **RBAC management in the web console:** a new **Access** page (owner/admin only) to grant/revoke user roles and create/delete teams + manage members — bringing the bot's `/role` and `/team` surfaces to the admin SPA, backed by new `/api/v1/rbac/*` routes that reuse the existing roles/teams repositories. A caller can never grant a role above their own rank.
 - **German language** (`de`) added to the bundled locales, plus a `GET /api/v1/me/languages` endpoint so the Mini-App language picker is driven by the locales that actually exist (no more dead options). Settings now show clear saving/saved feedback with a brief lockout after each change.
 - **Ticket attachments (images & files):** users can attach files when opening a request from the Mini-App; the bot stores them in the admin supergroup (Telegram `file_id`, no external blob store) and the admin console streams images inline via `GET /api/v1/tickets/{id}/attachments/{index}`. New `POST /api/v1/me/tickets/{id}/attach`.
 - **Single-screen New Ticket:** area selection, message, and attachments are now all on one screen instead of a multi-step flow.

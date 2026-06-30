@@ -76,6 +76,7 @@ def create_app(
     from xtv_support.api.routes import me as me_routes
     from xtv_support.api.routes import projects as projects_routes
     from xtv_support.api.routes import projects_write as projects_write_routes
+    from xtv_support.api.routes import rbac as rbac_routes
     from xtv_support.api.routes import rules as rules_routes
     from xtv_support.api.routes import tickets as tickets_routes
     from xtv_support.api.routes import tickets_write as tickets_write_routes
@@ -91,6 +92,7 @@ def create_app(
     app.include_router(me_routes.build_router())
     app.include_router(auth_routes.build_router())
     app.include_router(accounts_routes.build_router())
+    app.include_router(rbac_routes.build_router())
 
     _mount_spa(app)
 

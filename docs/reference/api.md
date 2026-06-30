@@ -83,6 +83,15 @@ FastAPI auto-generates both a Swagger UI and a ReDoc view:
 | `POST` | `/api/v1/projects/{id}/restore` | `projects:write` | Un-archive |
 | `DELETE` | `/api/v1/projects/{id}` | `projects:write` | **Hard delete** (tickets kept, unlinked) |
 | `GET` | `/api/v1/analytics/summary` | `analytics:read` | SLA + ticket roll-ups |
+| `GET/POST` | `/api/v1/rbac/roles` | admin/owner | List / grant role assignments |
+| `DELETE` | `/api/v1/rbac/roles/{user_id}` | admin/owner | Revoke a user's role |
+| `GET/POST` | `/api/v1/rbac/teams` | admin/owner | List / create teams |
+| `DELETE` | `/api/v1/rbac/teams/{id}` | admin/owner | Delete a team |
+| `POST/DELETE` | `/api/v1/rbac/teams/{id}/members[/{user_id}]` | admin/owner | Add / remove a team member |
+
+The `/api/v1/rbac/*` routes require the caller to resolve to **ADMIN or OWNER**
+(session account) or hold an `admin:full` key; a caller can never grant or
+revoke a role above their own rank.
 
 > Project lifecycle routes accept the project `_id` (with a `slug` fallback).
 > `DELETE` permanently removes the project document; existing tickets keep

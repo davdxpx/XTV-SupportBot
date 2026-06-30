@@ -243,6 +243,42 @@ export interface AccountsResponse {
 }
 
 export const listAccounts = () => api<AccountsResponse>('/api/v1/auth/accounts');
+
+// ---------- RBAC: roles & teams -----------------------------------------
+export interface RoleAssignment {
+  user_id: number;
+  role: string;
+  team_ids: string[];
+  granted_at?: string | null;
+}
+export interface RolesResponse {
+  items: RoleAssignment[];
+  count: number;
+  roles: string[];
+}
+export interface TeamItem {
+  id: string;
+  name: string;
+  timezone: string;
+  member_ids: number[];
+  created_at?: string | null;
+}
+
+export const listRoles = () => api<RolesResponse>('/api/v1/rbac/roles');
+export const grantRole = (user_id: number, role: string, team_ids?: string[]) =>
+  api('/api/v1/rbac/roles', { method: 'POST', body: JSON.stringify({ user_id, role, team_ids }) });
+export const revokeRole = (user_id: number) =>
+  api(`/api/v1/rbac/roles/${user_id}`, { method: 'DELETE' });
+
+export const listTeams = () => api<{ items: TeamItem[] }>('/api/v1/rbac/teams');
+export const createTeam = (team_id: string, name: string, timezone?: string) =>
+  api('/api/v1/rbac/teams', { method: 'POST', body: JSON.stringify({ team_id, name, timezone }) });
+export const deleteTeam = (id: string) =>
+  api(`/api/v1/rbac/teams/${id}`, { method: 'DELETE' });
+export const addTeamMember = (id: string, user_id: number) =>
+  api(`/api/v1/rbac/teams/${id}/members`, { method: 'POST', body: JSON.stringify({ user_id }) });
+export const removeTeamMember = (id: string, user_id: number) =>
+  api(`/api/v1/rbac/teams/${id}/members/${user_id}`, { method: 'DELETE' });
 export const disableAccount = (id: string) =>
   api(`/api/v1/auth/accounts/${id}/disable`, { method: 'POST' });
 export const enableAccount = (id: string) =>

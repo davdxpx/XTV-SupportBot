@@ -65,6 +65,12 @@ async def revoke(db: AsyncIOMotorDatabase, user_id: int) -> None:
     await db.roles.delete_one({"user_id": user_id})
 
 
+async def list_all(db: AsyncIOMotorDatabase) -> list[RoleAssignment]:
+    """Every stored role assignment (for the admin RBAC console)."""
+    cursor = db.roles.find().sort("role", 1)
+    return [_assignment_from_doc(doc) async for doc in cursor]
+
+
 async def list_by_role(db: AsyncIOMotorDatabase, role: Role) -> list[RoleAssignment]:
     cursor = db.roles.find({"role": str(role)})
     return [_assignment_from_doc(doc) async for doc in cursor]
