@@ -72,6 +72,17 @@ def build_router() -> APIRouter:
             rows.append(doc)
         return {"items": rows, "count": len(rows)}
 
+    @router.get("/stats")
+    async def ticket_stats(
+        db=Depends(get_db),
+        _key=Depends(require_scope("tickets:read")),
+    ) -> dict:
+        # Live counts straight from the tickets collection — independent of the
+        # nightly analytics_daily rollup, so the console is never stuck at 0.
+        from xtv_support.infrastructure.db import tickets as tickets_repo
+
+        return await tickets_repo.stats(db)
+
     @router.get("/{ticket_id}")
     async def get_ticket(
         request: Request,

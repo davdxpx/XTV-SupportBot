@@ -1,20 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { analyticsSummary, listTickets } from '@/lib/api';
+import { analyticsSummary, ticketStats } from '@/lib/api';
 
 export function Overview() {
   const analytics = useQuery({
     queryKey: ['analytics-summary', 7],
     queryFn: () => analyticsSummary(7),
   });
-  const tickets = useQuery({
-    queryKey: ['tickets-overview'],
-    queryFn: () => listTickets(new URLSearchParams({ limit: '200' })),
+  // Live counts from the tickets collection — independent of the nightly
+  // analytics rollup, so the console reflects reality immediately.
+  const stats = useQuery({
+    queryKey: ['ticket-stats'],
+    queryFn: ticketStats,
   });
 
-  const open = tickets.data?.items.filter((t) => t.status === 'open').length ?? 0;
-  const unassigned =
-    tickets.data?.items.filter((t) => t.status === 'open' && !t.assignee_id).length ?? 0;
+  const open = stats.data?.open ?? 0;
+  const unassigned = stats.data?.unassigned ?? 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>

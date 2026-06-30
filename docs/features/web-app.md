@@ -107,7 +107,7 @@ read or mutate another user's ticket.
 | `GET` | `/api/v1/me/projects` | Active projects available for intake |
 | `GET` | `/api/v1/me/tickets?status=…` | Caller's tickets with filter |
 | `GET` | `/api/v1/me/tickets/{id}` | Ticket + history (internal notes stripped) |
-| `POST` | `/api/v1/me/tickets` | Create a new ticket |
+| `POST` | `/api/v1/me/tickets` | Create a new ticket (creates the admin-supergroup forum topic, same as the bot) |
 | `POST` | `/api/v1/me/tickets/{id}/reply` | Add a user reply |
 | `POST` | `/api/v1/me/tickets/{id}/close` | Self-close |
 | `GET` | `/api/v1/me/settings` | Language + notification prefs + `ui_pref` |

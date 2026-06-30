@@ -72,6 +72,7 @@ FastAPI auto-generates both a Swagger UI and a ReDoc view:
 | `GET` | `/metrics` | — | Prometheus exposition format |
 | `GET` | `/api/v1/version` | — | Version + service name |
 | `GET` | `/api/v1/tickets` | `tickets:read` | List tickets |
+| `GET` | `/api/v1/tickets/stats` | `tickets:read` | Live ticket counts |
 | `GET` | `/api/v1/tickets/{id}` | `tickets:read` | Fetch a single ticket |
 | `GET` | `/api/v1/projects` | `projects:read` | List projects |
 | `GET` | `/api/v1/analytics/summary` | `analytics:read` | SLA + ticket roll-ups |
@@ -170,6 +171,17 @@ curl -sS "$BASE/api/v1/tickets?status=open&limit=20" \
 The projection is intentionally narrow — full ticket bodies, message
 history and attachments are **not** returned in the list view. Use the
 single-ticket endpoint below when you need them.
+
+### `GET /api/v1/tickets/stats`
+
+Live ticket counts straight from the collection — used by the admin
+console dashboard so it never depends on the nightly analytics roll-up.
+
+**Scope**: `tickets:read`
+
+```json
+{ "open": 12, "closed": 240, "unassigned": 3, "total": 252, "today": 7 }
+```
 
 ### `GET /api/v1/tickets/{id}`
 

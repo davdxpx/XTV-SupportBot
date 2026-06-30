@@ -278,6 +278,18 @@ async def find_stale(db: AsyncIOMotorDatabase, *, threshold: timedelta) -> list[
     return [doc async for doc in cursor]
 
 
+async def stats(db: AsyncIOMotorDatabase) -> dict[str, int]:
+    """Live ticket counts for the admin console (open/closed/unassigned/total/today)."""
+    start_of_day = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return {
+        "open": await db.tickets.count_documents({"status": "open"}),
+        "closed": await db.tickets.count_documents({"status": "closed"}),
+        "unassigned": await db.tickets.count_documents({"status": "open", "assignee_id": None}),
+        "total": await db.tickets.count_documents({}),
+        "today": await db.tickets.count_documents({"created_at": {"$gte": start_of_day}}),
+    }
+
+
 # --------------------------------------------------------------------------
 # Developed by 𝕏0L0™ (@davdxpx) | © 2026 XTV Network Global
 # Don't Remove Credit

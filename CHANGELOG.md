@@ -7,10 +7,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Live ticket stats endpoint** (`GET /api/v1/tickets/stats`): open/closed/unassigned/total/today counts straight from the tickets collection, so the admin console dashboard reflects reality immediately instead of waiting on the nightly analytics roll-up.
 - **Real admin accounts:** Username/password login for the admin web console, replacing API-key-as-admin. Accounts are created through a single-use "Register with API Key" invitation (`/apikey invite`) that burns the key on redemption, and are bound to the invitee's Telegram identity so permissions read from the existing Role/Team RBAC system — no second permission model. Server-side, revocable sessions (httpOnly cookie, Argon2id passwords, SHA-256-hashed session tokens); an Accounts management surface for owners/admins (list, disable/enable with immediate session revocation); login rate-limiting. The legacy `Authorization: Bearer` API-key login remains fully supported as a secondary path.
 - **External User Directory:** Map user metadata from an external MongoDB database directly into SupportBot. Allows configuring conditional logic based on a user's subscription or VIP tier status dynamically. Includes a full interactive configuration wizard and UI surfacing of user priority levels across the chat interface and the Mini-App.
 
 ### Fixed
+- **Web tickets created no forum topic:** the Mini-App / web `POST /api/v1/me/tickets` path inserted a bare ticket document and never created the admin-supergroup forum topic + header card. Bot and web now share one ticket-creation service, so both produce an identical ticket; the web path degrades gracefully (still persists the ticket) when no bot client is available. Topic-creation failures are now logged at ERROR with the admin channel id and the real Telegram cause, instead of being silently swallowed.
+- **Admin console showed 0 tickets everywhere:** the dashboard read headline counts from the (initially empty) `analytics_daily` roll-up. It now uses live counts from `GET /api/v1/tickets/stats`.
 - **`GET /api/v1/me` privilege bug:** the endpoint returned `is_admin: true` for *any* valid API key regardless of scope. It now resolves the real Role for account sessions and only reports admin for API keys whose scopes actually satisfy `admin:full`.
 
 ## [0.9.0] — 2026-04-23

@@ -10,7 +10,7 @@ from pyrogram.errors import RPCError
 from pyrogram.types import Message
 
 from xtv_support.config.settings import settings
-from xtv_support.core.errors import TopicsNotSupported
+from xtv_support.core.errors import TopicCreationError, TopicsNotSupported
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.db import audit as audit_repo
 from xtv_support.infrastructure.db import projects as projects_repo
@@ -47,15 +47,44 @@ async def create_ticket_from_message(
     project: dict[str, Any] | None,
     contact_uuid: str | None = None,
 ) -> dict[str, Any]:
+    """Create a ticket from a Telegram message — thin adapter over :func:`create_ticket`."""
+    user = message.from_user
+    text, media_type, file_id = _extract_message(message)
+    return await create_ticket(
+        client,
+        db,
+        user_id=user.id,
+        user_name=user.first_name or user.username or f"User {user.id}",
+        username=user.username,
+        project=project,
+        text=text,
+        media_type=media_type,
+        file_id=file_id,
+        contact_uuid=contact_uuid,
+    )
+
+
+async def create_ticket(
+    client: Client,
+    db: AsyncIOMotorDatabase,
+    *,
+    user_id: int,
+    user_name: str,
+    username: str | None,
+    project: dict[str, Any] | None,
+    text: str,
+    media_type: str = "text",
+    file_id: str | None = None,
+    contact_uuid: str | None = None,
+) -> dict[str, Any]:
     """Create a ticket, attach a forum topic, post the header and confirm to the user.
+
+    Path-agnostic core shared by the Telegram bot and the web/Mini-App API so
+    both produce an identical ticket: a forum topic in the admin supergroup,
+    the header card, the forwarded first message, and a user confirmation.
 
     Returns the fully hydrated ticket dict.
     """
-    user = message.from_user
-    user_id = user.id
-
-    text, media_type, file_id = _extract_message(message)
-
     deadline = utcnow() + timedelta(minutes=settings.SLA_WARN_MINUTES)
     ticket_id = await tickets_repo.create(
         db,
@@ -85,17 +114,18 @@ async def create_ticket_from_message(
             db,
             ticket_id=ticket_id,
             title_prefix=title_prefix,
-            user_name=user.first_name or user.username or f"User {user_id}",
-            username=user.username,
+            user_name=user_name,
+            username=username,
             project=project,
         )
-    except TopicsNotSupported:
-        # Fallback path: the supergroup doesn't support forum topics, so
-        # we post everything to the channel root instead. ``topic_id``
-        # stays unset on the ticket document and the handler branches on
-        # ``fallback`` below.
+    except (TopicsNotSupported, TopicCreationError) as exc:
+        # Fallback path: the topic couldn't be created (forum disabled, missing
+        # permission, or ADMIN_CHANNEL_ID misconfigured). We still keep the
+        # ticket and post everything to the channel root — the ticket stays
+        # visible in the admin console regardless. topic_service already logged
+        # the real cause at ERROR.
         fallback = True
-        log.warning("ticket.topic_unavailable", ticket=str(ticket_id))
+        log.warning("ticket.topic_unavailable", ticket=str(ticket_id), error=str(exc))
 
     # Forward the original user message into the topic (or fallback to channel).
     ticket = await tickets_repo.get(db, ticket_id)

@@ -37,6 +37,25 @@ from fastapi import Request
 _log = get_logger("api.me")
 
 
+def _resolve_bot_client(request: Request):
+    """Return the pyrofork Client from the app container, or None.
+
+    FastAPI runs in the same process as the bot, which registers its Client in
+    the DI container at boot. Resolution is best-effort: an API-only deploy (no
+    bot, pyrogram absent) simply gets None and the caller degrades gracefully.
+    """
+    container = getattr(request.app.state, "container", None)
+    if container is None:
+        return None
+    try:
+        from pyrogram import Client
+
+        return container.resolve(Client)
+    except Exception as exc:  # noqa: BLE001 — any resolution/import failure → degrade
+        _log.debug("api.me.client_unavailable", error=str(exc))
+        return None
+
+
 # Dispatcher-friendly projection — keeps documents slim on the wire.
 def _ticket_summary(doc: dict[str, Any]) -> dict[str, Any]:
     return {
@@ -222,6 +241,7 @@ def build_router() -> APIRouter:
     # ------------------------------------------------------------------
     @router.post("/tickets", status_code=201)
     async def create_my_ticket(
+        request: Request,
         user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(...),
         db=Depends(get_db),
@@ -232,34 +252,51 @@ def build_router() -> APIRouter:
         if len(message) > 4000:
             raise HTTPException(status_code=400, detail="message_too_long")
         project_raw = body.get("project_id") or body.get("project_slug")
-        project_id = None
+        proj = None
         if project_raw:
             oid = safe_objectid(project_raw)
             if oid is None:
-                # Try slug lookup as a fallback.
                 proj = await db.projects.find_one({"slug": project_raw, "active": True})
-                if proj is None:
-                    raise HTTPException(status_code=404, detail="project_not_found")
-                project_id = proj["_id"]
             else:
                 proj = await db.projects.find_one({"_id": oid, "active": True})
-                if proj is None:
-                    raise HTTPException(status_code=404, detail="project_not_found")
-                project_id = proj["_id"]
+            if proj is None:
+                raise HTTPException(status_code=404, detail="project_not_found")
 
-        tid = await tickets_repo.create(
-            db,
-            project_id=project_id,
-            user_id=user.id,
-            message=message,
-        )
+        # Create through the shared ticket service so the web path produces the
+        # SAME result as the bot: a forum topic + header card in the admin
+        # supergroup, the forwarded message, and a user confirmation. The bot
+        # Client lives in the container of the same process (FastAPI runs
+        # alongside pyrofork). If it isn't available (API-only deploy), degrade
+        # to a bare ticket insert so the endpoint still works.
+        client = _resolve_bot_client(request)
+        if client is not None:
+            from xtv_support.services.tickets import service as ticket_service
+
+            ticket = await ticket_service.create_ticket(
+                client,
+                db,
+                user_id=user.id,
+                user_name=user.first_name or user.username or f"User {user.id}",
+                username=user.username,
+                project=proj,
+                text=message,
+            )
+            tid = ticket.get("_id")
+        else:
+            _log.warning("api.me.ticket_no_client", user_id=user.id)
+            tid = await tickets_repo.create(
+                db,
+                project_id=str(proj["_id"]) if proj else None,
+                user_id=user.id,
+                message=message,
+            )
         if tid is None:
             raise HTTPException(status_code=500, detail="ticket_create_failed")
         _log.info(
             "api.me.ticket_created",
             ticket_id=str(tid),
             user_id=user.id,
-            project_id=str(project_id) if project_id else None,
+            project_id=str(proj["_id"]) if proj else None,
         )
         return {"id": str(tid), "status": "open"}
 
