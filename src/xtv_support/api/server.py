@@ -72,6 +72,7 @@ def create_app(
     # test environment that stubs out the routes doesn't pay for them.
     from xtv_support.api.routes import accounts as accounts_routes
     from xtv_support.api.routes import analytics as analytics_routes
+    from xtv_support.api.routes import apikeys as apikeys_routes
     from xtv_support.api.routes import auth as auth_routes
     from xtv_support.api.routes import me as me_routes
     from xtv_support.api.routes import projects as projects_routes
@@ -93,6 +94,7 @@ def create_app(
     app.include_router(auth_routes.build_router())
     app.include_router(accounts_routes.build_router())
     app.include_router(rbac_routes.build_router())
+    app.include_router(apikeys_routes.build_router())
 
     _mount_spa(app)
 

@@ -279,6 +279,38 @@ export const addTeamMember = (id: string, user_id: number) =>
   api(`/api/v1/rbac/teams/${id}/members`, { method: 'POST', body: JSON.stringify({ user_id }) });
 export const removeTeamMember = (id: string, user_id: number) =>
   api(`/api/v1/rbac/teams/${id}/members/${user_id}`, { method: 'DELETE' });
+
+// ---------- API keys -----------------------------------------------------
+export interface ApiKeyItem {
+  key_id: string;
+  label: string;
+  scopes: string[];
+  created_at?: string | null;
+  last_used_at?: string | null;
+  revoked_at?: string | null;
+  registration_capable: boolean;
+  registration_used_at?: string | null;
+  target_user_id?: number | null;
+}
+export interface ApiKeysResponse {
+  items: ApiKeyItem[];
+  count: number;
+  scopes: string[];
+}
+export interface NewApiKeyResult {
+  plaintext: string;
+  key: ApiKeyItem;
+}
+
+export const listApiKeys = () => api<ApiKeysResponse>('/api/v1/apikeys');
+export const createApiKey = (payload: {
+  label: string;
+  scopes?: string[];
+  allow_registration?: boolean;
+  target_user_id?: number;
+}) => api<NewApiKeyResult>('/api/v1/apikeys', { method: 'POST', body: JSON.stringify(payload) });
+export const revokeApiKey = (keyId: string) =>
+  api(`/api/v1/apikeys/${keyId}`, { method: 'DELETE' });
 export const disableAccount = (id: string) =>
   api(`/api/v1/auth/accounts/${id}/disable`, { method: 'POST' });
 export const enableAccount = (id: string) =>

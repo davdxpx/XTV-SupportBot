@@ -93,6 +93,13 @@ The `/api/v1/rbac/*` routes require the caller to resolve to **ADMIN or OWNER**
 (session account) or hold an `admin:full` key; a caller can never grant or
 revoke a role above their own rank.
 
+| `GET/POST` | `/api/v1/apikeys` | admin/owner | List / mint API keys (or registration invites) |
+| `DELETE` | `/api/v1/apikeys/{key_id}` | admin/owner | Revoke a key |
+
+`POST /api/v1/apikeys` returns the plaintext key **once**. Pass
+`allow_registration: true` + `target_user_id` to mint a single-use
+registration invite instead of a scoped bearer key.
+
 > Project lifecycle routes accept the project `_id` (with a `slug` fallback).
 > `DELETE` permanently removes the project document; existing tickets keep
 > their `project_id` backreference (no destructive cascade).

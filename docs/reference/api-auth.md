@@ -52,6 +52,10 @@ Other admin commands:
 | `/apikey invite <user_id> [label]` | Mint a **single-use registration key** for a new admin account (see [Admin accounts](../features/admin-accounts.md)). Also available by forwarding a message from the invitee, or via the 🎟 Invite admin button |
 | `/apikey revoke <key_id>` | Immediately invalidate a key |
 
+Keys can also be managed from the **admin web console** (Keys page) — list,
+mint (scoped keys or registration invites), and revoke — via the
+`/api/v1/apikeys/*` routes, gated to ADMIN/OWNER.
+
 ## Scopes
 
 A key carries a list of scope strings. Routes declare which scope they
