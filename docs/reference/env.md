@@ -4,6 +4,14 @@ The canonical list lives in
 [`.env.example`](https://github.com/davdxpx/XTV-SupportBot/blob/main/.env.example).
 This page groups variables by purpose.
 
+!!! tip "Most settings are NOT env vars anymore"
+    Operational knobs — SLA timers, auto-close, topic auto-delete, anti-spam
+    cooldown, broadcast tuning, branding, default UI mode / language — are
+    configured **live in the admin console → Settings** (or the bot's `/admin`
+    → Settings), no redeploy. See
+    [Operational settings](#operational-settings-admin-console) below. The env
+    is only for the boot/secret/infra variables in this page's other sections.
+
 ## Required
 
 | Variable | Purpose |
@@ -12,8 +20,28 @@ This page groups variables by purpose.
 | `API_HASH` | my.telegram.org API hash |
 | `BOT_TOKEN` | @BotFather token |
 | `MONGO_URI` | MongoDB connection string |
-| `ADMIN_IDS` | Comma-separated Telegram user ids |
+| `MONGO_DB_NAME` | Database name (default `xtv_support`) |
+| `ADMIN_IDS` | Comma-separated Telegram user ids (bootstrap admins) |
 | `ADMIN_CHANNEL_ID` | Forum supergroup id (`-100…`) |
+
+## Operational settings (admin console)
+
+These are **not** set via env in normal operation — edit them on the
+**Settings** page (`GET`/`PATCH /api/v1/settings`) or the bot's `/admin` →
+Settings. The env value, if present, is only the fallback default used before
+an override is set (kept for back-compat).
+
+| Setting | What it controls |
+|---|---|
+| `SLA_WARN_MINUTES`, `SLA_BREACH_MINUTES` | SLA warn / breach thresholds |
+| `AUTO_CLOSE_DAYS`, `AUTO_CLOSE_SWEEP_MINUTES` | Idle auto-close + sweep cadence |
+| `TOPIC_DELETE_AFTER_CLOSE_MINUTES`, `TOPIC_CLEANUP_SWEEP_MINUTES` | Auto-delete closed topics (0 = keep) + sweep cadence |
+| `COOLDOWN_RATE`, `COOLDOWN_WINDOW`, `COOLDOWN_MUTE_SECONDS` | Anti-spam sliding-window limiter |
+| `BROADCAST_CONCURRENCY`, `BROADCAST_FLOOD_BUFFER_MS` | Broadcast send tuning |
+| `BRAND_NAME`, `BRAND_TAGLINE` | Branding shown across the UI |
+| `UI_MODE` | Default `chat` / `webapp` / `hybrid` |
+| `DEFAULT_LANG` | Default UI language code |
+| Feature flags (`FEATURE_*`) | Toggled live in the same Settings surface |
 
 ## Telegram session
 
@@ -24,31 +52,6 @@ This page groups variables by purpose.
 ## Logging
 
 `LOG_LEVEL`, `LOG_JSON`, `DEBUG_MODE`, `ERROR_LOG_TOPIC_ID`.
-
-## SLA / auto-close / cooldown
-
-`SLA_WARN_MINUTES`, `SLA_BREACH_MINUTES`, `AUTO_CLOSE_DAYS`,
-`AUTO_CLOSE_SWEEP_MINUTES`, `COOLDOWN_RATE`, `COOLDOWN_WINDOW`,
-`COOLDOWN_MUTE_SECONDS`.
-
-## Topic lifecycle
-
-`TOPIC_DELETE_AFTER_CLOSE_MINUTES` (default `1440` = 24h) — how long after a
-ticket is closed its forum topic is auto-deleted, to keep the admin supergroup
-tidy. Set `0` to disable (topics are only closed, never deleted).
-`TOPIC_CLEANUP_SWEEP_MINUTES` (default `15`) — how often the cleanup sweeper
-runs.
-
-!!! tip "Runtime-editable"
-    The operational knobs in the **SLA / auto-close / cooldown**, **Topic
-    lifecycle**, **Broadcast** and branding groups are also editable live from
-    the admin console **Settings** page (and `PATCH /api/v1/settings`) without a
-    redeploy — the env value is just the default. Secrets and infrastructure
-    settings stay env-only.
-
-## i18n
-
-`DEFAULT_LANG` (default `en`).
 
 ## Redis (optional)
 
@@ -123,7 +126,7 @@ See [Web App feature](../features/web-app.md) and the dedicated
 
 | Variable | Default | Notes |
 |---|---|---|
-| `UI_MODE` | `chat` | `chat` / `webapp` / `hybrid`. Typo-tolerant — unknown values fall back to `chat` |
+| `UI_MODE` | `chat` | `chat` / `webapp` / `hybrid`. **Now set in the admin console → Settings** (env is only the boot default) |
 | `WEBAPP_URL` | `""` | Public HTTPS URL of the Mini-App. Must match the WebApp domain configured via @BotFather |
 | `WEBAPP_SET_MENU_BUTTON` | `false` | When true, the bot calls `setChatMenuButton` at boot so every chat shows a persistent "Open App" button |
 | `WEBAPP_MENU_BUTTON_TEXT` | `Open App` | Label for the global menu button |

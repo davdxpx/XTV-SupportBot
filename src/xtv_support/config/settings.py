@@ -7,7 +7,22 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration loaded from environment / .env."""
+    """Configuration loaded from environment / .env.
+
+    Two kinds of fields live here:
+
+    * **Bootstrap / secret / infra** — must be set via env because they're
+      needed before the database is available or are sensitive: ``API_ID``,
+      ``API_HASH``, ``BOT_TOKEN``, ``MONGO_URI``, ``MONGO_DB_NAME``,
+      ``ADMIN_IDS``, ``ADMIN_CHANNEL_ID``, session/cookie, API/web hosting,
+      ``EXTERNAL_DIRECTORY_ENCRYPTION_KEY``, logging.
+    * **Operational defaults** — the SLA/auto-close/topic/cooldown/broadcast/
+      branding/UI-mode/language knobs below. These are editable **live in the
+      admin console → Settings** (:mod:`xtv_support.config.runtime`); the value
+      here is only the fallback default. Operators normally do NOT set these in
+      env — that's why they're absent from ``.env.example``. Setting one in env
+      still works as the boot default (back-compat).
+    """
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -44,27 +59,27 @@ class Settings(BaseSettings):
     LOG_JSON: bool = False
     DEBUG_MODE: bool = False
 
-    # --- SLA ---
+    # --- SLA --- (console-managed; env = default only)
     SLA_WARN_MINUTES: int = 30
     SLA_BREACH_MINUTES: int = 120
 
-    # --- Auto close ---
+    # --- Auto close --- (console-managed; env = default only)
     AUTO_CLOSE_DAYS: int = 7
     AUTO_CLOSE_SWEEP_MINUTES: int = 10
 
-    # --- Topic lifecycle ---
+    # --- Topic lifecycle --- (console-managed; env = default only)
     # Delete a ticket's forum topic this many minutes after it's closed, to keep
     # the admin supergroup tidy. 0 disables (topics are only closed, never
     # deleted). Default 1440 = 24h.
     TOPIC_DELETE_AFTER_CLOSE_MINUTES: int = 1440
     TOPIC_CLEANUP_SWEEP_MINUTES: int = 15
 
-    # --- Anti-spam ---
+    # --- Anti-spam / cooldown --- (console-managed; env = default only)
     COOLDOWN_RATE: int = 10
     COOLDOWN_WINDOW: int = 60
     COOLDOWN_MUTE_SECONDS: int = 300
 
-    # --- Broadcast ---
+    # --- Broadcast --- (console-managed; env = default only)
     BROADCAST_CONCURRENCY: int = 20
     BROADCAST_FLOOD_BUFFER_MS: int = 250
 
@@ -81,7 +96,7 @@ class Settings(BaseSettings):
     ERROR_LOG_TOPIC_ID: int | None = None
     AUDIT_RETENTION_DAYS: int = 90
 
-    # --- Localization ---
+    # --- Localization --- (console-managed; env = default only)
     DEFAULT_LANG: str = "en"
 
     # --- Branding ---
