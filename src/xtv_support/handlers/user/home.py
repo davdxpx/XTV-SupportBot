@@ -76,6 +76,22 @@ def _brand_from_settings(settings) -> BrandConfig:
     )
 
 
+async def _brand(ctx) -> BrandConfig:
+    """Brand config with runtime-editable name/tagline overlaid on the env base."""
+    base = _brand_from_settings(ctx.settings)
+    try:
+        from xtv_support.config.runtime import get_runtime
+
+        rt = await get_runtime(ctx.db)
+        return BrandConfig(
+            name=str(rt.BRAND_NAME or base.name),
+            tagline=str(rt.BRAND_TAGLINE or base.tagline),
+            links=base.links,
+        )
+    except Exception:  # noqa: BLE001 — never let branding break /start
+        return base
+
+
 log = get_logger("user.home")
 
 
@@ -131,7 +147,7 @@ async def _render_home_panel(
 
     stats = await _collect_stats(ctx.db, user.id)
     unread = await _unread_count(ctx.db, user.id)
-    brand = _brand_from_settings(ctx.settings)
+    brand = await _brand(ctx)
     client_ver = getattr(user, "client_version", None) or None
     webapp_url, webapp_only = await _resolve_webapp_for(ctx, user.id, client_ver)
     panel = onboarding_panel(
@@ -160,7 +176,7 @@ async def render_home(client: Client, user_id: int) -> None:
         first_name = None
     stats = await _collect_stats(ctx.db, user_id)
     unread = await _unread_count(ctx.db, user_id)
-    brand = _brand_from_settings(ctx.settings)
+    brand = await _brand(ctx)
     webapp_url, webapp_only = await _resolve_webapp_for(ctx, user_id)
     panel = onboarding_panel(
         user_first_name=first_name,
@@ -294,7 +310,7 @@ async def home_callback(client: Client, cq: CallbackQuery) -> None:
 
         ctx = get_context(client)
         projects = await projects_repo.list_active(ctx.db)
-        brand = _brand_from_settings(ctx.settings)
+        brand = await _brand(ctx)
         # The legacy ``u:sp|<id>`` callback in project_picker_panel lands
         # in ``handlers/start.project_selected`` — it already sets
         # ``AWAITING_FEEDBACK`` and renders the intake card. We just

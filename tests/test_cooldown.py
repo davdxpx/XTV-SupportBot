@@ -38,6 +38,18 @@ async def test_mute_clears_after_reset():
 
 
 @pytest.mark.asyncio
+async def test_runtime_override_tightens_rate():
+    # Service constructed permissively, but a live (runtime) override of rate=2
+    # must take effect on the very next check — proves settings apply without a
+    # restart of the singleton.
+    svc = CooldownService(rate=100, window=60, mute_seconds=5)
+    assert (await svc.check(1, rate=2, window=60, mute=5)).allowed
+    assert (await svc.check(1, rate=2, window=60, mute=5)).allowed
+    blocked = await svc.check(1, rate=2, window=60, mute=5)
+    assert not blocked.allowed
+
+
+@pytest.mark.asyncio
 async def test_strikes_isolated_per_user():
     svc = CooldownService(rate=2, window=60, mute_seconds=30)
     for _ in range(2):

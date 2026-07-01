@@ -32,7 +32,20 @@ class CooldownService:
     _strikes: dict[int, deque[float]] = field(default_factory=lambda: defaultdict(deque))
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
-    async def check(self, user_id: int) -> BucketDecision:
+    async def check(
+        self,
+        user_id: int,
+        *,
+        rate: int | None = None,
+        window: int | None = None,
+        mute: int | None = None,
+    ) -> BucketDecision:
+        """Rate-limit check. Callers may pass live (runtime) rate/window/mute to
+        override the boot-time defaults, so admins can tune anti-spam without a
+        restart."""
+        rate = rate if rate is not None else self.rate
+        window = window if window is not None else self.window
+        mute = mute if mute is not None else self.mute_seconds
         async with self._lock:
             now = time.monotonic()
             # Honour an active mute first.
@@ -41,19 +54,19 @@ class CooldownService:
                 return BucketDecision(False, retry_after=int(muted_until - now) + 1)
 
             events = self._events[user_id]
-            cutoff = now - self.window
+            cutoff = now - window
             while events and events[0] < cutoff:
                 events.popleft()
 
-            if len(events) >= self.rate:
-                self._muted_until[user_id] = now + self.mute_seconds
+            if len(events) >= rate:
+                self._muted_until[user_id] = now + mute
                 events.clear()
                 strikes = self._strikes[user_id]
                 strikes.append(now)
                 strike_cutoff = now - 3600
                 while strikes and strikes[0] < strike_cutoff:
                     strikes.popleft()
-                return BucketDecision(False, retry_after=self.mute_seconds)
+                return BucketDecision(False, retry_after=mute)
 
             events.append(now)
             return BucketDecision(True)
