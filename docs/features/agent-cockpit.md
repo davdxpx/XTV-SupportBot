@@ -77,6 +77,16 @@ Returns:
 📝 Internal note added (3 total — hidden from the customer).
 ```
 
+## Two-way conversation
+
+A ticket's forum topic mirrors the full conversation. When the user keeps
+writing — from the bot chat **or** the Mini-App / web console — each message is
+appended to the ticket history *and* posted into the topic, so agents see
+everything in one place. Closing from the web console also closes the topic and
+notifies the user, identical to closing from the bot. Agents reply from the
+topic side (their own messages in a private chat are not treated as ticket
+replies).
+
 ## Customer history card
 
 When a new topic is created for a user with a history

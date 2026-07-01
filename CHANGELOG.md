@@ -6,6 +6,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Web ticket replies and closes never reached the supergroup:** `POST /api/v1/me/tickets/{id}/reply` only wrote to the database and `…/close` only flipped the status — neither touched the ticket's forum topic. Both now go through the shared ticket service (bot `Client` resolved from the container), so a web reply is posted into the topic and a web close also closes the topic and notifies the user, exactly like the bot. Both degrade gracefully (bare DB write + warning) on an API-only deploy.
+
 ### Added
 - **Account & profile menu + mobile bottom bar in the admin console:** the sidebar footer is now a logged-in account chip (avatar from Telegram photo or coloured initials, name, role — a key glyph for legacy API-key sessions) that opens a dropdown with a **theme switch** (Auto / Light / Dark, persisted), quick links, **Account settings**, and **Log out**, replacing the bare disconnect button. The new **Account** page shows identity + theme and lets account users **change their password** (`POST /api/v1/auth/change-password`, which verifies the current password and signs out all other devices). On phones the cut-off icon rail is replaced by a proper **bottom navigation bar** (primary tabs + a full-navigation sheet + profile), respecting the safe-area inset. `GET /api/v1/me` now also reports `auth_method`.
 - **Broadcast management in the web console:** a new **Broadcast** page (owner/admin only) to compose and send a message to every active user, watch live progress, and cancel a running broadcast — bringing the bot's broadcast surface to the admin SPA via new `/api/v1/broadcasts/*` routes. Sending reuses the existing one-at-a-time, FloodWait-aware `BroadcastManager` and is guarded behind a type-`SEND` confirmation.
