@@ -6,6 +6,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **Ticket header controls stay in one message (chat cleanliness):** pressing Assign / Tag / Priority on a ticket's header card now swaps that card's own buttons to the picker in place instead of posting (and later deleting) a throwaway message. Picking an option re-renders the header and restores the default action row. **Close** now asks for confirmation first (✅ Confirm close / ◀ Back) inside the same message before closing the ticket + topic.
+
 ### Fixed
 - **Web ticket replies and closes never reached the supergroup:** `POST /api/v1/me/tickets/{id}/reply` only wrote to the database and `…/close` only flipped the status — neither touched the ticket's forum topic. Both now go through the shared ticket service (bot `Client` resolved from the container), so a web reply is posted into the topic and a web close also closes the topic and notifies the user, exactly like the bot. Both degrade gracefully (bare DB write + warning) on an API-only deploy.
 

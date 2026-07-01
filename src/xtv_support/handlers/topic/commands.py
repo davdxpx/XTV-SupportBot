@@ -9,43 +9,18 @@ from xtv_support.core.constants import CallbackPrefix, HandlerGroup
 from xtv_support.core.context import get_context
 from xtv_support.core.filters import cb_prefix, is_admin_forum_topic, is_admin_user
 from xtv_support.core.logger import get_logger
-from xtv_support.infrastructure.db import projects as projects_repo
 from xtv_support.infrastructure.db import tags as tags_repo
 from xtv_support.infrastructure.db import tickets as tickets_repo
-from xtv_support.infrastructure.db import users as users_repo
 from xtv_support.middlewares.admin_guard import require_admin
 from xtv_support.services.tickets import topic_service
+from xtv_support.ui.templates.ticket_header import confirm_close_rows, priority_rows
 from xtv_support.utils.ids import safe_objectid
 
 log = get_logger("topic.commands")
 
 
 async def _rerender(client: Client, ctx, ticket: dict) -> None:
-    project = None
-    if ticket.get("project_id"):
-        project = await projects_repo.get(ctx.db, ticket["project_id"])
-    user_name = str(ticket["user_id"])
-    try:
-        u = await client.get_users(ticket["user_id"])
-        user_name = u.first_name or user_name
-    except Exception:  # noqa: BLE001
-        pass
-    assignee_name = None
-    if ticket.get("assignee_id"):
-        try:
-            a = await client.get_users(ticket["assignee_id"])
-            assignee_name = a.first_name or f"Admin {ticket['assignee_id']}"
-        except Exception:  # noqa: BLE001
-            assignee_name = f"Admin {ticket['assignee_id']}"
-    await topic_service.rerender_header(
-        client,
-        ctx.db,
-        ticket=ticket,
-        project=project,
-        user_name=user_name,
-        username=(await users_repo.get(ctx.db, ticket["user_id"]) or {}).get("username"),
-        assignee_name=assignee_name,
-    )
+    await topic_service.rerender_ticket_header(client, ctx.db, ticket=ticket)
 
 
 @Client.on_message(
@@ -129,21 +104,9 @@ async def open_priority_picker(client: Client, callback: CallbackQuery) -> None:
     if oid is None:
         await callback.answer("Invalid.", show_alert=True)
         return
-    from xtv_support.ui.keyboards.base import btn, rows
-
-    keyboard = rows(
-        [
-            btn("Low", f"{CallbackPrefix.TICKET_PRIORITY_PICK}|{ticket_id}|low"),
-            btn("Normal", f"{CallbackPrefix.TICKET_PRIORITY_PICK}|{ticket_id}|normal"),
-            btn("High", f"{CallbackPrefix.TICKET_PRIORITY_PICK}|{ticket_id}|high"),
-        ],
-    )
+    # Swap the header keyboard to the priority picker in place.
     try:
-        await callback.message.reply_text(
-            f"⚡ <b>Priority</b> for #{ticket_id[-6:]}",
-            parse_mode=ParseMode.HTML,
-            reply_markup=keyboard,
-        )
+        await callback.message.edit_reply_markup(reply_markup=priority_rows(ticket_id))
     except Exception as exc:  # noqa: BLE001
         log.warning("priority.picker_failed", error=str(exc))
     await callback.answer()
@@ -165,15 +128,49 @@ async def priority_pick(client: Client, callback: CallbackQuery) -> None:
     ticket = await tickets_repo.get(ctx.db, oid)
     if ticket:
         await _rerender(client, ctx, ticket)
-    try:
-        await callback.message.delete()
-    except Exception:  # noqa: BLE001
-        pass
     await callback.answer("Saved.")
+
+
+@Client.on_callback_query(cb_prefix(CallbackPrefix.TICKET_ACTIONS))
+async def back_to_actions(client: Client, callback: CallbackQuery) -> None:
+    """◀ Back / Done from any picker — re-render the header to its default state."""
+    await require_admin(callback)
+    ctx = get_context(client)
+    _, ticket_id = callback.data.split("|", 1)
+    oid = safe_objectid(ticket_id)
+    if oid is None:
+        await callback.answer()
+        return
+    ticket = await tickets_repo.get(ctx.db, oid)
+    if ticket:
+        await _rerender(client, ctx, ticket)
+    await callback.answer()
 
 
 @Client.on_callback_query(cb_prefix(CallbackPrefix.TICKET_CLOSE))
 async def close_button(client: Client, callback: CallbackQuery) -> None:
+    """First press: ask for confirmation inside the header message."""
+    await require_admin(callback)
+    ctx = get_context(client)
+    _, ticket_id = callback.data.split("|", 1)
+    oid = safe_objectid(ticket_id)
+    if oid is None:
+        await callback.answer()
+        return
+    ticket = await tickets_repo.get(ctx.db, oid)
+    if not ticket or ticket.get("status") != "open":
+        await callback.answer("Already closed.", show_alert=True)
+        return
+    try:
+        await callback.message.edit_reply_markup(reply_markup=confirm_close_rows(ticket_id))
+    except Exception as exc:  # noqa: BLE001
+        log.warning("close.confirm_failed", error=str(exc))
+    await callback.answer()
+
+
+@Client.on_callback_query(cb_prefix(CallbackPrefix.TICKET_CLOSE_CONFIRM))
+async def close_confirm(client: Client, callback: CallbackQuery) -> None:
+    """Second press: actually close the ticket + topic and re-render the header."""
     await require_admin(callback)
     ctx = get_context(client)
     _, ticket_id = callback.data.split("|", 1)
@@ -195,6 +192,10 @@ async def close_button(client: Client, callback: CallbackQuery) -> None:
         reason="header_button",
         notify_user=True,
     )
+    # Re-render to the closed state (no buttons) in the same message.
+    fresh = await tickets_repo.get(ctx.db, oid)
+    if fresh:
+        await _rerender(client, ctx, fresh)
     await callback.answer("Closed.")
 
 

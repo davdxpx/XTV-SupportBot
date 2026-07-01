@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from pyrogram import Client
-from pyrogram.enums import ParseMode
-from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
+from pyrogram.types import CallbackQuery
 
 from xtv_support.core.callback_data import CbTagToggle
 from xtv_support.core.constants import CallbackPrefix, UserState
@@ -10,15 +9,13 @@ from xtv_support.core.context import get_context
 from xtv_support.core.filters import cb_prefix
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.db import audit as audit_repo
-from xtv_support.infrastructure.db import projects as projects_repo
 from xtv_support.infrastructure.db import tags as tags_repo
 from xtv_support.infrastructure.db import tickets as tickets_repo
 from xtv_support.infrastructure.db import users as users_repo
 from xtv_support.middlewares.admin_guard import require_admin
-from xtv_support.services.tickets import topic_service
-from xtv_support.ui.keyboards.base import btn, chunk
 from xtv_support.ui.primitives.card import Card, edit_card
 from xtv_support.ui.templates import admin_dashboard
+from xtv_support.ui.templates.ticket_header import tag_rows
 from xtv_support.utils.ids import safe_objectid
 
 log = get_logger("admin.tags")
@@ -90,22 +87,10 @@ async def open_tag_picker(client: Client, callback: CallbackQuery) -> None:
         await callback.answer("Create tags first via /admin › Tags.", show_alert=True)
         return
     current = set(ticket.get("tags") or [])
-    buttons = []
-    for t in tags:
-        marker = "✓ " if t["name"] in current else "• "
-        buttons.append(
-            btn(
-                f"{marker}#{t['name']}",
-                f"{CallbackPrefix.TICKET_TAG_TOGGLE}|{ticket_id}|{t['name']}",
-            )
-        )
-    keyboard = InlineKeyboardMarkup(chunk(buttons, per_row=2))
+    names = [t["name"] for t in tags]
+    # Swap the header keyboard to the tag toggles in place — no new message.
     try:
-        await callback.message.reply_text(
-            f"🏷 <b>Toggle tags</b> for #{ticket_id[-6:]}",
-            parse_mode=ParseMode.HTML,
-            reply_markup=keyboard,
-        )
+        await callback.message.edit_reply_markup(reply_markup=tag_rows(ticket_id, names, current))
     except Exception as exc:  # noqa: BLE001
         log.warning("tag.picker_failed", error=str(exc))
     await callback.answer()
@@ -129,26 +114,17 @@ async def tag_toggle(client: Client, callback: CallbackQuery) -> None:
         target_id=str(oid),
         payload={"tag": cb.tag},
     )
+    # Keep the picker open (multi-select) with refreshed ✓ markers; the header
+    # body's Tags line is re-rendered when the admin taps Done (TICKET_ACTIONS).
     ticket = await tickets_repo.get(ctx.db, oid)
-    project = None
-    if ticket and ticket.get("project_id"):
-        project = await projects_repo.get(ctx.db, ticket["project_id"])
-    if ticket:
-        user_name = str(ticket.get("user_id"))
-        try:
-            u = await client.get_users(ticket["user_id"])
-            user_name = u.first_name or user_name
-        except Exception:  # noqa: BLE001
-            pass
-        await topic_service.rerender_header(
-            client,
-            ctx.db,
-            ticket=ticket,
-            project=project,
-            user_name=user_name,
-            username=(await users_repo.get(ctx.db, ticket["user_id"]) or {}).get("username"),
-            assignee_name=None,
+    tags = await tags_repo.list_all(ctx.db)
+    current = set((ticket or {}).get("tags") or [])
+    try:
+        await callback.message.edit_reply_markup(
+            reply_markup=tag_rows(cb.ticket_id, [t["name"] for t in tags], current)
         )
+    except Exception as exc:  # noqa: BLE001
+        log.warning("tag.toggle_refresh_failed", error=str(exc))
     await callback.answer("Updated.")
 
 

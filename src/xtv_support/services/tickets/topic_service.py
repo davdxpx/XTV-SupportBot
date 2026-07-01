@@ -14,7 +14,9 @@ from xtv_support.config.settings import settings
 from xtv_support.core.context import get_context
 from xtv_support.core.errors import TopicCreationError, TopicsNotSupported
 from xtv_support.core.logger import get_logger
+from xtv_support.infrastructure.db import projects as projects_repo
 from xtv_support.infrastructure.db import tickets as tickets_repo
+from xtv_support.infrastructure.db import users as users_repo
 from xtv_support.services.external_directory.accessors import get_user_signal_for
 from xtv_support.ui.primitives.card import edit_card, send_card
 from xtv_support.ui.templates.ticket_header import render as render_header
@@ -272,6 +274,43 @@ async def rerender_header(
         await edit_card(client, settings.ADMIN_CHANNEL_ID, header_msg_id, card)
     except RPCError as exc:
         log.warning("topic.header_edit_failed", error=str(exc))
+
+
+async def rerender_ticket_header(
+    client: Client, db: AsyncIOMotorDatabase, *, ticket: dict[str, Any]
+) -> None:
+    """Resolve project/user/assignee names and re-render the header in place.
+
+    Convenience over :func:`rerender_header` so callbacks don't each repeat the
+    same lookups. Restores the default action row for open tickets (and no
+    buttons once closed).
+    """
+    project = None
+    if ticket.get("project_id"):
+        project = await projects_repo.get(db, ticket["project_id"])
+    user_name = str(ticket["user_id"])
+    try:
+        u = await client.get_users(ticket["user_id"])
+        user_name = u.first_name or user_name
+    except Exception:  # noqa: BLE001
+        pass
+    assignee_name = None
+    if ticket.get("assignee_id"):
+        try:
+            a = await client.get_users(ticket["assignee_id"])
+            assignee_name = a.first_name or f"Admin {ticket['assignee_id']}"
+        except Exception:  # noqa: BLE001
+            assignee_name = f"Admin {ticket['assignee_id']}"
+    username = (await users_repo.get(db, ticket["user_id"]) or {}).get("username")
+    await rerender_header(
+        client,
+        db,
+        ticket=ticket,
+        project=project,
+        user_name=user_name,
+        username=username,
+        assignee_name=assignee_name,
+    )
 
 
 async def send_to_topic_or_fallback(

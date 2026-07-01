@@ -53,6 +53,16 @@ Every bulk action goes through the shared
 - Failures don't abort the batch — you get a count back
   (`Bulk close: 4 ok, 1 failed`)
 
+## Header controls
+
+The ticket header card carries **Assign · Tag · Priority · Close**. Each acts
+*inside the header message itself* — tapping Assign/Tag/Priority swaps the card's
+buttons to the relevant picker (with a ◀ Back / ✅ Done button), and choosing an
+option re-renders the header in place. Nothing is posted or deleted around it, so
+the topic stays clean. **Close** shows a ✅ Confirm close / ◀ Back step before it
+closes the ticket and its forum topic. The `/tag`, `/assign` topic commands still
+work as power-user shortcuts.
+
 ## `/note <text>`
 
 Inside a ticket topic thread, appends an internal note to the ticket's
