@@ -79,6 +79,12 @@ def task(monkeypatch):
 
     from xtv_support.tasks import topic_cleanup_task
 
+    # Rebind the name the task actually uses. The sys.modules stub above is
+    # enough in the sandbox (real topic_service never imported), but on CI the
+    # real module is already imported, so ``from ... import topic_service``
+    # resolves to it via the package attribute — patch the bound reference too.
+    monkeypatch.setattr(topic_cleanup_task, "topic_service", fake_ts)
+
     yield topic_cleanup_task, deleted
 
     runtime.invalidate()
