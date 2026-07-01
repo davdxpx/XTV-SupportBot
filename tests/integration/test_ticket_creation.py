@@ -129,3 +129,86 @@ def test_web_ticket_delegates_to_shared_service(env, monkeypatch) -> None:
 def test_stats_endpoint_requires_scope(env) -> None:
     client, _ = env
     assert client.get("/api/v1/tickets/stats").status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Web reply / close must relay to the supergroup topic via the shared service.
+# ---------------------------------------------------------------------------
+def _make_open_ticket(db, uid: int) -> str:
+    from xtv_support.infrastructure.db import tickets as tr
+
+    tid = _run(tr.create(db, project_id=None, user_id=uid, message="first"))
+    return str(tid)
+
+
+def test_web_reply_delegates_to_service(env, monkeypatch) -> None:
+    client, db = env
+    tid = _make_open_ticket(db, 555)
+
+    calls: list[dict] = []
+    stub = types.ModuleType("xtv_support.services.tickets.service")
+
+    async def append_user_reply_text(_client, _db, **kw):  # noqa: ANN001
+        calls.append(kw)
+
+    stub.append_user_reply_text = append_user_reply_text
+    monkeypatch.setitem(sys.modules, "xtv_support.services.tickets.service", stub)
+    from xtv_support.api.routes import me as me_routes
+
+    monkeypatch.setattr(me_routes, "_resolve_bot_client", lambda request: object())
+
+    r = client.post(
+        f"/api/v1/me/tickets/{tid}/reply",
+        headers={"X-Telegram-Init-Data": _init_data(555)},
+        json={"message": "another detail"},
+    )
+    assert r.status_code == 200, r.text
+    assert len(calls) == 1
+    assert calls[0]["text"] == "another detail"
+    assert str(calls[0]["ticket"]["_id"]) == tid
+
+
+def test_web_reply_fallback_appends_history_when_no_client(env, monkeypatch) -> None:
+    client, db = env
+    tid = _make_open_ticket(db, 555)
+    from xtv_support.api.routes import me as me_routes
+
+    monkeypatch.setattr(me_routes, "_resolve_bot_client", lambda request: None)
+
+    r = client.post(
+        f"/api/v1/me/tickets/{tid}/reply",
+        headers={"X-Telegram-Init-Data": _init_data(555)},
+        json={"message": "offline reply"},
+    )
+    assert r.status_code == 200, r.text
+    from xtv_support.infrastructure.db import tickets as tr
+
+    doc = _run(tr.get(db, tid))
+    assert any(h.get("text") == "offline reply" for h in (doc.get("history") or []))
+
+
+def test_web_close_delegates_to_service(env, monkeypatch) -> None:
+    client, db = env
+    tid = _make_open_ticket(db, 555)
+
+    calls: list[dict] = []
+    stub = types.ModuleType("xtv_support.services.tickets.service")
+
+    async def close_ticket(_client, _db, **kw):  # noqa: ANN001
+        calls.append(kw)
+
+    stub.close_ticket = close_ticket
+    monkeypatch.setitem(sys.modules, "xtv_support.services.tickets.service", stub)
+    from xtv_support.api.routes import me as me_routes
+
+    monkeypatch.setattr(me_routes, "_resolve_bot_client", lambda request: object())
+
+    r = client.post(
+        f"/api/v1/me/tickets/{tid}/close",
+        headers={"X-Telegram-Init-Data": _init_data(555)},
+        json={},
+    )
+    assert r.status_code == 200, r.text
+    assert len(calls) == 1
+    assert calls[0]["closed_by"] == 555
+    assert str(calls[0]["ticket"]["_id"]) == tid

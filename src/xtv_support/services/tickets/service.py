@@ -168,7 +168,27 @@ async def append_user_reply(
     ticket: dict[str, Any],
     message: Message,
 ) -> None:
+    """Bot adapter — extract the pyrogram message and delegate to the core."""
     text, media_type, file_id = _extract_message(message)
+    await append_user_reply_text(
+        client, db, ticket=ticket, text=text, media_type=media_type, file_id=file_id
+    )
+
+
+async def append_user_reply_text(
+    client: Client,
+    db: AsyncIOMotorDatabase,
+    *,
+    ticket: dict[str, Any],
+    text: str,
+    media_type: str = "text",
+    file_id: str | None = None,
+) -> None:
+    """Path-agnostic core: record a user reply and post it into the ticket topic.
+
+    Shared by the bot (via :func:`append_user_reply`) and the web/Mini-App reply
+    route so both keep the supergroup topic in sync with the DB history.
+    """
     await tickets_repo.append_history(
         db,
         ticket["_id"],

@@ -346,6 +346,7 @@ def build_router() -> APIRouter:
 
     @router.post("/tickets/{ticket_id}/reply")
     async def reply_my_ticket(
+        request: Request,
         ticket_id: str,
         user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(...),
@@ -361,17 +362,23 @@ def build_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="ticket_not_found")
         if doc.get("status") != "open":
             raise HTTPException(status_code=409, detail="ticket_closed")
-        await tickets_repo.append_history(
-            db,
-            doc["_id"],
-            sender="user",
-            text=text,
-        )
+        # Post into the supergroup topic through the shared service so the web
+        # reply shows up for agents exactly like a bot reply. Degrade to a bare
+        # history append when no bot Client is available (API-only deploy).
+        client = _resolve_bot_client(request)
+        if client is not None:
+            from xtv_support.services.tickets import service as ticket_service
+
+            await ticket_service.append_user_reply_text(client, db, ticket=doc, text=text)
+        else:
+            _log.warning("api.me.reply_no_client", ticket_id=ticket_id, user_id=user.id)
+            await tickets_repo.append_history(db, doc["_id"], sender="user", text=text)
         _log.info("api.me.ticket_reply", ticket_id=ticket_id, user_id=user.id)
         return {"ok": True}
 
     @router.post("/tickets/{ticket_id}/close")
     async def close_my_ticket(
+        request: Request,
         ticket_id: str,
         user: TelegramUser = Depends(current_tg_user),
         body: dict = Body(default_factory=dict),
@@ -383,7 +390,18 @@ def build_router() -> APIRouter:
         if doc.get("status") != "open":
             return {"ok": True, "already_closed": True}
         reason = (body.get("reason") or "").strip() or "self_closed"
-        await tickets_repo.close(db, doc["_id"], closed_by=user.id, reason=reason)
+        # Close through the service so the forum topic is closed and the user is
+        # notified, matching the bot. Degrade to a bare DB close with no client.
+        client = _resolve_bot_client(request)
+        if client is not None:
+            from xtv_support.services.tickets import service as ticket_service
+
+            await ticket_service.close_ticket(
+                client, db, ticket=doc, closed_by=user.id, reason=reason, notify_user=True
+            )
+        else:
+            _log.warning("api.me.close_no_client", ticket_id=ticket_id, user_id=user.id)
+            await tickets_repo.close(db, doc["_id"], closed_by=user.id, reason=reason)
         _log.info("api.me.ticket_closed", ticket_id=ticket_id, user_id=user.id)
         return {"ok": True}
 
