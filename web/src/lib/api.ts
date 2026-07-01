@@ -374,6 +374,28 @@ export const listBroadcasts = () => api<BroadcastsResponse>('/api/v1/broadcasts'
 export const createBroadcast = (text: string) =>
   api<{ ok: boolean; id: string }>('/api/v1/broadcasts', { method: 'POST', body: JSON.stringify({ text }) });
 export const cancelBroadcast = () => api('/api/v1/broadcasts/cancel', { method: 'POST' });
+
+// ---------- Runtime settings --------------------------------------------
+export interface SettingItem {
+  key: string;
+  type: 'int' | 'str' | 'choice';
+  section: string;
+  label: string;
+  help: string;
+  min: number | null;
+  max: number | null;
+  choices: string[] | null;
+  value: string | number;
+  default: string | number;
+  overridden: boolean;
+}
+export interface SettingsResponse {
+  items: SettingItem[];
+}
+
+export const getSettings = () => api<SettingsResponse>('/api/v1/settings');
+export const patchSettings = (patch: Record<string, string | number>) =>
+  api<SettingsResponse>('/api/v1/settings', { method: 'PATCH', body: JSON.stringify(patch) });
 export const disableAccount = (id: string) =>
   api(`/api/v1/auth/accounts/${id}/disable`, { method: 'POST' });
 export const enableAccount = (id: string) =>

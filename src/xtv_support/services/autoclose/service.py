@@ -6,7 +6,7 @@ from typing import Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pyrogram import Client
 
-from xtv_support.config.settings import settings
+from xtv_support.config.runtime import get_runtime
 from xtv_support.core.logger import get_logger
 from xtv_support.infrastructure.db import tickets as tickets_repo
 from xtv_support.services.tickets import topic_service
@@ -18,14 +18,14 @@ log = get_logger("autoclose")
 
 
 async def sweep(client: Client, db: AsyncIOMotorDatabase) -> int:
-    threshold = timedelta(days=settings.AUTO_CLOSE_DAYS)
-    stale = await tickets_repo.find_stale(db, threshold=threshold)
+    days = (await get_runtime(db)).AUTO_CLOSE_DAYS
+    stale = await tickets_repo.find_stale(db, threshold=timedelta(days=days))
     if not stale:
         return 0
     closed = 0
     for ticket in stale:
         try:
-            await _close_one(client, db, ticket)
+            await _close_one(client, db, ticket, days=days)
             closed += 1
         except Exception as exc:  # noqa: BLE001
             log.warning("autoclose.failed", ticket=str(ticket["_id"]), error=str(exc))
@@ -33,7 +33,9 @@ async def sweep(client: Client, db: AsyncIOMotorDatabase) -> int:
     return closed
 
 
-async def _close_one(client: Client, db: AsyncIOMotorDatabase, ticket: dict[str, Any]) -> None:
+async def _close_one(
+    client: Client, db: AsyncIOMotorDatabase, ticket: dict[str, Any], *, days: int
+) -> None:
     short = short_ticket_id(ticket["_id"])
     await tickets_repo.close(db, ticket["_id"], closed_by=None, reason="auto_inactive")
     topic_id = ticket.get("topic_id")
@@ -43,7 +45,7 @@ async def _close_one(client: Client, db: AsyncIOMotorDatabase, ticket: dict[str,
         await send_card(
             client,
             ticket["user_id"],
-            user_messages.auto_closed_card(short, settings.AUTO_CLOSE_DAYS),
+            user_messages.auto_closed_card(short, days),
         )
     except Exception as exc:  # noqa: BLE001
         log.debug("autoclose.notify_failed", user_id=ticket["user_id"], error=str(exc))

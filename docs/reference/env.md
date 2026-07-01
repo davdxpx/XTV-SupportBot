@@ -39,6 +39,13 @@ tidy. Set `0` to disable (topics are only closed, never deleted).
 `TOPIC_CLEANUP_SWEEP_MINUTES` (default `15`) — how often the cleanup sweeper
 runs.
 
+!!! tip "Runtime-editable"
+    The operational knobs in the **SLA / auto-close / cooldown**, **Topic
+    lifecycle**, **Broadcast** and branding groups are also editable live from
+    the admin console **Settings** page (and `PATCH /api/v1/settings`) without a
+    redeploy — the env value is just the default. Secrets and infrastructure
+    settings stay env-only.
+
 ## i18n
 
 `DEFAULT_LANG` (default `en`).

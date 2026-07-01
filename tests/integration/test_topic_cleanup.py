@@ -73,10 +73,15 @@ def task(monkeypatch):
     monkeypatch.setitem(sys.modules, "xtv_support.services.tickets.topic_service", fake_ts)
     monkeypatch.delitem(sys.modules, "xtv_support.tasks.topic_cleanup_task", raising=False)
 
+    from xtv_support.config import runtime
+
+    runtime.invalidate()  # don't inherit another test's cached overrides
+
     from xtv_support.tasks import topic_cleanup_task
 
     yield topic_cleanup_task, deleted
 
+    runtime.invalidate()
     # Drop the fake-bound module so a later test re-imports it against the real
     # pyrogram / topic service (matters on CI, where both are installed).
     sys.modules.pop("xtv_support.tasks.topic_cleanup_task", None)
