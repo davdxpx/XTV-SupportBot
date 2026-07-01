@@ -7,6 +7,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
+- **Closed ticket topics are auto-deleted (keeps the supergroup tidy):** a background sweeper deletes a ticket's forum topic once it has been closed for `TOPIC_DELETE_AFTER_CLOSE_MINUTES` (default 1440 = 24h; set `0` to disable). Closing still happens immediately; only the eventual deletion is delayed and configurable.
 - **Ticket header controls stay in one message (chat cleanliness):** pressing Assign / Tag / Priority on a ticket's header card now swaps that card's own buttons to the picker in place instead of posting (and later deleting) a throwaway message. Picking an option re-renders the header and restores the default action row. **Close** now asks for confirmation first (✅ Confirm close / ◀ Back) inside the same message before closing the ticket + topic.
 
 ### Fixed

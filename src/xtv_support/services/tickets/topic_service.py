@@ -246,6 +246,38 @@ async def close_topic(client: Client, topic_id: int) -> None:
         log.warning("topic.close_failed", topic_id=topic_id, error=str(exc))
 
 
+async def _delete_forum_topic_raw(client: Client, topic_id: int) -> None:
+    cls = _find_raw_class("DeleteTopicHistory")
+    if cls is None:
+        raise TopicCreationError("Pyrofork has no DeleteTopicHistory")
+
+    params = _class_params(cls)
+    peer_key, peer_value = await _peer_kwarg(client, params)
+    kwargs: dict[str, Any] = {peer_key: peer_value, "top_msg_id": topic_id}
+
+    log.debug(
+        "topic.raw.delete",
+        cls=f"{cls.__module__}.{cls.__name__}",
+        peer_key=peer_key,
+    )
+    await client.invoke(cls(**kwargs))
+
+
+async def delete_topic(client: Client, topic_id: int) -> bool:
+    """Delete a forum topic (and its history). Returns True on success.
+
+    Used by the cleanup sweeper to purge topics of long-closed tickets so the
+    admin supergroup doesn't fill up. Per
+    https://core.telegram.org/method/channels.deleteTopicHistory.
+    """
+    try:
+        await _delete_forum_topic_raw(client, topic_id)
+        return True
+    except (RPCError, TopicCreationError) as exc:
+        log.warning("topic.delete_failed", topic_id=topic_id, error=str(exc))
+        return False
+
+
 async def rerender_header(
     client: Client,
     db: AsyncIOMotorDatabase,

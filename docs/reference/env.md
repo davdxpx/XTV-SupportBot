@@ -31,6 +31,14 @@ This page groups variables by purpose.
 `AUTO_CLOSE_SWEEP_MINUTES`, `COOLDOWN_RATE`, `COOLDOWN_WINDOW`,
 `COOLDOWN_MUTE_SECONDS`.
 
+## Topic lifecycle
+
+`TOPIC_DELETE_AFTER_CLOSE_MINUTES` (default `1440` = 24h) — how long after a
+ticket is closed its forum topic is auto-deleted, to keep the admin supergroup
+tidy. Set `0` to disable (topics are only closed, never deleted).
+`TOPIC_CLEANUP_SWEEP_MINUTES` (default `15`) — how often the cleanup sweeper
+runs.
+
 ## i18n
 
 `DEFAULT_LANG` (default `en`).
