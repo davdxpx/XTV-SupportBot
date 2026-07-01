@@ -253,6 +253,29 @@ async def find_sla_breached(db: AsyncIOMotorDatabase) -> list[dict[str, Any]]:
     return [doc async for doc in cursor]
 
 
+async def find_closed_topics_before(
+    db: AsyncIOMotorDatabase, *, threshold: timedelta
+) -> list[dict[str, Any]]:
+    """Closed tickets whose forum topic is still around and old enough to purge."""
+    cutoff = utcnow() - threshold
+    cursor = db.tickets.find(
+        {
+            "status": "closed",
+            "topic_id": {"$ne": None},
+            "closed_at": {"$ne": None, "$lt": cutoff},
+        }
+    )
+    return [doc async for doc in cursor]
+
+
+async def clear_topic(db: AsyncIOMotorDatabase, ticket_id: ObjectId) -> None:
+    """Forget a ticket's forum topic after it's been deleted from Telegram."""
+    await db.tickets.update_one(
+        {"_id": ticket_id},
+        {"$set": {"topic_id": None, "topic_deleted_at": utcnow()}},
+    )
+
+
 async def find_stale(db: AsyncIOMotorDatabase, *, threshold: timedelta) -> list[dict[str, Any]]:
     cutoff = utcnow() - threshold
     cursor = db.tickets.find(

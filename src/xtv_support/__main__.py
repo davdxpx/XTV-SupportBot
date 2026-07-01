@@ -20,7 +20,7 @@ from xtv_support.config.settings import settings
 from xtv_support.core.bootstrap import build_client, build_context, shutdown
 from xtv_support.core.logger import configure_logging, get_logger
 from xtv_support.core.router import register_all
-from xtv_support.tasks import autoclose_task, sla_task
+from xtv_support.tasks import autoclose_task, sla_task, topic_cleanup_task
 from xtv_support.tasks.sla_task import SLA_LOOP_SECONDS
 
 
@@ -108,6 +108,12 @@ async def _amain() -> None:
             name="autoclose_loop",
             interval=max(60, ctx.settings.AUTO_CLOSE_SWEEP_MINUTES * 60),
         )
+        if ctx.settings.TOPIC_DELETE_AFTER_CLOSE_MINUTES > 0:
+            ctx.tasks.run_loop(
+                lambda: topic_cleanup_task.run_once(client, ctx.db),
+                name="topic_cleanup_loop",
+                interval=max(60, ctx.settings.TOPIC_CLEANUP_SWEEP_MINUTES * 60),
+            )
 
         if settings.API_ENABLED:
             api_server = await _start_api(ctx)

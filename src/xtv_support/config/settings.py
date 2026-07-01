@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     AUTO_CLOSE_DAYS: int = 7
     AUTO_CLOSE_SWEEP_MINUTES: int = 10
 
+    # --- Topic lifecycle ---
+    # Delete a ticket's forum topic this many minutes after it's closed, to keep
+    # the admin supergroup tidy. 0 disables (topics are only closed, never
+    # deleted). Default 1440 = 24h.
+    TOPIC_DELETE_AFTER_CLOSE_MINUTES: int = 1440
+    TOPIC_CLEANUP_SWEEP_MINUTES: int = 15
+
     # --- Anti-spam ---
     COOLDOWN_RATE: int = 10
     COOLDOWN_WINDOW: int = 60
