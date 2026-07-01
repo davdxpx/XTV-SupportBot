@@ -117,11 +117,69 @@ def render(
 def _buttons(ticket_id: str, status: str) -> InlineKeyboardMarkup | None:
     if status != "open":
         return None
+    return action_rows(ticket_id)
+
+
+# ---------------------------------------------------------------------------
+# Header keyboards. All pickers live inside the single header message and end
+# in a Back button so the whole conversation stays in one message (chat
+# cleanliness). Builders take plain data so they're unit-testable.
+# ---------------------------------------------------------------------------
+def _back_btn(ticket_id: str):
+    return btn("◀ Back", f"{CallbackPrefix.TICKET_ACTIONS}|{ticket_id}")
+
+
+def action_rows(ticket_id: str) -> InlineKeyboardMarkup:
+    """The default 2×2 action row shown on an open ticket header."""
     assign = btn("👨‍💻 Assign", f"{CallbackPrefix.TICKET_ASSIGN}|{ticket_id}")
     tag = btn("🏷 Tag", f"{CallbackPrefix.TICKET_TAG}|{ticket_id}")
     priority = btn("⚡ Priority", f"{CallbackPrefix.TICKET_PRIORITY}|{ticket_id}")
     close = btn("🔒 Close", f"{CallbackPrefix.TICKET_CLOSE}|{ticket_id}")
     return rows([assign, tag], [priority, close])
+
+
+def assign_rows(ticket_id: str, admins: list[tuple[str, int]]) -> InlineKeyboardMarkup:
+    """Assignee picker: one button per admin + Unassign + Back."""
+    picks = [
+        btn(label, f"{CallbackPrefix.TICKET_ASSIGN_PICK}|{ticket_id}|{admin_id}")
+        for label, admin_id in admins
+    ]
+    picks.append(btn("Unassign", f"{CallbackPrefix.TICKET_ASSIGN_PICK}|{ticket_id}|0"))
+    body = [picks[i : i + 2] for i in range(0, len(picks), 2)]
+    body.append([_back_btn(ticket_id)])
+    return rows(*body)
+
+
+def tag_rows(ticket_id: str, tags: list[str], current: set[str]) -> InlineKeyboardMarkup:
+    """Tag toggles (✓ when set) + Back. Multi-select: stays open between taps."""
+    picks = [
+        btn(
+            f"{'✓ ' if name in current else '• '}#{name}",
+            f"{CallbackPrefix.TICKET_TAG_TOGGLE}|{ticket_id}|{name}",
+        )
+        for name in tags
+    ]
+    body = [picks[i : i + 2] for i in range(0, len(picks), 2)]
+    body.append([btn("✅ Done", f"{CallbackPrefix.TICKET_ACTIONS}|{ticket_id}")])
+    return rows(*body)
+
+
+def priority_rows(ticket_id: str) -> InlineKeyboardMarkup:
+    return rows(
+        [
+            btn("Low", f"{CallbackPrefix.TICKET_PRIORITY_PICK}|{ticket_id}|low"),
+            btn("Normal", f"{CallbackPrefix.TICKET_PRIORITY_PICK}|{ticket_id}|normal"),
+            btn("High", f"{CallbackPrefix.TICKET_PRIORITY_PICK}|{ticket_id}|high"),
+        ],
+        [_back_btn(ticket_id)],
+    )
+
+
+def confirm_close_rows(ticket_id: str) -> InlineKeyboardMarkup:
+    return rows(
+        [btn("✅ Confirm close", f"{CallbackPrefix.TICKET_CLOSE_CONFIRM}|{ticket_id}")],
+        [_back_btn(ticket_id)],
+    )
 
 
 # --------------------------------------------------------------------------

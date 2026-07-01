@@ -92,6 +92,8 @@ class CallbackPrefix(StrEnum):
     TICKET_PRIORITY = "t:prio"
     TICKET_PRIORITY_PICK = "t:ppick"
     TICKET_CLOSE = "t:close"
+    TICKET_CLOSE_CONFIRM = "t:closeok"
+    TICKET_ACTIONS = "t:act"
 
 
 DEFAULT_PROGRESS_WIDTH = 10
