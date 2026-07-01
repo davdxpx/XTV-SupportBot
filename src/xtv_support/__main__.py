@@ -108,12 +108,13 @@ async def _amain() -> None:
             name="autoclose_loop",
             interval=max(60, ctx.settings.AUTO_CLOSE_SWEEP_MINUTES * 60),
         )
-        if ctx.settings.TOPIC_DELETE_AFTER_CLOSE_MINUTES > 0:
-            ctx.tasks.run_loop(
-                lambda: topic_cleanup_task.run_once(client, ctx.db),
-                name="topic_cleanup_loop",
-                interval=max(60, ctx.settings.TOPIC_CLEANUP_SWEEP_MINUTES * 60),
-            )
+        # Always register — run_once reads the delay live (runtime settings) and
+        # no-ops when disabled, so admins can toggle it without a restart.
+        ctx.tasks.run_loop(
+            lambda: topic_cleanup_task.run_once(client, ctx.db),
+            name="topic_cleanup_loop",
+            interval=max(60, ctx.settings.TOPIC_CLEANUP_SWEEP_MINUTES * 60),
+        )
 
         if settings.API_ENABLED:
             api_server = await _start_api(ctx)
