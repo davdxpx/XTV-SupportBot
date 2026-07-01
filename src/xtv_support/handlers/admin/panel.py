@@ -126,6 +126,24 @@ def _flags_snapshot(ctx) -> list[tuple[str, bool]]:
     return [(name, bool(getattr(flags, name, False))) for name in candidates]
 
 
+async def _runtime_values(ctx) -> tuple[tuple[str, str], ...]:
+    """A compact read-only view of the key operational settings for the bot panel."""
+    try:
+        from xtv_support.config.runtime import get_runtime
+
+        rt = await get_runtime(ctx.db)
+    except Exception:  # noqa: BLE001
+        return ()
+    keys = (
+        ("SLA warn (min)", "SLA_WARN_MINUTES"),
+        ("Auto-close (days)", "AUTO_CLOSE_DAYS"),
+        ("Topic delete (min)", "TOPIC_DELETE_AFTER_CLOSE_MINUTES"),
+        ("Cooldown rate", "COOLDOWN_RATE"),
+        ("Cooldown window (s)", "COOLDOWN_WINDOW"),
+    )
+    return tuple((label, str(rt.get(key))) for label, key in keys)
+
+
 # ---------------------------------------------------------------------------
 # Section router
 # ---------------------------------------------------------------------------
@@ -153,7 +171,7 @@ async def _render_section(ctx, section: str) -> Panel:
         days, total, ratio = await _analytics(ctx)
         return render_analytics_section(days, total, ratio)
     if section == "settings":
-        return render_settings_section(_flags_snapshot(ctx))
+        return render_settings_section(_flags_snapshot(ctx), await _runtime_values(ctx))
     if section == "extdir":
         return render_extdir_section()
     # Unknown key → fall back to home.
@@ -244,7 +262,14 @@ async def panel_flag_toggle(client: Client, cq: CallbackQuery) -> None:
         {"$set": {"flags": flips, "updated_at": utcnow()}},
         upsert=True,
     )
-    await cq.answer(f"Flag {name} toggled (takes effect on next deploy).", show_alert=False)
+    # Apply live: update the in-memory flags so it takes effect immediately
+    # (no redeploy). Persisted above so it survives a restart too.
+    if ctx.flags is not None:
+        try:
+            setattr(ctx.flags, name, flips[name])
+        except Exception:  # noqa: BLE001 — never let a toggle 500 the panel
+            pass
+    await cq.answer(f"Flag {name} {'enabled' if flips[name] else 'disabled'}.", show_alert=False)
     panel = await _render_section(ctx, "settings")
     await _send_or_edit(client, None, cq, panel)
 

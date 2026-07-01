@@ -22,7 +22,15 @@ async def enforce_cooldown(client: Client, message: Message) -> None:
     except RuntimeError:
         return
 
-    decision = await ctx.cooldown.check(message.from_user.id)
+    from xtv_support.config.runtime import get_runtime
+
+    rt = await get_runtime(ctx.db)
+    decision = await ctx.cooldown.check(
+        message.from_user.id,
+        rate=rt.COOLDOWN_RATE,
+        window=rt.COOLDOWN_WINDOW,
+        mute=rt.COOLDOWN_MUTE_SECONDS,
+    )
     if decision.allowed:
         return
 

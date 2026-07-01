@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from xtv_support.config.settings import settings
+from xtv_support.config import settings as _settings_mod
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,9 @@ SPEC_BY_KEY: dict[str, SettingSpec] = {s.key: s for s in SPECS}
 
 
 def default_for(key: str) -> Any:
-    return getattr(settings, key)
+    # Read the live module attribute (not a captured reference) so tests that
+    # swap ``settings`` — and any future settings reload — are reflected.
+    return getattr(_settings_mod.settings, key)
 
 
 def coerce(spec: SettingSpec, raw: Any) -> Any:

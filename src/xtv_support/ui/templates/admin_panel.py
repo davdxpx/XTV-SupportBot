@@ -244,11 +244,18 @@ def render_analytics_section(days: int, tickets: int, sla_ratio: float) -> Panel
     )
 
 
-def render_settings_section(flags_snapshot: list[tuple[str, bool]]) -> Panel:
-    body_lines = (
-        "Toggle feature flags below. Live toggles are persisted to "
-        "<code>admin_overrides</code> — changes apply on the next request.",
-    )
+def render_settings_section(
+    flags_snapshot: list[tuple[str, bool]],
+    runtime_values: tuple[tuple[str, str], ...] = (),
+) -> Panel:
+    body_lines: list[str] = [
+        "Toggle feature flags below — changes apply <b>live</b> (persisted to "
+        "<code>admin_overrides</code>).",
+    ]
+    if runtime_values:
+        body_lines.append("")
+        body_lines.append("<b>Operational settings</b> (edit in the web console → Settings):")
+        body_lines.extend(f"• {label}: <code>{value}</code>" for label, value in runtime_values)
     action_rows_list: list[tuple[PanelButton, ...]] = []
 
     # Flag grid — 2 flags per row for visual parity with the rest.
@@ -277,9 +284,9 @@ def render_settings_section(flags_snapshot: list[tuple[str, bool]]) -> Panel:
 
     return Panel(
         title="⚙️ Settings",
-        subtitle="Feature flags + secrets",
-        body=body_lines,
-        hints=("⚠️ Some flags only take effect after a redeploy — label hints below.",),
+        subtitle="Feature flags + operational settings",
+        body=tuple(body_lines),
+        hints=("💡 Numeric/text settings are edited in the web console → Settings.",),
         action_rows=tuple(action_rows_list),
     )
 

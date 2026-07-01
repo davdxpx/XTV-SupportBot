@@ -60,6 +60,9 @@ def make_app() -> Iterator:
     settings_mod.settings = settings_mod.get_settings()
 
     from xtv_support.api.server import create_app
+    from xtv_support.config import runtime
+
+    runtime.invalidate()
 
     def _build(cooldown: CooldownService | None) -> TestClient:
         db = AsyncMongoMockClient().testdb
@@ -71,6 +74,7 @@ def make_app() -> Iterator:
 
     yield _build
 
+    runtime.invalidate()
     settings_mod.settings = saved
     settings_mod.get_settings.cache_clear()
 
@@ -84,9 +88,15 @@ def test_languages_endpoint_includes_german(make_app) -> None:
     assert "en" in items
 
 
-def test_ticket_creation_rate_limited(make_app) -> None:
-    # rate=0 → the limiter denies the very first attempt.
-    client = make_app(CooldownService(rate=0, window=60, mute_seconds=30))
+def test_ticket_creation_rate_limited(make_app, monkeypatch) -> None:
+    # The API enforces the *runtime* rate (env default), so drive it to 0 to deny
+    # the very first attempt — proving the limit is resolved live at request time.
+    from xtv_support.config import runtime
+    from xtv_support.config import settings as settings_mod
+
+    monkeypatch.setattr(settings_mod.settings, "COOLDOWN_RATE", 0)
+    runtime.invalidate()
+    client = make_app(CooldownService(rate=10, window=60, mute_seconds=30))
     r = client.post(
         "/api/v1/me/tickets",
         headers={"X-Telegram-Init-Data": _init_data(555)},

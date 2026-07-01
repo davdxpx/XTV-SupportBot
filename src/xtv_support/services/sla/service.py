@@ -34,7 +34,11 @@ class SlaService:
         self._db = db
 
     async def schedule(self, ticket_id, *, minutes: int | None = None) -> None:
-        delta = timedelta(minutes=minutes or settings.SLA_WARN_MINUTES)
+        if minutes is None:
+            from xtv_support.config.runtime import get_runtime
+
+            minutes = (await get_runtime(self._db)).SLA_WARN_MINUTES
+        delta = timedelta(minutes=minutes)
         await tickets_repo.set_sla(self._db, ticket_id, deadline=utcnow() + delta, warned=False)
 
     async def cancel(self, ticket_id) -> None:

@@ -157,6 +157,16 @@ def build_router() -> APIRouter:
     async def get_me(request: Request) -> dict:
         principal = await current_principal(request)
 
+        # Brand strings are runtime-editable; overlay them when a DB is present
+        # (standalone API-only deploys with no DB keep the env defaults).
+        brand: dict[str, Any] = {}
+        db_opt = getattr(request.app.state, "db", None)
+        if db_opt is not None:
+            from xtv_support.config.runtime import get_runtime
+
+            rt = await get_runtime(db_opt)
+            brand = {"brand_name": rt.BRAND_NAME, "brand_tagline": rt.BRAND_TAGLINE}
+
         # Telegram Mini-App user — admin flag from ADMIN_IDS (unchanged).
         if isinstance(principal, TelegramUser):
             return _envelope(
@@ -167,6 +177,7 @@ def build_router() -> APIRouter:
                 language_code=principal.language_code,
                 is_admin=principal.id in set(settings.ADMIN_IDS),
                 auth_method="telegram",
+                **brand,
             )
 
         # Real admin account — resolve permissions from the EXISTING Role
@@ -184,6 +195,7 @@ def build_router() -> APIRouter:
                 is_admin=role.can(Role.AGENT),
                 role=str(role),
                 auth_method="account",
+                **brand,
             )
 
         # Legacy API-key session — is_admin ONLY when scopes grant admin:full.
@@ -193,6 +205,7 @@ def build_router() -> APIRouter:
             first_name=key.label or "Admin",
             is_admin=scope_satisfies(key.scopes, "admin:full"),
             auth_method="apikey",
+            **brand,
         )
 
     @router.get("/languages")
@@ -289,7 +302,15 @@ def build_router() -> APIRouter:
         # can't flood tickets via the Mini-App either.
         cooldown = _resolve_cooldown(request)
         if cooldown is not None:
-            decision = await cooldown.check(user.id)
+            from xtv_support.config.runtime import get_runtime
+
+            rt = await get_runtime(db)
+            decision = await cooldown.check(
+                user.id,
+                rate=rt.COOLDOWN_RATE,
+                window=rt.COOLDOWN_WINDOW,
+                mute=rt.COOLDOWN_MUTE_SECONDS,
+            )
             if not decision.allowed:
                 raise HTTPException(
                     status_code=429,

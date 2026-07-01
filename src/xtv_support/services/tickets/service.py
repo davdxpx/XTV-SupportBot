@@ -85,7 +85,10 @@ async def create_ticket(
 
     Returns the fully hydrated ticket dict.
     """
-    deadline = utcnow() + timedelta(minutes=settings.SLA_WARN_MINUTES)
+    from xtv_support.config.runtime import get_runtime
+
+    warn_minutes = (await get_runtime(db)).SLA_WARN_MINUTES
+    deadline = utcnow() + timedelta(minutes=warn_minutes)
     ticket_id = await tickets_repo.create(
         db,
         project_id=str(project["_id"]) if project else None,

@@ -91,3 +91,15 @@ def test_patch_rejects_bad_choice(env) -> None:
 def test_requires_auth(env) -> None:
     client, _, _ = env
     assert client.get("/api/v1/settings").status_code == 401
+
+
+def test_brand_override_reflected_in_me(env) -> None:
+    # A live BRAND_NAME override must show up in /api/v1/me without a restart.
+    client, h, _ = env
+    assert (
+        client.patch("/api/v1/settings", headers=h, json={"BRAND_NAME": "XOLO Support"}).status_code
+        == 200
+    )
+    runtime.invalidate()
+    me = client.get("/api/v1/me", headers=h).json()
+    assert me["brand_name"] == "XOLO Support"
