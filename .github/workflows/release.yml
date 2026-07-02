@@ -55,7 +55,7 @@ jobs:
           if [ ! -s RELEASE_NOTES.md ]; then
             echo "Release ${VERSION}" > RELEASE_NOTES.md
           fi
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           body_path: RELEASE_NOTES.md
           draft: false
